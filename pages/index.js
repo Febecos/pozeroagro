@@ -124,4 +124,29 @@ export default function Directorio() {
                     WhatsApp
                   </a>
                 ) : (
-                  <div style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '0.5px solid
+                  <div style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '0.5px solid #e0e0d8', background: '#f5f5f0', color: '#aaa', fontSize: '12px', textAlign: 'center' }}>
+                    WA 🔒
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {!cargando && filtrados.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#888' }}>
+            No se encontraron perforistas para esa búsqueda.
+          </div>
+        )}
+      </div>
+
+      <div style={{ background: '#085041', padding: '1rem 1.5rem', marginTop: '2rem', textAlign: 'center' }}>
+        <div style={{ fontSize: '13px', color: '#9FE1CB', marginBottom: '6px' }}>¿Necesitás equipar tu pozo con energía solar?</div>
+        <a href="https://febecos.mitiendanube.com" target="_blank" rel="noreferrer" style={{ background: '#1D9E75', color: '#fff', padding: '8px 20px', borderRadius: '6px', textDecoration: 'none', fontSize: '13px', fontWeight: '500' }}>
+          Ver kits Febecos →
+        </a>
+      </div>
+
+    </div>
+  )
+}
