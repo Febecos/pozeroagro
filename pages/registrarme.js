@@ -324,10 +324,20 @@ export default function Registro() {
               }}
               </button>
             )}
-            {paso === 4 && (
-              <button onClick={enviar} disabled={enviando}
-                style={{ flex: 1, padding: '10px', background: '#085041', color: '#E1F5EE', border: 'none', borderRadius: '8px', fontSize: '15px', cursor: 'pointer', fontWeight: '500' }}>
-                {enviando ? 'Enviando...' : 'Publicar mi perfil gratis'}
+            {paso < 4 && (
+              <button onClick={() => {
+                if (paso === 1 && (!form.nombre || !form.apellido || !form.provincia || !form.localidad || !form.telefono)) {
+                  alert('Por favor completá Nombre, Apellido, Provincia, Localidad y Teléfono.')
+                return
+              }  
+              if (paso === 2 && !form.experiencia) {
+                  alert('Por favor indicá tus años de experiencia.')
+                return
+              }
+              setPaso(p => p + 1)
+            }}
+                style={{ flex: 1, padding: '10px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', fontWeight: '500' }}>
+                Siguiente →
               </button>
             )}
           </div>
