@@ -110,6 +110,24 @@ export default function Registro() {
     return
   }
 }
+if (paso === 3) {
+  if (form.servicios.length === 0) {
+    alert('Por favor seleccioná al menos un servicio que ofrecés.')
+    return
+  }
+  if (form.tipo_bomba.length === 0) {
+    alert('Por favor seleccioná al menos un tipo de bomba que instalás.')
+    return
+  }
+  if (!form.conoce_solar) {
+    alert('Por favor indicá si instalás o conocés sistemas de bombeo solar.')
+    return
+  }
+  if (!form.trabajos_por_mes) {
+    alert('Por favor indicá cuántos trabajos realizás por mes.')
+    return
+  }
+}
     setPaso(p => p + 1)
   }
 
