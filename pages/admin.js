@@ -1,6 +1,26 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
+export default function AdminWrapper() {
+  const [autorizado, setAutorizado] = useState(false)
+  const [verificando, setVerificando] = useState(true)
+
+  useEffect(() => {
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      window.location.href = '/login'
+    } else {
+      setAutorizado(true)
+    }
+    setVerificando(false)
+  }, [])
+
+  if (verificando) return null
+  if (!autorizado) return null
+  return <Admin />
+}
+
+function Admin() {
 export default function Admin() {
   const [perforistas, setPerforistas] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -89,6 +109,10 @@ export default function Admin() {
           <div style={{ fontSize: '12px', color: '#5DCAA5' }}>Gestioná perforistas y toggles de contacto</div>
         </div>
         <a href="/" style={{ fontSize: '13px', color: '#9FE1CB', textDecoration: 'none' }}>← Ver directorio</a>
+        <button onClick={() => { localStorage.removeItem('admin_token'); window.location.href = '/login' }}
+          style={{ fontSize: '13px', color: '#9FE1CB', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+          Cerrar sesión
+        </button>
       </div>
 
       <div style={{ padding: '1.25rem 1.5rem' }}>
