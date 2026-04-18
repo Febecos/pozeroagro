@@ -67,7 +67,7 @@ export default function Registro() {
     }])
     setEnviando(false)
     if (!error) setExito(true)
-    else alert('Hubo un error al enviar. Intentá de nuevo.')
+    else alert('Error: ' + JSON.stringify(error))
   }
 
   const input = (campo, placeholder, tipo = 'text') => (
