@@ -97,11 +97,19 @@ export default function Registro() {
       }
     }
     if (paso === 2) {
-      if (!form.experiencia) {
-        alert('Por favor indicá tus años de experiencia.')
-        return
-      }
-    }
+  if (!form.experiencia) {
+    alert('Por favor indicá tus años de experiencia.')
+    return
+  }
+  if (form.diametros.length === 0) {
+    alert('Por favor seleccioná al menos un diámetro de perforación.')
+    return
+  }
+  if (form.zonas_trabajo.length === 0) {
+    alert('Por favor seleccioná al menos una zona donde trabajás.')
+    return
+  }
+}
     setPaso(p => p + 1)
   }
 
