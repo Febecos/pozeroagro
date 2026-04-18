@@ -54,22 +54,41 @@ export default function Registro() {
     )
   }
 
-  async function enviar() {
-    setEnviando(true)
-    const { error } = await supabase.from('perforistas').insert([{
-      ...form,
-      estado: 'pendiente',
-      visible_telefono: true,
-      visible_whatsapp: false,
-      visible_instagram: true,
-      visible_facebook: true,
-      visible_email: false,
-    }])
-    setEnviando(false)
-    if (!error) setExito(true)
-    else alert('Error: ' + JSON.stringify(error))
+ async function enviar() {
+  setEnviando(true)
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/perforistas`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          ...form,
+          estado: 'pendiente',
+          visible_telefono: true,
+          visible_whatsapp: false,
+          visible_instagram: true,
+          visible_facebook: true,
+          visible_email: false,
+        })
+      }
+    )
+    if (response.ok) {
+      setExito(true)
+    } else {
+      const err = await response.text()
+      alert('Error: ' + err)
+    }
+  } catch(e) {
+    alert('Error de red: ' + e.message)
   }
-
+  setEnviando(false)
+}
   const input = (campo, placeholder, tipo = 'text') => (
     <input
       type={tipo}
