@@ -21,7 +21,7 @@ export default function AdminWrapper() {
 }
 
 function Admin() {
-export default function Admin() {
+function Admin() {
   const [perforistas, setPerforistas] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState('todos')
