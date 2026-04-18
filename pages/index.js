@@ -15,9 +15,7 @@ export default function Directorio() {
     'Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'
   ]
 
-  useEffect(() => {
-    cargarPerforistas()
-  }, [])
+  useEffect(() => { cargarPerforistas() }, [])
 
   async function cargarPerforistas() {
     setCargando(true)
@@ -40,7 +38,6 @@ export default function Directorio() {
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f5f0' }}>
 
-      {/* HEADER */}
       <div style={{ background: '#085041', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: '18px', fontWeight: '600', color: '#E1F5EE' }}>Pozeros Agro</div>
@@ -51,7 +48,6 @@ export default function Directorio() {
         </a>
       </div>
 
-      {/* HERO BÚSQUEDA */}
       <div style={{ background: '#0F6E56', padding: '1.25rem 1.5rem' }}>
         <div style={{ fontSize: '16px', color: '#E1F5EE', fontWeight: '500', marginBottom: '12px' }}>
           Encontrá un perforista rural en tu zona
@@ -75,7 +71,6 @@ export default function Directorio() {
         </div>
       </div>
 
-      {/* CONTENIDO */}
       <div style={{ padding: '1.25rem 1.5rem' }}>
         <div style={{ fontSize: '12px', color: '#888', marginBottom: '12px' }}>
           {cargando ? 'Cargando...' : `${filtrados.length} perforistas encontrados`}
@@ -88,8 +83,6 @@ export default function Directorio() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
           {filtrados.map(p => (
             <div key={p.id} style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e0e0d8', padding: '1rem 1.25rem' }}>
-
-              {/* Cabecera tarjeta */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                 <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#E1F5EE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '15px', color: '#085041', flexShrink: 0 }}>
                   {p.nombre?.[0]}{p.apellido?.[0]}
@@ -100,12 +93,11 @@ export default function Directorio() {
                 </div>
               </div>
 
-              {/* Badges */}
               <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '10px' }}>
                 {p.estado === 'cliente' && (
                   <span style={{ fontSize: '11px', background: '#E1F5EE', color: '#085041', padding: '2px 8px', borderRadius: '4px' }}>✓ Verificado Febecos</span>
                 )}
-                {p.conoce_solar === 'Sí, ya instalé' && (
+                {p.conoce_solar === 'Sí, ya instalé sistemas solares' && (
                   <span style={{ fontSize: '11px', background: '#FAEEDA', color: '#633806', padding: '2px 8px', borderRadius: '4px' }}>Instala solar</span>
                 )}
                 {p.profundidad_max && (
@@ -113,20 +105,18 @@ export default function Directorio() {
                 )}
               </div>
 
-              {/* Servicios */}
               {p.servicios && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '10px' }}>
-                  {p.servicios.slice(0, 3).map(s => (
+                  {p.servicios.slice(0,3).map(s => (
                     <span key={s} style={{ fontSize: '11px', background: '#f5f5f0', color: '#666', padding: '2px 8px', borderRadius: '4px' }}>{s}</span>
                   ))}
                 </div>
               )}
 
-              {/* Contacto */}
               <div style={{ display: 'flex', gap: '6px' }}>
                 {p.visible_telefono && p.telefono && (
                   <a href={`tel:${p.telefono}`} style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '0.5px solid #9FE1CB', background: '#E1F5EE', color: '#085041', fontSize: '12px', textAlign: 'center', textDecoration: 'none', fontWeight: '500' }}>
-                    📞 Llamar
+                    Llamar
                   </a>
                 )}
                 {p.visible_whatsapp && p.whatsapp ? (
@@ -134,24 +124,4 @@ export default function Directorio() {
                     WhatsApp
                   </a>
                 ) : (
-                  <div style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '0.5px solid #e0e0d8', background: '#f5f5f0', color: '#aaa', fontSize: '12px', textAlign: 'center' }}>
-                    WA 🔒
-                  </div>
-                )}
-              </div>
-
-            </div>
-          ))}
-        </div>
-
-        {!cargando && filtrados.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#888' }}>
-            No se encontraron perforistas para esa búsqueda.
-          </div>
-        )}
-      </div>
-
-      {/* FOOTER FEBECOS */}
-      <div style={{ background: '#085041', padding: '1rem 1.5rem', marginTop: '2rem', textAlign: 'center' }}>
-        <div style={{ fontSize: '13px', color: '#9FE1CB', marginBottom: '6px' }}>¿Necesitás equipar tu pozo con energía solar?</div>
-        <a href="https://febecos.mitiendanube.com" target="_blank" rel="noreferrer" style={{ background: '#1D9E75', color: '#fff', padding: '8px 20px', borderRadiu
+                  <div style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '0.5px solid
