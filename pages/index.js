@@ -78,27 +78,56 @@ export default function Directorio() {
         <div style={{ fontSize: '16px', color: '#fff', fontWeight: '600', marginBottom: '12px' }}>
           Encontrá un perforista rural en tu zona
         </div>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
           <input
             type="text"
             placeholder="Buscar por nombre o localidad..."
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
-            style={{ padding: '9px 12px', borderRadius: '6px', border: 'none', fontSize: '14px', minWidth: '160px', background: 'rgba(255,255,255,0.15)', color: '#fff' }}
+            style={{
+              padding: '10px 14px',
+              borderRadius: '6px',
+              border: '1.5px solid rgba(255,255,255,0.4)',
+              fontSize: '14px',
+              width: '100%',
+              boxSizing: 'border-box',
+              background: '#fff',
+              color: '#333',
+            }}
           />
-          <select
-            value={provincia}
-            onChange={e => setProvincia(e.target.value)}
-            style={{ padding: '9px 12px', borderRadius: '6px', border: 'none', fontSize: '14px', minWidth: '160px', background: 'rgba(255,255,255,0.15)', color: '#fff' }}
-          >
-            <option value="" style={{ background: '#1B4F8A', color: '#fff' }}>Todas las provincias</option>
-            {provincias.map(p => <option key={p} value={p} style={{ background: '#1B4F8A', color: '#fff' }}>{p}</option>)}
-          </select>
-          <button
-            onClick={() => {}}
-            style={{ padding: '9px 20px', background: '#F26419', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-            Buscar
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <select
+              value={provincia}
+              onChange={e => setProvincia(e.target.value)}
+              style={{
+                flex: 1,
+                padding: '10px 14px',
+                borderRadius: '6px',
+                border: '1.5px solid rgba(255,255,255,0.4)',
+                fontSize: '14px',
+                background: '#fff',
+                color: '#333',
+              }}
+            >
+              <option value="">Todas las provincias</option>
+              {provincias.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+            <button
+              onClick={() => {}}
+              style={{
+                padding: '10px 24px',
+                background: '#F26419',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}>
+              Buscar
+            </button>
+          </div>
         </div>
       </div>
 
