@@ -71,7 +71,7 @@ export default function Directorio() {
             placeholder="Buscar por nombre o localidad..."
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
-            style={{ flex: 1, minWidth: '180px', padding: '9px 12px', borderRadius: '6px', border: 'none', fontSize: '14px', background: 'rgba(255,255,255,0.15)', color: '#fff' }}
+            style={{ flex: 1, minWidth: '180px', padding: '9px 12px', borderRadius: '6px', border: '1.5px solid rgba(255,255,255,0.5)', fontSize: '14px', background: 'rgba(255,255,255,0.12)', color: '#fff' }}
           />
           <select
             value={provincia}
