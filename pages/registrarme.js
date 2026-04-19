@@ -62,26 +62,7 @@ export default function Registro() {
     if (!form.email) { alert('El email es obligatorio para confirmar tu registro.'); return }
     setEnviando(true)
     try {
-      // 1. Crear usuario en Supabase Auth con magic link
-      const authRes = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
-        method: 'POST',
-        headers: { 'apikey': ANON_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: form.email,
-          options: {
-            emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : 'https://pozeroagro.vercel.app'}/confirmado`,
-            data: { tipo: 'perforista' }
-          }
-        })
-      })
-
-      if (!authRes.ok) {
-        const err = await authRes.text()
-        throw new Error(err)
-      }
-
-      // 2. Guardar datos del perforista con estado pendiente
-      // El whatsapp usa el teléfono si no se completó
+      // 1. PRIMERO guardar datos (siempre, pase lo que pase con el mail)
       const datosPerforista = {
         ...form,
         whatsapp: form.whatsapp || form.telefono,
@@ -99,12 +80,30 @@ export default function Registro() {
         body: JSON.stringify(datosPerforista)
       })
 
-      if (dataRes.ok || dataRes.status === 201) {
-        setExito(true)
-      } else {
+      if (!dataRes.ok && dataRes.status !== 201) {
         const err = await dataRes.text()
         throw new Error(err)
       }
+
+      // 2. DESPUÉS intentar mail (si falla no importa, datos ya guardados)
+      try {
+        await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
+          method: 'POST',
+          headers: { 'apikey': ANON_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: form.email,
+            options: {
+              emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : 'https://pozeroagro.vercel.app'}/confirmado`,
+              data: { tipo: 'perforista' }
+            }
+          })
+        })
+      } catch(mailErr) {
+        console.log('Mail no enviado, datos guardados igual')
+      }
+
+      setExito(true)
+
     } catch(e) {
       alert('Error al registrarse: ' + e.message)
     }
