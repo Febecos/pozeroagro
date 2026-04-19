@@ -3,6 +3,19 @@ import { useState } from 'react'
 const SUPABASE_URL = 'https://qfesxpcuhsrfdohnsleg.supabase.co'
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
 
+async function supabase(path, options = {}) {
+  const res = await fetch(`${SUPABASE_URL}${path}`, {
+    ...options,
+    headers: {
+      'apikey': ANON_KEY,
+      'Authorization': `Bearer ${ANON_KEY}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  })
+  return res
+}
+
 export default function Registro() {
   const [paso, setPaso] = useState(1)
   const [enviando, setEnviando] = useState(false)
@@ -46,36 +59,68 @@ export default function Registro() {
   }
 
   async function enviar() {
+    if (!form.email) { alert('El email es obligatorio para confirmar tu registro.'); return }
     setEnviando(true)
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/perforistas`, {
+      // 1. Crear usuario en Supabase Auth con magic link
+      const authRes = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': ANON_KEY,
-          'Authorization': `Bearer ${ANON_KEY}`,
-          'Prefer': 'return=minimal'
-        },
+        headers: { 'apikey': ANON_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...form,
-          estado: 'activo',
-          visible_telefono: true,
-          visible_whatsapp: true,
-          visible_instagram: true,
-          visible_facebook: true,
-          visible_email: false,
+          email: form.email,
+          options: {
+            emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : 'https://pozeroagro.vercel.app'}/confirmado`,
+            data: { tipo: 'perforista' }
+          }
         })
       })
-      if (res.ok) { setExito(true) }
-      else { const err = await res.text(); alert('Error: ' + err) }
-    } catch(e) { alert('Error de red: ' + e.message) }
+
+      if (!authRes.ok) {
+        const err = await authRes.text()
+        throw new Error(err)
+      }
+
+      // 2. Guardar datos del perforista con estado pendiente
+      // El whatsapp usa el teléfono si no se completó
+      const datosPerforista = {
+        ...form,
+        whatsapp: form.whatsapp || form.telefono,
+        estado: 'pendiente',
+        visible_telefono: true,
+        visible_whatsapp: true,
+        visible_instagram: true,
+        visible_facebook: true,
+        visible_email: false,
+      }
+
+      const dataRes = await supabase('/rest/v1/perforistas', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify(datosPerforista)
+      })
+
+      if (dataRes.ok || dataRes.status === 201) {
+        setExito(true)
+      } else {
+        const err = await dataRes.text()
+        throw new Error(err)
+      }
+    } catch(e) {
+      alert('Error al registrarse: ' + e.message)
+    }
     setEnviando(false)
   }
 
   function siguiente() {
-    if (paso === 1 && (!form.nombre || !form.apellido || !form.provincia || !form.localidad || !form.telefono)) {
-      alert('Por favor completá Nombre, Apellido, Provincia, Localidad y Teléfono.')
-      return
+    if (paso === 1) {
+      if (!form.nombre || !form.apellido || !form.provincia || !form.localidad || !form.telefono) {
+        alert('Por favor completá Nombre, Apellido, Provincia, Localidad y Teléfono.')
+        return
+      }
+      if (!form.email) {
+        alert('El email es obligatorio para confirmar tu registro.')
+        return
+      }
     }
     if (paso === 2) {
       if (!form.experiencia) { alert('Por favor indicá tus años de experiencia.'); return }
@@ -98,11 +143,16 @@ export default function Registro() {
 
   if (exito) return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ background: '#fff', borderRadius: '12px', padding: '2rem', textAlign: 'center', maxWidth: '400px', margin: '1rem', border: '0.5px solid #e0e0e8' }}>
-        <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#e8f0fa', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', fontSize: '24px' }}>✓</div>
-        <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#1B4F8A' }}>¡Registro enviado!</div>
-        <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.6', marginBottom: '1.25rem' }}>
-          En breve revisamos tu perfil y aparecés en el directorio. Te vamos a contactar con información sobre kits de bombeo solar para tu zona.
+      <div style={{ background: '#fff', borderRadius: '12px', padding: '2rem', textAlign: 'center', maxWidth: '420px', margin: '1rem', border: '0.5px solid #e0e0e8' }}>
+        <div style={{ fontSize: '48px', marginBottom: '12px' }}>📧</div>
+        <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px', color: '#1B4F8A' }}>¡Revisá tu email!</div>
+        <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.7', marginBottom: '1.5rem' }}>
+          Te enviamos un mail a <strong>{form.email}</strong>.<br />
+          Hacé clic en el link para confirmar tu registro.<br /><br />
+          Una vez confirmado, tu perfil queda en revisión y en breve aparecés en el directorio.
+        </div>
+        <div style={{ background: '#f5f7fa', borderRadius: '8px', padding: '12px', fontSize: '13px', color: '#888', marginBottom: '1.5rem' }}>
+          ¿No llegó el mail? Revisá la carpeta de spam o escribinos a <strong>info@febecos.com</strong>
         </div>
         <a href="/" style={{ background: '#1B4F8A', color: '#fff', padding: '10px 24px', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
           Ver el directorio →
@@ -159,13 +209,22 @@ export default function Registro() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Teléfono *</label><br />{input('telefono', '+54 9 11 XXXX-XXXX', 'tel')}</div>
-                <div><label style={{ fontSize: '12px', color: '#666' }}>WhatsApp</label><br />{input('whatsapp', 'Si es distinto al tel.')}</div>
+                <div>
+                  <label style={{ fontSize: '12px', color: '#666' }}>WhatsApp <span style={{ color: '#aaa' }}>(si es distinto al tel.)</span></label><br />
+                  {input('whatsapp', 'Se usa el teléfono si no completás')}
+                </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Instagram</label><br />{input('instagram', '@tuperfil')}</div>
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Facebook</label><br />{input('facebook', 'fb.com/tuperfil')}</div>
               </div>
-              <div><label style={{ fontSize: '12px', color: '#666' }}>Email</label><br />{input('email', 'juan@ejemplo.com', 'email')}</div>
+              <div>
+                <label style={{ fontSize: '12px', color: '#666' }}>Email * <span style={{ color: '#1B4F8A', fontWeight: '600' }}>(para confirmar tu registro)</span></label><br />
+                {input('email', 'juan@ejemplo.com', 'email')}
+              </div>
+              <div style={{ marginTop: '10px', background: '#fff3e0', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', color: '#E65100' }}>
+                📧 Te enviaremos un mail para confirmar tu registro. Sin confirmación, el perfil no se publica.
+              </div>
             </div>
           )}
 
@@ -267,12 +326,15 @@ export default function Registro() {
                 <div style={{ fontSize: '14px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Accedé a equipos de bombeo solar</div>
                 <div style={{ fontSize: '13px', color: '#1B4F8A', lineHeight: '1.6' }}>Al registrarte te contactamos con las mejores opciones en kits solares para tus clientes de campo. Sin cargo y sin compromiso.</div>
               </div>
-              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', marginBottom: '10px' }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', marginBottom: '16px' }}>
                 <input type="checkbox" checked={form.quiere_info_equipos} onChange={e => set('quiere_info_equipos', e.target.checked)} style={{ marginTop: '2px' }} />
                 <span style={{ fontSize: '13px', color: '#444' }}>Quiero recibir información sobre equipos y kits solares para el agro</span>
               </label>
-              <div style={{ fontSize: '13px', color: '#888', padding: '10px', background: '#f5f7fa', borderRadius: '8px' }}>
+              <div style={{ fontSize: '13px', color: '#888', padding: '12px', background: '#f5f7fa', borderRadius: '8px', marginBottom: '12px' }}>
                 <strong>Resumen:</strong> {form.nombre} {form.apellido} · {form.localidad}, {form.provincia} · {form.profundidad_max}m máx
+              </div>
+              <div style={{ background: '#fff3e0', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', color: '#E65100' }}>
+                📧 Al publicar, te enviamos un mail a <strong>{form.email}</strong> para confirmar tu perfil.
               </div>
             </div>
           )}
@@ -292,7 +354,7 @@ export default function Registro() {
             )}
             {paso === 4 && (
               <button onClick={enviar} disabled={enviando}
-                style={{ flex: 1, padding: '10px', background: '#F26419', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', cursor: 'pointer', fontWeight: '700' }}>
+                style={{ flex: 1, padding: '10px', background: '#F26419', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', cursor: 'pointer', fontWeight: '700', opacity: enviando ? 0.7 : 1 }}>
                 {enviando ? 'Enviando...' : 'Publicar mi perfil gratis'}
               </button>
             )}
