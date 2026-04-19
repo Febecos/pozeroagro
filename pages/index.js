@@ -210,23 +210,21 @@ export default function Directorio() {
       {/* BUSCADOR */}
       <div style={{ background: '#1B4F8A', padding: '1.25rem 1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
         <div style={{ fontSize: '16px', color: '#fff', fontWeight: '600', marginBottom: '12px' }}>Encontrá un perforista rural en tu zona</div>
-        <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <input type="text" placeholder="Buscar por nombre o localidad..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
-            style={{ padding: '10px 14px', borderRadius: '6px', border: '1.5px solid rgba(255,255,255,0.4)', fontSize: '14px', width: '100%', boxSizing: 'border-box', background: '#fff', color: '#333' }} />
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <select value={provincia} onChange={e => setProvincia(e.target.value)}
-              style={{ flex: 1, padding: '10px 14px', borderRadius: '6px', border: '1.5px solid rgba(255,255,255,0.4)', fontSize: '14px', background: '#fff', color: '#333' }}>
-              <option value="">Todas las provincias</option>
-              {provincias.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-            <button onClick={() => {}} style={{ padding: '10px 24px', background: '#F26419', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}>Buscar</button>
-            {isMobile && (
-              <button onClick={() => setMostrarMapa(v => !v)}
-                style={{ padding: '10px 14px', background: mostrarMapa ? '#fff' : 'rgba(255,255,255,0.15)', color: mostrarMapa ? '#1B4F8A' : '#fff', border: 'none', borderRadius: '6px', fontSize: '18px', cursor: 'pointer' }}>
-                🗺️
-              </button>
-            )}
-          </div>
+            style={{ flex: '2 1 200px', padding: '10px 14px', borderRadius: '6px', border: '1.5px solid rgba(255,255,255,0.4)', fontSize: '14px', boxSizing: 'border-box', background: '#fff', color: '#333' }} />
+          <select value={provincia} onChange={e => setProvincia(e.target.value)}
+            style={{ flex: '1 1 160px', padding: '10px 14px', borderRadius: '6px', border: '1.5px solid rgba(255,255,255,0.4)', fontSize: '14px', background: '#fff', color: '#333' }}>
+            <option value="">Todas las provincias</option>
+            {provincias.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <button onClick={() => {}} style={{ padding: '10px 24px', background: '#F26419', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}>Buscar</button>
+          {isMobile && (
+            <button onClick={() => setMostrarMapa(v => !v)}
+              style={{ padding: '10px 14px', background: mostrarMapa ? '#fff' : 'rgba(255,255,255,0.15)', color: mostrarMapa ? '#1B4F8A' : '#fff', border: 'none', borderRadius: '6px', fontSize: '18px', cursor: 'pointer' }}>
+              🗺️
+            </button>
+          )}
         </div>
       </div>
 
