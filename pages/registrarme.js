@@ -1,5 +1,8 @@
 import { useState } from 'react'
 
+const SUPABASE_URL = 'https://qfesxpcuhsrfdohnsleg.supabase.co'
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
+
 export default function Registro() {
   const [paso, setPaso] = useState(1)
   const [enviando, setEnviando] = useState(false)
@@ -21,135 +24,87 @@ export default function Registro() {
     'Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'
   ]
 
-  function set(campo, valor) {
-    setForm(f => ({ ...f, [campo]: valor }))
-  }
+  function set(campo, valor) { setForm(f => ({ ...f, [campo]: valor })) }
 
   function toggleArray(campo, valor) {
     setForm(f => ({
       ...f,
-      [campo]: f[campo].includes(valor)
-        ? f[campo].filter(v => v !== valor)
-        : [...f[campo], valor]
+      [campo]: f[campo].includes(valor) ? f[campo].filter(v => v !== valor) : [...f[campo], valor]
     }))
   }
 
   function Tag({ campo, valor }) {
     const activo = form[campo].includes(valor)
     return (
-      <span
-        onClick={() => toggleArray(campo, valor)}
-        style={{
-          padding: '5px 12px', borderRadius: '20px', fontSize: '13px',
-          cursor: 'pointer', userSelect: 'none',
-          border: activo ? '1px solid #1D9E75' : '0.5px solid #ccc',
-          background: activo ? '#E1F5EE' : '#fff',
-          color: activo ? '#085041' : '#666',
-          fontWeight: activo ? '500' : '400'
-        }}
-      >
-        {valor}
-      </span>
+      <span onClick={() => toggleArray(campo, valor)} style={{
+        padding: '5px 12px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer', userSelect: 'none',
+        border: activo ? '1.5px solid #1B4F8A' : '0.5px solid #ccc',
+        background: activo ? '#e8f0fa' : '#fff',
+        color: activo ? '#1B4F8A' : '#666', fontWeight: activo ? '600' : '400'
+      }}>{valor}</span>
     )
   }
 
   async function enviar() {
     setEnviando(true)
     try {
-      const response = await fetch(
-        'https://qfesxpcuhsrfdohnsleg.supabase.co/rest/v1/perforistas',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI',
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI',
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({
-            ...form,
-            estado: 'pendiente',
-            visible_telefono: true,
-            visible_whatsapp: false,
-            visible_instagram: true,
-            visible_facebook: true,
-            visible_email: false,
-          })
-        }
-      )
-      if (response.ok) {
-        setExito(true)
-      } else {
-        const err = await response.text()
-        alert('Error: ' + err)
-      }
-    } catch(e) {
-      alert('Error de red: ' + e.message)
-    }
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/perforistas`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': ANON_KEY,
+          'Authorization': `Bearer ${ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          ...form,
+          estado: 'activo',
+          visible_telefono: true,
+          visible_whatsapp: true,
+          visible_instagram: true,
+          visible_facebook: true,
+          visible_email: false,
+        })
+      })
+      if (res.ok) { setExito(true) }
+      else { const err = await res.text(); alert('Error: ' + err) }
+    } catch(e) { alert('Error de red: ' + e.message) }
     setEnviando(false)
   }
 
   function siguiente() {
-    if (paso === 1) {
-      if (!form.nombre || !form.apellido || !form.provincia || !form.localidad || !form.telefono) {
-        alert('Por favor completá Nombre, Apellido, Provincia, Localidad y Teléfono.')
-        return
-      }
+    if (paso === 1 && (!form.nombre || !form.apellido || !form.provincia || !form.localidad || !form.telefono)) {
+      alert('Por favor completá Nombre, Apellido, Provincia, Localidad y Teléfono.')
+      return
     }
     if (paso === 2) {
-  if (!form.experiencia) {
-    alert('Por favor indicá tus años de experiencia.')
-    return
-  }
-  if (form.diametros.length === 0) {
-    alert('Por favor seleccioná al menos un diámetro de perforación.')
-    return
-  }
-  if (form.zonas_trabajo.length === 0) {
-    alert('Por favor seleccioná al menos una zona donde trabajás.')
-    return
-  }
-}
-if (paso === 3) {
-  if (form.servicios.length === 0) {
-    alert('Por favor seleccioná al menos un servicio que ofrecés.')
-    return
-  }
-  if (form.tipo_bomba.length === 0) {
-    alert('Por favor seleccioná al menos un tipo de bomba que instalás.')
-    return
-  }
-  if (!form.conoce_solar) {
-    alert('Por favor indicá si instalás o conocés sistemas de bombeo solar.')
-    return
-  }
-  if (!form.trabajos_por_mes) {
-    alert('Por favor indicá cuántos trabajos realizás por mes.')
-    return
-  }
-}
+      if (!form.experiencia) { alert('Por favor indicá tus años de experiencia.'); return }
+      if (form.diametros.length === 0) { alert('Por favor seleccioná al menos un diámetro.'); return }
+      if (form.zonas_trabajo.length === 0) { alert('Por favor seleccioná al menos una zona.'); return }
+    }
+    if (paso === 3) {
+      if (form.servicios.length === 0) { alert('Por favor seleccioná al menos un servicio.'); return }
+      if (form.tipo_bomba.length === 0) { alert('Por favor seleccioná al menos un tipo de bomba.'); return }
+      if (!form.conoce_solar) { alert('Por favor indicá si instalás sistemas solares.'); return }
+      if (!form.trabajos_por_mes) { alert('Por favor indicá cuántos trabajos hacés por mes.'); return }
+    }
     setPaso(p => p + 1)
   }
 
   const input = (campo, placeholder, tipo = 'text') => (
-    <input
-      type={tipo}
-      placeholder={placeholder}
-      value={form[campo]}
-      onChange={e => set(campo, e.target.value)}
-      style={{ width: '100%', padding: '8px 10px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
-    />
+    <input type={tipo} placeholder={placeholder} value={form[campo]} onChange={e => set(campo, e.target.value)}
+      style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} />
   )
 
   if (exito) return (
-    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f5f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ background: '#fff', borderRadius: '12px', padding: '2rem', textAlign: 'center', maxWidth: '400px', margin: '1rem' }}>
-        <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#E1F5EE', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', fontSize: '24px' }}>✓</div>
-        <div style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>¡Registro enviado!</div>
+    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#fff', borderRadius: '12px', padding: '2rem', textAlign: 'center', maxWidth: '400px', margin: '1rem', border: '0.5px solid #e0e0e8' }}>
+        <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#e8f0fa', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', fontSize: '24px' }}>✓</div>
+        <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: '#1B4F8A' }}>¡Registro enviado!</div>
         <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.6', marginBottom: '1.25rem' }}>
-          En breve revisamos tu perfil y aparecés en el directorio. Te vamos a contactar por WhatsApp con información sobre kits de bombeo solar para tu zona.
+          En breve revisamos tu perfil y aparecés en el directorio. Te vamos a contactar con información sobre kits de bombeo solar para tu zona.
         </div>
-        <a href="/" style={{ background: '#085041', color: '#fff', padding: '10px 24px', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>
+        <a href="/" style={{ background: '#1B4F8A', color: '#fff', padding: '10px 24px', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
           Ver el directorio →
         </a>
       </div>
@@ -157,25 +112,35 @@ if (paso === 3) {
   )
 
   return (
-    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f5f0' }}>
-      <div style={{ background: '#085041', padding: '1rem 1.5rem' }}>
-        <div style={{ fontSize: '16px', fontWeight: '600', color: '#E1F5EE' }}>Pozeros Agro</div>
-        <div style={{ fontSize: '12px', color: '#5DCAA5' }}>Registrate como perforista rural — gratis</div>
+    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
+      <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ width: '32px', height: '32px', background: 'rgba(255,255,255,0.15)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="20" height="20" viewBox="0 0 100 100">
+            <polygon points="15,15 85,15 50,75" fill="#fff"/>
+            <rect x="44" y="8" width="12" height="38" fill="#1B4F8A" rx="2"/>
+            <circle cx="50" cy="80" r="9" fill="#fff"/>
+            <circle cx="50" cy="80" r="3.5" fill="#1B4F8A"/>
+          </svg>
+        </div>
+        <div>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: '#fff' }}>Pozero Agro</div>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>Registrate gratis · 2 minutos</div>
+        </div>
       </div>
 
       <div style={{ maxWidth: '560px', margin: '1.5rem auto', padding: '0 1rem' }}>
         <div style={{ marginBottom: '1rem' }}>
-          <div style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>Paso {paso} de 4</div>
-          <div style={{ height: '4px', background: '#e0e0d8', borderRadius: '2px' }}>
-            <div style={{ height: '100%', background: '#1D9E75', borderRadius: '2px', width: `${paso * 25}%`, transition: 'width .3s' }} />
+          <div style={{ fontSize: '12px', color: '#888', marginBottom: '6px' }}>Paso {paso} de 4</div>
+          <div style={{ height: '5px', background: '#e0e0e8', borderRadius: '3px' }}>
+            <div style={{ height: '100%', background: '#1B4F8A', borderRadius: '3px', width: `${paso * 25}%`, transition: 'width .3s' }} />
           </div>
         </div>
 
-        <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e0e0d8', padding: '1.5rem' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e0e0e8', padding: '1.5rem' }}>
 
           {paso === 1 && (
             <div>
-              <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>Datos personales</div>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Datos personales</div>
               <div style={{ fontSize: '13px', color: '#888', marginBottom: '1rem' }}>Cómo te van a encontrar los productores</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Nombre *</label><br />{input('nombre', 'Juan')}</div>
@@ -185,7 +150,7 @@ if (paso === 3) {
                 <div>
                   <label style={{ fontSize: '12px', color: '#666' }}>Provincia *</label><br />
                   <select value={form.provincia} onChange={e => set('provincia', e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px' }}>
+                    style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px' }}>
                     <option value="">Seleccioná...</option>
                     {provincias.map(p => <option key={p}>{p}</option>)}
                   </select>
@@ -200,38 +165,30 @@ if (paso === 3) {
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Instagram</label><br />{input('instagram', '@tuperfil')}</div>
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Facebook</label><br />{input('facebook', 'fb.com/tuperfil')}</div>
               </div>
-              <div style={{ marginBottom: '10px' }}>
-                <label style={{ fontSize: '12px', color: '#666' }}>Email</label><br />
-                {input('email', 'juan@ejemplo.com', 'email')}
-              </div>
+              <div><label style={{ fontSize: '12px', color: '#666' }}>Email</label><br />{input('email', 'juan@ejemplo.com', 'email')}</div>
             </div>
           )}
 
           {paso === 2 && (
             <div>
-              <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>Experiencia técnica</div>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Experiencia técnica</div>
               <div style={{ fontSize: '13px', color: '#888', marginBottom: '1rem' }}>Tu capacidad como perforista</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
                 <div>
                   <label style={{ fontSize: '12px', color: '#666' }}>Años de experiencia *</label><br />
                   <select value={form.experiencia} onChange={e => set('experiencia', e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px' }}>
+                    style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px' }}>
                     <option value="">Seleccioná...</option>
-                    <option>Menos de 2 años</option>
-                    <option>2 a 5 años</option>
-                    <option>5 a 10 años</option>
-                    <option>10 a 20 años</option>
-                    <option>Más de 20 años</option>
+                    <option>Menos de 2 años</option><option>2 a 5 años</option>
+                    <option>5 a 10 años</option><option>10 a 20 años</option><option>Más de 20 años</option>
                   </select>
                 </div>
                 <div>
                   <label style={{ fontSize: '12px', color: '#666' }}>Tipo de empresa</label><br />
                   <select value={form.tipo_empresa} onChange={e => set('tipo_empresa', e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px' }}>
+                    style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px' }}>
                     <option value="">Seleccioná...</option>
-                    <option>Trabajador independiente</option>
-                    <option>Empresa unipersonal</option>
-                    <option>Empresa con empleados</option>
+                    <option>Trabajador independiente</option><option>Empresa unipersonal</option><option>Empresa con empleados</option>
                   </select>
                 </div>
               </div>
@@ -239,19 +196,18 @@ if (paso === 3) {
                 <label style={{ fontSize: '12px', color: '#666' }}>Profundidad máxima de perforación</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px' }}>
                   <input type="range" min="10" max="200" step="5" value={form.profundidad_max}
-                    onChange={e => set('profundidad_max', parseInt(e.target.value))}
-                    style={{ flex: 1 }} />
-                  <span style={{ fontSize: '14px', fontWeight: '600', minWidth: '70px' }}>{form.profundidad_max} metros</span>
+                    onChange={e => set('profundidad_max', parseInt(e.target.value))} style={{ flex: 1 }} />
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: '#1B4F8A', minWidth: '70px' }}>{form.profundidad_max} metros</span>
                 </div>
               </div>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Diámetros que perforás</label>
+                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Diámetros que perforás *</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {['3 pulgadas','4 pulgadas','6 pulgadas','8 pulgadas','Más de 8"'].map(v => <Tag key={v} campo="diametros" valor={v} />)}
                 </div>
               </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Zonas donde trabajás</label>
+              <div>
+                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Zonas donde trabajás *</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {['Buenos Aires','Santa Fe','Córdoba','Entre Ríos','La Pampa','Corrientes','Chaco','Salta','Mendoza','Otras'].map(v => <Tag key={v} campo="zonas_trabajo" valor={v} />)}
                 </div>
@@ -261,7 +217,7 @@ if (paso === 3) {
 
           {paso === 3 && (
             <div>
-              <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>Servicios y equipos</div>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Servicios y equipos</div>
               <div style={{ fontSize: '13px', color: '#888', marginBottom: '1rem' }}>Qué hacés y con qué trabajás</div>
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Servicios que ofrecés *</label>
@@ -270,15 +226,15 @@ if (paso === 3) {
                 </div>
               </div>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Tipo de bomba que instalás</label>
+                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Tipo de bomba que instalás *</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {['Bomba eléctrica','Bomba a gasoil','Bomba solar','Molino','Bomba manual'].map(v => <Tag key={v} campo="tipo_bomba" valor={v} />)}
                 </div>
               </div>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', color: '#666' }}>¿Instalás o conocés sistemas de bombeo solar?</label><br />
+                <label style={{ fontSize: '12px', color: '#666' }}>¿Instalás o conocés sistemas de bombeo solar? *</label><br />
                 <select value={form.conoce_solar} onChange={e => set('conoce_solar', e.target.value)}
-                  style={{ width: '100%', padding: '8px 10px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px', marginTop: '4px' }}>
+                  style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px', marginTop: '4px' }}>
                   <option value="">Seleccioná...</option>
                   <option>Sí, ya instalé sistemas solares</option>
                   <option>Conozco el sistema pero no lo instalé</option>
@@ -287,38 +243,35 @@ if (paso === 3) {
                 </select>
               </div>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', color: '#666' }}>Trabajos por mes (promedio)</label><br />
+                <label style={{ fontSize: '12px', color: '#666' }}>Trabajos por mes (promedio) *</label><br />
                 <select value={form.trabajos_por_mes} onChange={e => set('trabajos_por_mes', e.target.value)}
-                  style={{ width: '100%', padding: '8px 10px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px', marginTop: '4px' }}>
+                  style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px', marginTop: '4px' }}>
                   <option value="">Seleccioná...</option>
-                  <option>1 a 2</option>
-                  <option>3 a 5</option>
-                  <option>6 a 10</option>
-                  <option>Más de 10</option>
+                  <option>1 a 2</option><option>3 a 5</option><option>6 a 10</option><option>Más de 10</option>
                 </select>
               </div>
               <div>
                 <label style={{ fontSize: '12px', color: '#666' }}>Contanos tu experiencia o diferencial</label>
                 <textarea value={form.descripcion} onChange={e => set('descripcion', e.target.value)}
                   placeholder="Ej: Trabajo en el norte de Buenos Aires hace 15 años..."
-                  style={{ width: '100%', padding: '8px 10px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px', minHeight: '80px', resize: 'vertical', boxSizing: 'border-box', marginTop: '4px' }} />
+                  style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px', minHeight: '80px', resize: 'vertical', boxSizing: 'border-box', marginTop: '4px' }} />
               </div>
             </div>
           )}
 
           {paso === 4 && (
             <div>
-              <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>Últimos detalles</div>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Últimos detalles</div>
               <div style={{ fontSize: '13px', color: '#888', marginBottom: '1rem' }}>Ya casi estás en el directorio</div>
-              <div style={{ background: '#E1F5EE', border: '0.5px solid #9FE1CB', borderRadius: '8px', padding: '1rem', marginBottom: '1rem' }}>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: '#085041', marginBottom: '4px' }}>Accedé a equipos de bombeo solar</div>
-                <div style={{ fontSize: '13px', color: '#0F6E56', lineHeight: '1.6' }}>Al registrarte te contactamos con las mejores opciones en kits solares para tus clientes de campo. Sin cargo y sin compromiso.</div>
+              <div style={{ background: '#e8f0fa', border: '0.5px solid #1B4F8A', borderRadius: '8px', padding: '1rem', marginBottom: '1rem' }}>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Accedé a equipos de bombeo solar</div>
+                <div style={{ fontSize: '13px', color: '#1B4F8A', lineHeight: '1.6' }}>Al registrarte te contactamos con las mejores opciones en kits solares para tus clientes de campo. Sin cargo y sin compromiso.</div>
               </div>
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', marginBottom: '10px' }}>
                 <input type="checkbox" checked={form.quiere_info_equipos} onChange={e => set('quiere_info_equipos', e.target.checked)} style={{ marginTop: '2px' }} />
                 <span style={{ fontSize: '13px', color: '#444' }}>Quiero recibir información sobre equipos y kits solares para el agro</span>
               </label>
-              <div style={{ fontSize: '13px', color: '#888', marginBottom: '1rem', padding: '10px', background: '#f5f5f0', borderRadius: '8px' }}>
+              <div style={{ fontSize: '13px', color: '#888', padding: '10px', background: '#f5f7fa', borderRadius: '8px' }}>
                 <strong>Resumen:</strong> {form.nombre} {form.apellido} · {form.localidad}, {form.provincia} · {form.profundidad_max}m máx
               </div>
             </div>
@@ -333,18 +286,17 @@ if (paso === 3) {
             )}
             {paso < 4 && (
               <button onClick={siguiente}
-                style={{ flex: 1, padding: '10px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', fontWeight: '500' }}>
+                style={{ flex: 1, padding: '10px', background: '#1B4F8A', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', fontWeight: '600' }}>
                 Siguiente →
               </button>
             )}
             {paso === 4 && (
               <button onClick={enviar} disabled={enviando}
-                style={{ flex: 1, padding: '10px', background: '#085041', color: '#E1F5EE', border: 'none', borderRadius: '8px', fontSize: '15px', cursor: 'pointer', fontWeight: '500' }}>
+                style={{ flex: 1, padding: '10px', background: '#F26419', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', cursor: 'pointer', fontWeight: '700' }}>
                 {enviando ? 'Enviando...' : 'Publicar mi perfil gratis'}
               </button>
             )}
           </div>
-
         </div>
       </div>
     </div>
