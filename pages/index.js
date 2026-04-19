@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
+import { registrarEvento, trackWhatsApp, trackTelefono } from '../lib/tracker'
 
 const SUPABASE_URL = 'https://qfesxpcuhsrfdohnsleg.supabase.co'
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
@@ -83,6 +84,13 @@ export default function Directorio() {
     infoWindow.current = new window.google.maps.InfoWindow()
   }, [mapaListo])
 
+  // Registrar visita al directorio
+  useEffect(() => {
+    registrarEvento('directorio_visto', null, {
+      pagina: 'inicio'
+    })
+  }, [])
+
   useEffect(() => { cargar() }, [])
 
   async function cargar() {
@@ -122,7 +130,6 @@ export default function Directorio() {
     } catch (e) {}
   }
 
-  // Filtrado — busquedaActiva se actualiza solo al hacer clic en Buscar o Enter
   const filtrados = perforistas.filter(p => {
     const q = busquedaActiva.toLowerCase()
     const coincideBusqueda = !busquedaActiva || `${p.nombre} ${p.apellido} ${p.localidad}`.toLowerCase().includes(q)
@@ -132,6 +139,23 @@ export default function Directorio() {
 
   function ejecutarBusqueda() {
     setBusquedaActiva(busqueda)
+    // Registrar búsqueda realizada
+    if (busqueda || provincia) {
+      registrarEvento('busqueda_realizada', null, {
+        termino: busqueda || null,
+        provincia: provincia || null,
+        resultados: filtrados.length
+      })
+    }
+  }
+
+  function handleCardClick(p) {
+    // Registrar clic en card antes de navegar
+    registrarEvento('card_vista', p.id, {
+      perforista_nombre: `${p.nombre} ${p.apellido}`,
+      origen: 'directorio'
+    })
+    router.push(`/perforista/${p.id}`)
   }
 
   // Geocodificar perforistas filtrados
@@ -175,7 +199,7 @@ export default function Directorio() {
 
       const wa = whatsappNum(p)
       const waLink = wa
-        ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent('Me contacto desde Pozero Agro')}" target="_blank" style="display:inline-block;margin-top:6px;padding:5px 12px;background:#25D366;color:#fff;border-radius:5px;text-decoration:none;font-size:12px;font-weight:600;">💬 WhatsApp</a>`
+        ? `<a href="javascript:void(0)" onclick="window.open('https://wa.me/${wa}?text=${encodeURIComponent('Me contacto desde Pozero Agro')}','_blank')" style="display:inline-block;margin-top:6px;padding:5px 12px;background:#25D366;color:#fff;border-radius:5px;text-decoration:none;font-size:12px;font-weight:600;">💬 WhatsApp</a>`
         : ''
       const telLink = p.visible_telefono && p.telefono
         ? `<a href="tel:${p.telefono}" style="display:inline-block;margin-top:6px;margin-left:4px;padding:5px 12px;background:#e8f0fa;color:#1B4F8A;border-radius:5px;text-decoration:none;font-size:12px;font-weight:600;">📞 Llamar</a>`
@@ -185,6 +209,11 @@ export default function Directorio() {
         : ''
 
       marcador.addListener('click', () => {
+        // Registrar clic en pin del mapa
+        registrarEvento('pin_mapa_click', p.id, {
+          perforista_nombre: `${p.nombre} ${p.apellido}`,
+          origen: 'mapa'
+        })
         infoWindow.current.setContent(`
           <div style="font-family:sans-serif;min-width:190px;padding:4px">
             <div style="font-weight:700;font-size:14px;color:#1a1a2e">${p.nombre} ${p.apellido}</div>
@@ -319,9 +348,10 @@ export default function Directorio() {
             {filtrados.map(p => {
               const wa = whatsappNum(p)
               const esValidado = p.estado === 'cliente'
+              const nombreCompleto = `${p.nombre} ${p.apellido}`
               return (
                 <div key={p.id}
-                  onClick={() => router.push(`/perforista/${p.id}`)}
+                  onClick={() => handleCardClick(p)}
                   style={{
                     background: '#fff', borderRadius: '12px', cursor: 'pointer',
                     border: esValidado ? '1.5px solid #1B4F8A' : '0.5px solid #e0e0e8',
@@ -339,7 +369,7 @@ export default function Directorio() {
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontWeight: '600', fontSize: '14px', color: '#1a1a2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {p.nombre} {p.apellido}
+                        {nombreCompleto}
                       </div>
                       <div style={{ fontSize: '11px', color: '#888' }}>📍 {p.localidad} · {p.provincia}</div>
                     </div>
@@ -369,20 +399,21 @@ export default function Directorio() {
                     )}
                   </div>
 
-                  {/* Botones contacto */}
+                  {/* Botones contacto con tracking */}
                   <div style={{ display: 'flex', gap: '6px' }} onClick={e => e.stopPropagation()}>
                     {p.visible_telefono && p.telefono && (
                       <a href={`tel:${p.telefono}`}
+                        onClick={() => trackTelefono(p.id, p.telefono, nombreCompleto)}
                         style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '0.5px solid #1B4F8A', background: '#e8f0fa', color: '#1B4F8A', fontSize: '11px', textAlign: 'center', textDecoration: 'none', fontWeight: '600' }}>
                         📞 Llamar
                       </a>
                     )}
                     {wa && (
-                      <a href={`https://wa.me/${wa}?text=${encodeURIComponent('Me contacto desde Pozero Agro')}`}
-                        target="_blank" rel="noreferrer"
-                        style={{ flex: 1, padding: '6px', borderRadius: '6px', background: '#25D366', color: '#fff', fontSize: '11px', textAlign: 'center', textDecoration: 'none', fontWeight: '600' }}>
+                      <button
+                        onClick={() => trackWhatsApp(p.id, wa, nombreCompleto)}
+                        style={{ flex: 1, padding: '6px', borderRadius: '6px', background: '#25D366', color: '#fff', fontSize: '11px', textAlign: 'center', fontWeight: '600', border: 'none', cursor: 'pointer' }}>
                         💬 WA
-                      </a>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -396,7 +427,7 @@ export default function Directorio() {
             </div>
           )}
 
-          {/* Disclaimer bajo las cards */}
+          {/* Disclaimer */}
           {!cargando && filtrados.length > 0 && (
             <div style={{ marginTop: '16px', padding: '10px 14px', background: '#fff', borderRadius: '8px', border: '0.5px solid #e0e0e8', fontSize: '11px', color: '#aaa', lineHeight: '1.6' }}>
               Pozero Agro es un directorio informativo. No garantiza la calidad ni los resultados de los servicios publicados. La contratación es de exclusiva responsabilidad del usuario.{' '}
