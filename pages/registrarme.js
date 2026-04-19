@@ -3,7 +3,7 @@ import { useState } from 'react'
 const SUPABASE_URL = 'https://qfesxpcuhsrfdohnsleg.supabase.co'
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
 
-async function supabase(path, options = {}) {
+async function sbFetch(path, options = {}) {
   const res = await fetch(`${SUPABASE_URL}${path}`, {
     ...options,
     headers: {
@@ -26,7 +26,8 @@ export default function Registro() {
     experiencia: '', tipo_empresa: '', profundidad_max: 80,
     diametros: [], terrenos: [], zonas_trabajo: [], servicios: [],
     tipo_bomba: [], conoce_solar: '', trabajos_por_mes: '', descripcion: '',
-    quiere_info_equipos: false
+    quiere_info_equipos: false,
+    acepto_terminos: false
   })
 
   const provincias = [
@@ -42,7 +43,9 @@ export default function Registro() {
   function toggleArray(campo, valor) {
     setForm(f => ({
       ...f,
-      [campo]: f[campo].includes(valor) ? f[campo].filter(v => v !== valor) : [...f[campo], valor]
+      [campo]: f[campo].includes(valor)
+        ? f[campo].filter(v => v !== valor)
+        : [...f[campo], valor]
     }))
   }
 
@@ -50,33 +53,98 @@ export default function Registro() {
     const activo = form[campo].includes(valor)
     return (
       <span onClick={() => toggleArray(campo, valor)} style={{
-        padding: '5px 12px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer', userSelect: 'none',
+        padding: '5px 12px', borderRadius: '20px', fontSize: '13px',
+        cursor: 'pointer', userSelect: 'none',
         border: activo ? '1.5px solid #1B4F8A' : '0.5px solid #ccc',
         background: activo ? '#e8f0fa' : '#fff',
-        color: activo ? '#1B4F8A' : '#666', fontWeight: activo ? '600' : '400'
+        color: activo ? '#1B4F8A' : '#666',
+        fontWeight: activo ? '600' : '400'
       }}>{valor}</span>
     )
   }
 
+  async function registrarAceptacion(perforista_id) {
+    try {
+      // Obtener documento legal activo
+      const docRes = await sbFetch(
+        '/rest/v1/legal_documentos?tipo=eq.terminos&activo=eq.true&select=id,version',
+        { headers: { 'Prefer': 'return=representation' } }
+      )
+      const docs = await docRes.json()
+      const doc = Array.isArray(docs) && docs[0] ? docs[0] : null
+
+      if (!doc) return // Si no hay doc activo, no bloquea el registro
+
+      await sbFetch('/rest/v1/legal_aceptaciones', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          documento_id: doc.id,
+          tipo_actor: 'perforista',
+          email: form.email,
+          perforista_id: perforista_id || null,
+          metodo: 'checkbox',
+          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+          session_token: typeof crypto !== 'undefined' ? crypto.randomUUID() : null
+        })
+      })
+    } catch (e) {
+      // No bloquea el registro si falla el log
+      console.warn('No se pudo registrar aceptación legal:', e.message)
+    }
+  }
+
   async function enviar() {
-    if (!form.email) { alert('El email es obligatorio para confirmar tu registro.'); return }
+    if (!form.email) {
+      alert('El email es obligatorio para confirmar tu registro.')
+      return
+    }
+    if (!form.acepto_terminos) {
+      alert('Debés aceptar los Términos y Condiciones para registrarte.')
+      return
+    }
+
     setEnviando(true)
     try {
-      // 1. PRIMERO guardar datos (siempre, pase lo que pase con el mail)
+      const ahora = new Date().toISOString()
+
+      // 1. Guardar perforista con flags legales
       const datosPerforista = {
-        ...form,
+        nombre: form.nombre,
+        apellido: form.apellido,
+        provincia: form.provincia,
+        localidad: form.localidad,
+        telefono: form.telefono,
         whatsapp: form.whatsapp || form.telefono,
+        instagram: form.instagram,
+        facebook: form.facebook,
+        email: form.email,
+        experiencia: form.experiencia,
+        tipo_empresa: form.tipo_empresa,
+        profundidad_max: form.profundidad_max,
+        diametros: form.diametros,
+        terrenos: form.terrenos,
+        zonas_trabajo: form.zonas_trabajo,
+        servicios: form.servicios,
+        tipo_bomba: form.tipo_bomba,
+        conoce_solar: form.conoce_solar,
+        trabajos_por_mes: form.trabajos_por_mes,
+        descripcion: form.descripcion,
+        quiere_info_equipos: form.quiere_info_equipos,
         estado: 'pendiente',
         visible_telefono: true,
         visible_whatsapp: true,
         visible_instagram: true,
         visible_facebook: true,
         visible_email: false,
+        acepto_terminos: true,
+        acepto_terminos_at: ahora,
+        acepto_terminos_version: '1.0'
       }
 
-      const dataRes = await supabase('/rest/v1/perforistas', {
+      const dataRes = await sbFetch('/rest/v1/perforistas', {
         method: 'POST',
-        headers: { 'Prefer': 'return=minimal' },
+        headers: { 'Prefer': 'return=representation' },
         body: JSON.stringify(datosPerforista)
       })
 
@@ -85,7 +153,15 @@ export default function Registro() {
         throw new Error(err)
       }
 
-      // 2. DESPUÉS intentar mail (si falla no importa, datos ya guardados)
+      const perforistaNuevo = await dataRes.json()
+      const perforista_id = Array.isArray(perforistaNuevo)
+        ? perforistaNuevo[0]?.id
+        : perforistaNuevo?.id
+
+      // 2. Registrar aceptación legal en tabla dedicada
+      await registrarAceptacion(perforista_id)
+
+      // 3. Intentar envío de mail (no bloquea si falla)
       try {
         await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
           method: 'POST',
@@ -93,18 +169,20 @@ export default function Registro() {
           body: JSON.stringify({
             email: form.email,
             options: {
-              emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : 'https://pozeroagro.vercel.app'}/confirmado`,
+              emailRedirectTo: `${typeof window !== 'undefined'
+                ? window.location.origin
+                : 'https://pozeroagro.vercel.app'}/confirmado`,
               data: { tipo: 'perforista' }
             }
           })
         })
-      } catch(mailErr) {
-        console.log('Mail no enviado, datos guardados igual')
+      } catch (mailErr) {
+        console.warn('Mail no enviado, datos guardados igual:', mailErr.message)
       }
 
       setExito(true)
 
-    } catch(e) {
+    } catch (e) {
       alert('Error al registrarse: ' + e.message)
     }
     setEnviando(false)
@@ -136,32 +214,46 @@ export default function Registro() {
   }
 
   const input = (campo, placeholder, tipo = 'text') => (
-    <input type={tipo} placeholder={placeholder} value={form[campo]} onChange={e => set(campo, e.target.value)}
-      style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} />
+    <input
+      type={tipo}
+      placeholder={placeholder}
+      value={form[campo]}
+      onChange={e => set(campo, e.target.value)}
+      style={{
+        width: '100%', padding: '9px 12px',
+        border: '0.5px solid #ccc', borderRadius: '8px',
+        fontSize: '14px', boxSizing: 'border-box'
+      }}
+    />
   )
 
+  // ─── PANTALLA DE ÉXITO ───────────────────────────────────────────────────────
   if (exito) return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: '#fff', borderRadius: '12px', padding: '2rem', textAlign: 'center', maxWidth: '420px', margin: '1rem', border: '0.5px solid #e0e0e8' }}>
-        <div style={{ fontSize: '48px', marginBottom: '12px' }}>📧</div>
-        <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px', color: '#1B4F8A' }}>¡Revisá tu email!</div>
+        <div style={{ fontSize: '48px', marginBottom: '12px' }}>📋</div>
+        <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px', color: '#1B4F8A' }}>¡Registro recibido!</div>
         <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.7', marginBottom: '1.5rem' }}>
-          Te enviamos un mail a <strong>{form.email}</strong>.<br />
-          Hacé clic en el link para confirmar tu registro.<br /><br />
-          Una vez confirmado, tu perfil queda en revisión y en breve aparecés en el directorio.
+          Tu perfil fue enviado correctamente y está <strong>en revisión</strong>.<br /><br />
+          En breve aparecés en el directorio de Pozero Agro.<br />
+          Si dejaste tu email, te avisamos cuando esté activo.
         </div>
-        <div style={{ background: '#f5f7fa', borderRadius: '8px', padding: '12px', fontSize: '13px', color: '#888', marginBottom: '1.5rem' }}>
-          ¿No llegó el mail? Revisá la carpeta de spam o escribinos a <strong>info@febecos.com</strong>
+        <div style={{ background: '#f5f7fa', borderRadius: '8px', padding: '12px', fontSize: '12px', color: '#888', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+          Al registrarte aceptaste nuestros{' '}
+          <a href="/terminos" style={{ color: '#1B4F8A' }}>Términos y Condiciones</a>.
         </div>
-        <a href="/" style={{ background: '#1B4F8A', color: '#fff', padding: '10px 24px', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
+        <a href="/" style={{ display: 'inline-block', background: '#1B4F8A', color: '#fff', padding: '10px 24px', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
           Ver el directorio →
         </a>
       </div>
     </div>
   )
 
+  // ─── FORMULARIO ─────────────────────────────────────────────────────────────
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
+
+      {/* HEADER */}
       <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{ width: '32px', height: '32px', background: 'rgba(255,255,255,0.15)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="20" height="20" viewBox="0 0 100 100">
@@ -178,6 +270,8 @@ export default function Registro() {
       </div>
 
       <div style={{ maxWidth: '560px', margin: '1.5rem auto', padding: '0 1rem' }}>
+
+        {/* BARRA DE PROGRESO */}
         <div style={{ marginBottom: '1rem' }}>
           <div style={{ fontSize: '12px', color: '#888', marginBottom: '6px' }}>Paso {paso} de 4</div>
           <div style={{ height: '5px', background: '#e0e0e8', borderRadius: '3px' }}>
@@ -187,14 +281,17 @@ export default function Registro() {
 
         <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e0e0e8', padding: '1.5rem' }}>
 
+          {/* ── PASO 1: DATOS PERSONALES ── */}
           {paso === 1 && (
             <div>
               <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Datos personales</div>
               <div style={{ fontSize: '13px', color: '#888', marginBottom: '1rem' }}>Cómo te van a encontrar los productores</div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Nombre *</label><br />{input('nombre', 'Juan')}</div>
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Apellido *</label><br />{input('apellido', 'Pérez')}</div>
               </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                 <div>
                   <label style={{ fontSize: '12px', color: '#666' }}>Provincia *</label><br />
@@ -206,6 +303,7 @@ export default function Registro() {
                 </div>
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Localidad *</label><br />{input('localidad', 'Ej: Venado Tuerto')}</div>
               </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Teléfono *</label><br />{input('telefono', '+54 9 11 XXXX-XXXX', 'tel')}</div>
                 <div>
@@ -213,32 +311,42 @@ export default function Registro() {
                   {input('whatsapp', 'Se usa el teléfono si no completás')}
                 </div>
               </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Instagram</label><br />{input('instagram', '@tuperfil')}</div>
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Facebook</label><br />{input('facebook', 'fb.com/tuperfil')}</div>
               </div>
+
               <div>
-                <label style={{ fontSize: '12px', color: '#666' }}>Email * <span style={{ color: '#1B4F8A', fontWeight: '600' }}>(para confirmar tu registro)</span></label><br />
+                <label style={{ fontSize: '12px', color: '#666' }}>
+                  Email * <span style={{ color: '#1B4F8A', fontWeight: '600' }}>(para confirmar tu registro)</span>
+                </label><br />
                 {input('email', 'juan@ejemplo.com', 'email')}
               </div>
+
               <div style={{ marginTop: '10px', background: '#fff3e0', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', color: '#E65100' }}>
-                📧 Te enviaremos un mail para confirmar tu registro. Sin confirmación, el perfil no se publica.
+                📧 Te enviaremos un mail para confirmar tu registro.
               </div>
             </div>
           )}
 
+          {/* ── PASO 2: EXPERIENCIA ── */}
           {paso === 2 && (
             <div>
               <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Experiencia técnica</div>
               <div style={{ fontSize: '13px', color: '#888', marginBottom: '1rem' }}>Tu capacidad como perforista</div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
                 <div>
                   <label style={{ fontSize: '12px', color: '#666' }}>Años de experiencia *</label><br />
                   <select value={form.experiencia} onChange={e => set('experiencia', e.target.value)}
                     style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px' }}>
                     <option value="">Seleccioná...</option>
-                    <option>Menos de 2 años</option><option>2 a 5 años</option>
-                    <option>5 a 10 años</option><option>10 a 20 años</option><option>Más de 20 años</option>
+                    <option>Menos de 2 años</option>
+                    <option>2 a 5 años</option>
+                    <option>5 a 10 años</option>
+                    <option>10 a 20 años</option>
+                    <option>Más de 20 años</option>
                   </select>
                 </div>
                 <div>
@@ -246,10 +354,13 @@ export default function Registro() {
                   <select value={form.tipo_empresa} onChange={e => set('tipo_empresa', e.target.value)}
                     style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px' }}>
                     <option value="">Seleccioná...</option>
-                    <option>Trabajador independiente</option><option>Empresa unipersonal</option><option>Empresa con empleados</option>
+                    <option>Trabajador independiente</option>
+                    <option>Empresa unipersonal</option>
+                    <option>Empresa con empleados</option>
                   </select>
                 </div>
               </div>
+
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '12px', color: '#666' }}>Profundidad máxima de perforación</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px' }}>
@@ -258,12 +369,14 @@ export default function Registro() {
                   <span style={{ fontSize: '14px', fontWeight: '600', color: '#1B4F8A', minWidth: '70px' }}>{form.profundidad_max} metros</span>
                 </div>
               </div>
+
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Diámetros que perforás *</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {['3 pulgadas','4 pulgadas','6 pulgadas','8 pulgadas','Más de 8"'].map(v => <Tag key={v} campo="diametros" valor={v} />)}
                 </div>
               </div>
+
               <div>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Zonas donde trabajás *</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -273,22 +386,26 @@ export default function Registro() {
             </div>
           )}
 
+          {/* ── PASO 3: SERVICIOS ── */}
           {paso === 3 && (
             <div>
               <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Servicios y equipos</div>
               <div style={{ fontSize: '13px', color: '#888', marginBottom: '1rem' }}>Qué hacés y con qué trabajás</div>
+
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Servicios que ofrecés *</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {['Perforación de pozos de agua','Instalación de bombas','Mantenimiento de pozos','Instalación solar','Aguadas para ganado','Perforación para riego','Relevamiento de napas'].map(v => <Tag key={v} campo="servicios" valor={v} />)}
                 </div>
               </div>
+
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Tipo de bomba que instalás *</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {['Bomba eléctrica','Bomba a gasoil','Bomba solar','Molino','Bomba manual'].map(v => <Tag key={v} campo="tipo_bomba" valor={v} />)}
                 </div>
               </div>
+
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '12px', color: '#666' }}>¿Instalás o conocés sistemas de bombeo solar? *</label><br />
                 <select value={form.conoce_solar} onChange={e => set('conoce_solar', e.target.value)}
@@ -300,14 +417,19 @@ export default function Registro() {
                   <option>No trabajo con solar</option>
                 </select>
               </div>
+
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '12px', color: '#666' }}>Trabajos por mes (promedio) *</label><br />
                 <select value={form.trabajos_por_mes} onChange={e => set('trabajos_por_mes', e.target.value)}
                   style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px', marginTop: '4px' }}>
                   <option value="">Seleccioná...</option>
-                  <option>1 a 2</option><option>3 a 5</option><option>6 a 10</option><option>Más de 10</option>
+                  <option>1 a 2</option>
+                  <option>3 a 5</option>
+                  <option>6 a 10</option>
+                  <option>Más de 10</option>
                 </select>
               </div>
+
               <div>
                 <label style={{ fontSize: '12px', color: '#666' }}>Contanos tu experiencia o diferencial</label>
                 <textarea value={form.descripcion} onChange={e => set('descripcion', e.target.value)}
@@ -317,27 +439,68 @@ export default function Registro() {
             </div>
           )}
 
+          {/* ── PASO 4: CONFIRMACIÓN + T&C ── */}
           {paso === 4 && (
             <div>
               <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Últimos detalles</div>
               <div style={{ fontSize: '13px', color: '#888', marginBottom: '1rem' }}>Ya casi estás en el directorio</div>
+
+              {/* Bloque Febecos */}
               <div style={{ background: '#e8f0fa', border: '0.5px solid #1B4F8A', borderRadius: '8px', padding: '1rem', marginBottom: '1rem' }}>
                 <div style={{ fontSize: '14px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Accedé a equipos de bombeo solar</div>
-                <div style={{ fontSize: '13px', color: '#1B4F8A', lineHeight: '1.6' }}>Al registrarte te contactamos con las mejores opciones en kits solares para tus clientes de campo. Sin cargo y sin compromiso.</div>
+                <div style={{ fontSize: '13px', color: '#1B4F8A', lineHeight: '1.6' }}>
+                  Al registrarte te contactamos con las mejores opciones en kits solares para tus clientes de campo. Sin cargo y sin compromiso.
+                </div>
               </div>
+
+              {/* Checkbox equipos */}
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', marginBottom: '16px' }}>
-                <input type="checkbox" checked={form.quiere_info_equipos} onChange={e => set('quiere_info_equipos', e.target.checked)} style={{ marginTop: '2px' }} />
-                <span style={{ fontSize: '13px', color: '#444' }}>Quiero recibir información sobre equipos y kits solares para el agro</span>
+                <input type="checkbox" checked={form.quiere_info_equipos}
+                  onChange={e => set('quiere_info_equipos', e.target.checked)}
+                  style={{ marginTop: '3px', flexShrink: 0 }} />
+                <span style={{ fontSize: '13px', color: '#444' }}>
+                  Quiero recibir información sobre equipos y kits solares para el agro
+                </span>
               </label>
-              <div style={{ fontSize: '13px', color: '#888', padding: '12px', background: '#f5f7fa', borderRadius: '8px', marginBottom: '12px' }}>
+
+              {/* Resumen */}
+              <div style={{ fontSize: '13px', color: '#888', padding: '12px', background: '#f5f7fa', borderRadius: '8px', marginBottom: '16px' }}>
                 <strong>Resumen:</strong> {form.nombre} {form.apellido} · {form.localidad}, {form.provincia} · {form.profundidad_max}m máx
               </div>
+
+              {/* ── CHECKBOX T&C OBLIGATORIO ── */}
+              <div style={{ background: form.acepto_terminos ? '#f0fdf4' : '#fff8f0', border: `1px solid ${form.acepto_terminos ? '#86efac' : '#fcd34d'}`, borderRadius: '8px', padding: '12px 14px', marginBottom: '12px' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={form.acepto_terminos}
+                    onChange={e => set('acepto_terminos', e.target.checked)}
+                    style={{ marginTop: '3px', flexShrink: 0, width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '13px', color: '#333', lineHeight: '1.6' }}>
+                    Leí y acepto los{' '}
+                    <a href="/terminos" target="_blank" rel="noreferrer"
+                      style={{ color: '#1B4F8A', fontWeight: '600', textDecoration: 'underline' }}>
+                      Términos y Condiciones
+                    </a>
+                    {' '}y la{' '}
+                    <a href="/terminos" target="_blank" rel="noreferrer"
+                      style={{ color: '#1B4F8A', fontWeight: '600', textDecoration: 'underline' }}>
+                      Política de Privacidad
+                    </a>
+                    {' '}de Pozero Agro. Entiendo que la plataforma actúa como directorio informativo y no garantiza la calidad ni los resultados de los servicios publicados. *
+                  </span>
+                </label>
+              </div>
+
+              {/* Aviso email */}
               <div style={{ background: '#fff3e0', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', color: '#E65100' }}>
                 📧 Al publicar, te enviamos un mail a <strong>{form.email}</strong> para confirmar tu perfil.
               </div>
             </div>
           )}
 
+          {/* ── NAVEGACIÓN ── */}
           <div style={{ display: 'flex', gap: '10px', marginTop: '1.25rem' }}>
             {paso > 1 && (
               <button onClick={() => setPaso(p => p - 1)}
@@ -352,12 +515,27 @@ export default function Registro() {
               </button>
             )}
             {paso === 4 && (
-              <button onClick={enviar} disabled={enviando}
-                style={{ flex: 1, padding: '10px', background: '#F26419', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', cursor: 'pointer', fontWeight: '700', opacity: enviando ? 0.7 : 1 }}>
+              <button onClick={enviar} disabled={enviando || !form.acepto_terminos}
+                style={{
+                  flex: 1, padding: '10px',
+                  background: form.acepto_terminos ? '#F26419' : '#ccc',
+                  color: '#fff', border: 'none', borderRadius: '8px',
+                  fontSize: '15px', cursor: form.acepto_terminos ? 'pointer' : 'not-allowed',
+                  fontWeight: '700', opacity: enviando ? 0.7 : 1,
+                  transition: 'background 0.2s'
+                }}>
                 {enviando ? 'Enviando...' : 'Publicar mi perfil gratis'}
               </button>
             )}
           </div>
+
+          {/* Aviso T&C si no aceptó */}
+          {paso === 4 && !form.acepto_terminos && (
+            <div style={{ marginTop: '8px', fontSize: '12px', color: '#E65100', textAlign: 'center' }}>
+              ⚠️ Debés aceptar los Términos y Condiciones para continuar
+            </div>
+          )}
+
         </div>
       </div>
     </div>
