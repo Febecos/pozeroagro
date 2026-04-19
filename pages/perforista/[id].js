@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
+import {
+  registrarEvento,
+  trackWhatsApp,
+  trackTelefono,
+  trackEmail,
+  trackInstagram,
+  trackFacebook
+} from '../../lib/tracker'
 
 const SUPABASE_URL = 'https://qfesxpcuhsrfdohnsleg.supabase.co'
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
@@ -28,6 +36,8 @@ export default function PerfilPerforista() {
     cargar()
     cargarComentarios()
     verificarSesion()
+    // Registrar vista de perfil
+    registrarEvento('perfil_visto', id)
   }, [id])
 
   async function verificarSesion() {
@@ -64,7 +74,6 @@ export default function PerfilPerforista() {
 
   async function cargarComentarios() {
     try {
-      // Solo trae comentarios en estado 'publicado' (RLS lo garantiza, este filtro es doble seguro)
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/comentarios?perforista_id=eq.${id}&estado=eq.publicado&order=created_at.desc`,
         { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
@@ -154,8 +163,12 @@ export default function PerfilPerforista() {
         })
       })
       if (res.ok || res.status === 201) {
-        // Registrar aceptación legal del comentarista
         await registrarAceptacionComentarista()
+        // Registrar evento comentario enviado
+        registrarEvento('comentario_enviado', id, {
+          estrellas: miRating,
+          tiene_texto: comentario.length > 0
+        })
         setEnviado(true)
         setMiRating(0)
         setComentario('')
@@ -206,8 +219,8 @@ export default function PerfilPerforista() {
   const wa = whatsappNum(p)
   const promedio = promedioEstrellas()
   const esValidado = p.estado === 'cliente'
+  const nombreCompleto = `${p.nombre} ${p.apellido}`
 
-  // ─── RENDER PRINCIPAL ────────────────────────────────────────────────────────
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
 
@@ -244,10 +257,9 @@ export default function PerfilPerforista() {
               {p.nombre?.[0]}{p.apellido?.[0]}
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '20px', fontWeight: '700', color: '#1a1a2e' }}>{p.nombre} {p.apellido}</div>
+              <div style={{ fontSize: '20px', fontWeight: '700', color: '#1a1a2e' }}>{nombreCompleto}</div>
               <div style={{ fontSize: '13px', color: '#888', marginTop: '2px' }}>📍 {p.localidad} · {p.provincia}</div>
 
-              {/* Estrellas promedio */}
               {comentarios.length > 0 && (
                 <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <EstrellasDisplay valor={promedio} size={16} />
@@ -257,7 +269,6 @@ export default function PerfilPerforista() {
                 </div>
               )}
 
-              {/* Badges */}
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
                 {esValidado && (
                   <span style={{
@@ -277,7 +288,6 @@ export default function PerfilPerforista() {
                 )}
               </div>
 
-              {/* Aviso insignia — cumplimiento legal */}
               {esValidado && (
                 <div style={{ marginTop: '8px', fontSize: '11px', color: '#aaa', lineHeight: '1.4' }}>
                   La insignia indica revisión interna básica de datos. No implica certificación técnica ni garantía de calidad.{' '}
@@ -309,35 +319,55 @@ export default function PerfilPerforista() {
           {p.tipo_bomba?.length > 0 && <TagGroup label="Tipos de bomba" items={p.tipo_bomba} color="#fff3e0" textColor="#E65100" />}
           {p.zonas_trabajo?.length > 0 && <TagGroup label="Zonas de trabajo" items={p.zonas_trabajo} color="#fef3c7" textColor="#92400e" />}
 
-          {/* Contacto */}
+          {/* Contacto con tracking */}
           <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px', marginTop: '16px' }}>
             <div style={{ fontSize: '13px', fontWeight: '600', color: '#666', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>Contacto</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+
               {p.visible_telefono && p.telefono && (
-                <a href={`tel:${p.telefono}`} style={btnStyle('#e8f0fa', '#1B4F8A', '1px solid #1B4F8A')}>📞 {p.telefono}</a>
-              )}
-              {wa && (
-                <a href={`https://wa.me/${wa}?text=${encodeURIComponent('Me contacto desde Pozero Agro')}`}
-                  target="_blank" rel="noreferrer" style={btnStyle('#25D366', '#fff')}>
-                  💬 WhatsApp
+                <a href={`tel:${p.telefono}`}
+                  onClick={() => trackTelefono(id, p.telefono, nombreCompleto)}
+                  style={btnStyle('#e8f0fa', '#1B4F8A', '1px solid #1B4F8A')}>
+                  📞 {p.telefono}
                 </a>
               )}
+
+              {wa && (
+                <button
+                  onClick={() => trackWhatsApp(id, wa, nombreCompleto)}
+                  style={{ ...btnStyle('#25D366', '#fff'), border: 'none', cursor: 'pointer' }}>
+                  💬 WhatsApp
+                </button>
+              )}
+
               {p.visible_email && p.email && (
                 <a href={`mailto:${p.email}?subject=Consulta desde Pozero Agro`}
-                  style={btnStyle('#e8f0fa', '#1B4F8A', '1px solid #1B4F8A')}>✉️ {p.email}</a>
+                  onClick={() => trackEmail(id, p.email, nombreCompleto)}
+                  style={btnStyle('#e8f0fa', '#1B4F8A', '1px solid #1B4F8A')}>
+                  ✉️ {p.email}
+                </a>
               )}
+
               {p.visible_instagram && p.instagram && (
-                <a href={`https://instagram.com/${p.instagram.replace('@','')}`}
-                  target="_blank" rel="noreferrer" style={btnStyle('#fce4ec', '#c2185b', '1px solid #c2185b')}>📸 Instagram</a>
+                <button
+                  onClick={() => trackInstagram(id, p.instagram, nombreCompleto)}
+                  style={{ ...btnStyle('#fce4ec', '#c2185b', '1px solid #c2185b'), border: '1px solid #c2185b', cursor: 'pointer' }}>
+                  📸 Instagram
+                </button>
               )}
+
               {p.visible_facebook && p.facebook && (
-                <a href={p.facebook.startsWith('http') ? p.facebook : `https://facebook.com/${p.facebook}`}
-                  target="_blank" rel="noreferrer" style={btnStyle('#e3f2fd', '#1565c0', '1px solid #1565c0')}>👍 Facebook</a>
+                <button
+                  onClick={() => trackFacebook(id, p.facebook, nombreCompleto)}
+                  style={{ ...btnStyle('#e3f2fd', '#1565c0', '1px solid #1565c0'), border: '1px solid #1565c0', cursor: 'pointer' }}>
+                  👍 Facebook
+                </button>
               )}
+
             </div>
           </div>
 
-          {/* Disclaimer de contacto */}
+          {/* Disclaimer contacto */}
           <div style={{ marginTop: '12px', padding: '10px 12px', background: '#f8f9fa', borderRadius: '6px', fontSize: '11px', color: '#aaa', lineHeight: '1.5' }}>
             Pozero Agro facilita el contacto pero no garantiza la calidad ni los resultados de los servicios. La contratación es de exclusiva responsabilidad del usuario.{' '}
             <a href="/terminos" target="_blank" rel="noreferrer" style={{ color: '#1B4F8A' }}>Términos y condiciones</a>
@@ -351,7 +381,7 @@ export default function PerfilPerforista() {
             Opiniones de usuarios verificados. No representan la posición de Pozero Agro.
           </div>
 
-          {/* Resumen de puntuación */}
+          {/* Resumen */}
           {comentarios.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: '#f8f9fa', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px' }}>
               <div style={{ textAlign: 'center' }}>
@@ -380,7 +410,7 @@ export default function PerfilPerforista() {
             </div>
           )}
 
-          {/* Lista de comentarios */}
+          {/* Lista */}
           {comentarios.map((r, i) => (
             <div key={r.id || i} style={{ borderBottom: i < comentarios.length - 1 ? '1px solid #f0f0f0' : 'none', paddingBottom: '12px', marginBottom: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -407,7 +437,7 @@ export default function PerfilPerforista() {
             </div>
           )}
 
-          {/* ── FORMULARIO COMENTARIO ── */}
+          {/* Formulario */}
           <div style={{ background: '#f8f9fa', borderRadius: '10px', padding: '16px', marginTop: '8px' }}>
             <div style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a2e', marginBottom: '4px' }}>Dejá tu opinión</div>
             <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '12px' }}>
@@ -416,7 +446,6 @@ export default function PerfilPerforista() {
 
             {!usuario ? (
               !magicEnviado ? (
-                /* Paso 1: verificar email */
                 <div>
                   <div style={{ fontSize: '13px', color: '#666', marginBottom: '10px' }}>
                     Ingresá tu email para verificar tu identidad. Te enviamos un link, sin contraseña.
@@ -438,7 +467,6 @@ export default function PerfilPerforista() {
                   {errorEnvio && <div style={{ fontSize: '12px', color: '#e53e3e', marginTop: '6px' }}>{errorEnvio}</div>}
                 </div>
               ) : (
-                /* Paso 2: link enviado */
                 <div style={{ textAlign: 'center', padding: '12px' }}>
                   <div style={{ fontSize: '32px', marginBottom: '8px' }}>📧</div>
                   <div style={{ fontSize: '14px', fontWeight: '600', color: '#1B4F8A', marginBottom: '4px' }}>¡Revisá tu email!</div>
@@ -450,13 +478,11 @@ export default function PerfilPerforista() {
               )
             ) : (
               !enviado ? (
-                /* Usuario autenticado */
                 <div>
                   <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
                     Comentando como <strong>{usuario.email}</strong> ✓
                   </div>
 
-                  {/* Estrellas */}
                   <div style={{ marginBottom: '12px' }}>
                     <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>Tu puntuación *</div>
                     <div style={{ display: 'flex', gap: '4px' }}>
@@ -472,7 +498,6 @@ export default function PerfilPerforista() {
                     </div>
                   </div>
 
-                  {/* Texto */}
                   <textarea
                     placeholder="Contá tu experiencia (opcional)..."
                     value={comentario}
@@ -481,7 +506,6 @@ export default function PerfilPerforista() {
                     style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', resize: 'vertical', background: '#fff', marginBottom: '10px' }}
                   />
 
-                  {/* Checkbox T&C obligatorio */}
                   <div style={{ background: aceptoTC ? '#f0fdf4' : '#fff8f0', border: `1px solid ${aceptoTC ? '#86efac' : '#fcd34d'}`, borderRadius: '8px', padding: '10px 12px', marginBottom: '10px' }}>
                     <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }}>
                       <input type="checkbox" checked={aceptoTC} onChange={e => setAceptoTC(e.target.checked)}
@@ -536,8 +560,6 @@ export default function PerfilPerforista() {
     </div>
   )
 }
-
-// ─── COMPONENTES AUXILIARES ──────────────────────────────────────────────────
 
 function Dato({ icono, label, valor }) {
   return (
