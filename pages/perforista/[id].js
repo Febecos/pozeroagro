@@ -4,16 +4,19 @@ import { useRouter } from 'next/router'
 const SUPABASE_URL = 'https://qfesxpcuhsrfdohnsleg.supabase.co'
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
 
-export default function PerfiPerforista() {
+export default function PerfilPerforista() {
   const router = useRouter()
   const { id } = router.query
   const [p, setP] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [comentarios, setComentarios] = useState([])
+  const [usuario, setUsuario] = useState(null)
+  const [emailMagic, setEmailMagic] = useState('')
+  const [enviandoMagic, setEnviandoMagic] = useState(false)
+  const [magicEnviado, setMagicEnviado] = useState(false)
   const [miRating, setMiRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
   const [comentario, setComentario] = useState('')
-  const [nombre, setNombre] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [enviado, setEnviado] = useState(false)
   const [errorEnvio, setErrorEnvio] = useState('')
@@ -22,7 +25,27 @@ export default function PerfiPerforista() {
     if (!id) return
     cargar()
     cargarComentarios()
+    verificarSesion()
   }, [id])
+
+  async function verificarSesion() {
+    // Verificar si hay sesión activa en el hash (magic link)
+    const hash = window.location.hash
+    if (hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.replace('#', ''))
+      const token = params.get('access_token')
+      if (token) {
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+          headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${token}` }
+        })
+        const data = await res.json()
+        if (data?.email) {
+          setUsuario({ email: data.email, token })
+          window.history.replaceState({}, '', window.location.pathname)
+        }
+      }
+    }
+  }
 
   async function cargar() {
     setCargando(true)
@@ -44,27 +67,59 @@ export default function PerfiPerforista() {
     } catch (e) {}
   }
 
+  async function enviarMagicLink() {
+    if (!emailMagic) return
+    setEnviandoMagic(true)
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
+        method: 'POST',
+        headers: { 'apikey': ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: emailMagic,
+          options: {
+            emailRedirectTo: `${window.location.origin}/perforista/${id}`,
+          }
+        })
+      })
+      if (res.ok) setMagicEnviado(true)
+      else setErrorEnvio('No se pudo enviar el email. Intentá de nuevo.')
+    } catch (e) {
+      setErrorEnvio('Error de red. Intentá de nuevo.')
+    }
+    setEnviandoMagic(false)
+  }
+
   async function enviarComentario() {
     if (!miRating) { setErrorEnvio('Por favor seleccioná una puntuación'); return }
+    if (!usuario) { setErrorEnvio('Necesitás verificar tu email primero'); return }
     setEnviando(true)
     setErrorEnvio('')
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/comentarios`, {
         method: 'POST',
-        headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ perforista_id: id, estrellas: miRating, comentario, nombre_cliente: nombre || 'Anónimo' })
+        headers: {
+          'apikey': ANON_KEY,
+          'Authorization': `Bearer ${usuario.token}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          perforista_id: id,
+          estrellas: miRating,
+          comentario,
+          nombre_cliente: usuario.email
+        })
       })
       if (res.ok || res.status === 201) {
         setEnviado(true)
         setMiRating(0)
         setComentario('')
-        setNombre('')
         cargarComentarios()
       } else {
         setErrorEnvio('Hubo un error al enviar. Intentá de nuevo.')
       }
     } catch (e) {
-      setErrorEnvio('Hubo un error al enviar. Intentá de nuevo.')
+      setErrorEnvio('Error de red. Intentá de nuevo.')
     }
     setEnviando(false)
   }
@@ -93,7 +148,7 @@ export default function PerfiPerforista() {
   if (!p) return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
       <div style={{ fontSize: '18px', color: '#888' }}>Perforista no encontrado</div>
-      <button onClick={() => router.push('/')} style={{ padding: '8px 20px', background: '#1B4F8A', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>← Volver al directorio</button>
+      <button onClick={() => router.push('/')} style={{ padding: '8px 20px', background: '#1B4F8A', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>← Volver</button>
     </div>
   )
 
@@ -128,8 +183,6 @@ export default function PerfiPerforista() {
 
         {/* TARJETA PRINCIPAL */}
         <div style={{ background: '#fff', borderRadius: '16px', border: p.estado === 'cliente' ? '2px solid #1B4F8A' : '1px solid #e0e0e8', padding: '1.5rem', marginBottom: '16px' }}>
-
-          {/* Avatar + nombre + badges */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' }}>
             <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#e8f0fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '22px', color: '#1B4F8A', flexShrink: 0 }}>
               {p.nombre?.[0]}{p.apellido?.[0]}
@@ -151,14 +204,12 @@ export default function PerfiPerforista() {
             </div>
           </div>
 
-          {/* Descripción */}
           {p.descripcion && (
             <div style={{ background: '#f8f9fa', borderRadius: '8px', padding: '12px', marginBottom: '16px', fontSize: '14px', color: '#444', lineHeight: '1.6' }}>
               {p.descripcion}
             </div>
           )}
 
-          {/* Datos técnicos */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px', marginBottom: '16px' }}>
             {p.experiencia && <Dato icono="🗓️" label="Experiencia" valor={p.experiencia} />}
             {p.tipo_empresa && <Dato icono="🏢" label="Tipo de empresa" valor={p.tipo_empresa} />}
@@ -166,14 +217,12 @@ export default function PerfiPerforista() {
             {p.trabajos_por_mes && <Dato icono="📊" label="Trabajos por mes" valor={p.trabajos_por_mes} />}
           </div>
 
-          {/* Arrays de datos */}
           {p.servicios?.length > 0 && <TagGroup label="Servicios" items={p.servicios} color="#e8f0fa" textColor="#1B4F8A" />}
           {p.diametros?.length > 0 && <TagGroup label="Diámetros" items={p.diametros} color="#f3e8ff" textColor="#6a0dad" />}
           {p.terrenos?.length > 0 && <TagGroup label="Tipos de terreno" items={p.terrenos} color="#f0fdf4" textColor="#166534" />}
           {p.tipo_bomba?.length > 0 && <TagGroup label="Tipos de bomba" items={p.tipo_bomba} color="#fff3e0" textColor="#E65100" />}
           {p.zonas_trabajo?.length > 0 && <TagGroup label="Zonas de trabajo" items={p.zonas_trabajo} color="#fef3c7" textColor="#92400e" />}
 
-          {/* Contacto */}
           <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px', marginTop: '16px' }}>
             <div style={{ fontSize: '13px', fontWeight: '600', color: '#666', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>Contacto</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -198,11 +247,10 @@ export default function PerfiPerforista() {
           </div>
         </div>
 
-        {/* SECCIÓN RESEÑAS */}
+        {/* COMENTARIOS */}
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e0e0e8', padding: '1.5rem', marginBottom: '16px' }}>
           <div style={{ fontSize: '16px', fontWeight: '700', color: '#1a1a2e', marginBottom: '16px' }}>⭐ Comentarios y puntuación</div>
 
-          {/* Resumen */}
           {comentarios.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: '#f8f9fa', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px' }}>
               <div style={{ textAlign: 'center' }}>
@@ -229,7 +277,6 @@ export default function PerfiPerforista() {
             </div>
           )}
 
-          {/* Lista de comentarios */}
           {comentarios.map((r, i) => (
             <div key={i} style={{ borderBottom: i < comentarios.length - 1 ? '1px solid #f0f0f0' : 'none', paddingBottom: '12px', marginBottom: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -245,55 +292,88 @@ export default function PerfiPerforista() {
             <div style={{ color: '#aaa', fontSize: '13px', marginBottom: '16px' }}>Todavía no hay comentarios. ¡Sé el primero en opinar!</div>
           )}
 
-          {/* Formulario nuevo comentario */}
-          {!enviado ? (
-            <div style={{ background: '#f8f9fa', borderRadius: '10px', padding: '16px', marginTop: '8px' }}>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a2e', marginBottom: '12px' }}>Dejá tu opinión</div>
+          {/* FORMULARIO COMENTARIO */}
+          <div style={{ background: '#f8f9fa', borderRadius: '10px', padding: '16px', marginTop: '8px' }}>
+            <div style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a2e', marginBottom: '12px' }}>Dejá tu opinión</div>
 
-              {/* Selector de estrellas */}
-              <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>Tu puntuación *</div>
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  {[1,2,3,4,5].map(n => (
-                    <span key={n}
-                      onMouseEnter={() => setHoverRating(n)}
-                      onMouseLeave={() => setHoverRating(0)}
-                      onClick={() => setMiRating(n)}
-                      style={{ fontSize: '28px', cursor: 'pointer', color: n <= (hoverRating || miRating) ? '#F5A623' : '#ddd', transition: 'color 0.1s' }}>
-                      ★
-                    </span>
-                  ))}
+            {!usuario ? (
+              // Paso 1: pedir email para magic link
+              !magicEnviado ? (
+                <div>
+                  <div style={{ fontSize: '13px', color: '#666', marginBottom: '10px' }}>
+                    Ingresá tu email para verificar tu identidad. Te enviamos un link y listo, sin contraseña.
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="email"
+                      placeholder="tu@email.com"
+                      value={emailMagic}
+                      onChange={e => setEmailMagic(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && enviarMagicLink()}
+                      style={{ flex: 1, padding: '9px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px' }}
+                    />
+                    <button onClick={enviarMagicLink} disabled={enviandoMagic || !emailMagic}
+                      style={{ padding: '9px 16px', background: '#1B4F8A', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', opacity: enviandoMagic ? 0.7 : 1, whiteSpace: 'nowrap' }}>
+                      {enviandoMagic ? 'Enviando...' : 'Verificar email'}
+                    </button>
+                  </div>
+                  {errorEnvio && <div style={{ fontSize: '12px', color: '#e53e3e', marginTop: '6px' }}>{errorEnvio}</div>}
                 </div>
-              </div>
-
-              <input
-                type="text"
-                placeholder="Tu nombre (opcional)"
-                value={nombre}
-                onChange={e => setNombre(e.target.value)}
-                style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', marginBottom: '8px', background: '#fff' }}
-              />
-              <textarea
-                placeholder="Contá tu experiencia (opcional)..."
-                value={comentario}
-                onChange={e => setComentario(e.target.value)}
-                rows={3}
-                style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', resize: 'vertical', background: '#fff', marginBottom: '8px' }}
-              />
-              {errorEnvio && <div style={{ fontSize: '12px', color: '#e53e3e', marginBottom: '8px' }}>{errorEnvio}</div>}
-              <button onClick={enviarComentario} disabled={enviando}
-                style={{ padding: '9px 24px', background: '#1B4F8A', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: enviando ? 'not-allowed' : 'pointer', opacity: enviando ? 0.7 : 1 }}>
-                {enviando ? 'Enviando...' : 'Enviar comentario'}
-              </button>
-            </div>
-          ) : (
-            <div style={{ background: '#f0fdf4', borderRadius: '10px', padding: '16px', textAlign: 'center', color: '#166534', fontWeight: '600', fontSize: '14px' }}>
-              ✅ ¡Gracias por tu comentario!
-            </div>
-          )}
+              ) : (
+                // Paso 2: magic link enviado
+                <div style={{ textAlign: 'center', padding: '12px' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>📧</div>
+                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#1B4F8A', marginBottom: '4px' }}>¡Revisá tu email!</div>
+                  <div style={{ fontSize: '13px', color: '#666' }}>
+                    Te enviamos un link a <strong>{emailMagic}</strong>.<br />
+                    Hacé clic en el link y volvé a esta página para comentar.
+                  </div>
+                </div>
+              )
+            ) : (
+              // Usuario autenticado → mostrar formulario
+              !enviado ? (
+                <div>
+                  <div style={{ fontSize: '12px', color: '#888', marginBottom: '8px' }}>
+                    Comentando como <strong>{usuario.email}</strong>
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>Tu puntuación *</div>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      {[1,2,3,4,5].map(n => (
+                        <span key={n}
+                          onMouseEnter={() => setHoverRating(n)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          onClick={() => setMiRating(n)}
+                          style={{ fontSize: '28px', cursor: 'pointer', color: n <= (hoverRating || miRating) ? '#F5A623' : '#ddd', transition: 'color 0.1s' }}>
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <textarea
+                    placeholder="Contá tu experiencia (opcional)..."
+                    value={comentario}
+                    onChange={e => setComentario(e.target.value)}
+                    rows={3}
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', resize: 'vertical', background: '#fff', marginBottom: '8px' }}
+                  />
+                  {errorEnvio && <div style={{ fontSize: '12px', color: '#e53e3e', marginBottom: '8px' }}>{errorEnvio}</div>}
+                  <button onClick={enviarComentario} disabled={enviando}
+                    style={{ padding: '9px 24px', background: '#1B4F8A', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: enviando ? 'not-allowed' : 'pointer', opacity: enviando ? 0.7 : 1 }}>
+                    {enviando ? 'Enviando...' : 'Enviar comentario'}
+                  </button>
+                </div>
+              ) : (
+                <div style={{ background: '#f0fdf4', borderRadius: '10px', padding: '16px', textAlign: 'center', color: '#166534', fontWeight: '600', fontSize: '14px' }}>
+                  ✅ ¡Gracias por tu comentario!
+                </div>
+              )
+            )}
+          </div>
         </div>
 
-        {/* FOOTER INFO */}
+        {/* FOOTER */}
         <div style={{ background: '#1B4F8A', borderRadius: '12px', padding: '1rem 1.5rem', textAlign: 'center' }}>
           <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>¿Necesitás equipar tu pozo con energía solar?</div>
           <a href="https://febecos.mitiendanube.com" target="_blank" rel="noreferrer"
