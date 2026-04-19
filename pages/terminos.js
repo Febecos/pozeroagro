@@ -114,7 +114,7 @@ export default function Terminos() {
             </Seccion>
 
             <Seccion titulo="4. Exención de responsabilidad">
-              Pozero Agro, sus administradores, colaboradores y Febecos no serán responsables bajo ninguna circunstancia por:
+              Pozero Agro, sus administradores y colaboradores no serán responsables bajo ninguna circunstancia por:
               <ul style={{ marginTop: '10px', paddingLeft: '20px', lineHeight: '2', color: '#444', fontSize: '14px' }}>
                 <li>Daños directos, indirectos, incidentales o consecuentes derivados del uso de la plataforma.</li>
                 <li>Incumplimiento, mala ejecución o deficiencia de servicios por parte de los perforistas listados.</li>
@@ -135,7 +135,7 @@ export default function Terminos() {
             </Seccion>
 
             <Seccion titulo="7. Publicidad y contenido promocional">
-              Pozero Agro puede mostrar publicidad propia o de terceros en la plataforma, incluyendo contenido promocional de Febecos y sus productos. Dicha publicidad está claramente diferenciada del contenido orgánico del directorio y no implica validación, recomendación ni respaldo de ningún perforista en particular.
+              Pozero Agro puede mostrar publicidad propia o de terceros en la plataforma, incluyendo contenido promocional de productos y servicios complementarios al sector agropecuario. Dicha publicidad está claramente diferenciada del contenido orgánico del directorio y no implica validación, recomendación ni respaldo de ningún perforista en particular.
             </Seccion>
 
             <Seccion titulo="8. Responsabilidades de los perforistas registrados">
@@ -160,10 +160,7 @@ export default function Terminos() {
 
             <div style={{ marginTop: '2rem', padding: '16px', background: '#f8f9fa', borderRadius: '10px', fontSize: '13px', color: '#888', lineHeight: '1.6', textAlign: 'center' }}>
               Al usar Pozero Agro aceptás estos Términos y Condiciones (versión {versionTC}).<br />
-              Pozero Agro es un servicio de <strong>Febecos</strong> ·{' '}
-              <a href="https://febecos.mitiendanube.com" target="_blank" rel="noreferrer" style={{ color: '#1B4F8A' }}>
-                febecos.mitiendanube.com
-              </a>
+              © 2026 Pozero Agro · Todos los derechos reservados.
             </div>
           </div>
         )}
