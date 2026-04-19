@@ -177,7 +177,7 @@ export default function Terminos() {
             </div>
 
             <Seccion titulo="1. Responsable del tratamiento">
-              El responsable del archivo y tratamiento de los datos personales recolectados a través de Pozero Agro es <strong>Febecos</strong>, con domicilio en la República Argentina. Contacto: <a href="mailto:pozeroagro@gmail.com" style={{ color: '#1B4F8A' }}>pozeroagro@gmail.com</a>
+              El responsable del archivo y tratamiento de los datos personales recolectados a través de Pozero Agro es <strong>Pozero Agro</strong>, con domicilio en la República Argentina. Contacto: <a href="mailto:pozeroagro@gmail.com" style={{ color: '#1B4F8A' }}>pozeroagro@gmail.com</a>
             </Seccion>
 
             <Seccion titulo="2. Datos que recolectamos">
@@ -231,7 +231,7 @@ export default function Terminos() {
 
             <div style={{ marginTop: '2rem', padding: '16px', background: '#e8f0fa', borderRadius: '10px', fontSize: '13px', color: '#1B4F8A', lineHeight: '1.6' }}>
               🔒 Esta política cumple con la <strong>Ley 25.326 de Protección de los Datos Personales</strong> de la República Argentina.<br />
-              Versión {versionPriv} — Pozero Agro · Febecos
+              Versión {versionPriv} — © 2026 Pozero Agro · Todos los derechos reservados.
             </div>
           </div>
         )}
@@ -240,7 +240,7 @@ export default function Terminos() {
         <div style={{ textAlign: 'center', padding: '1rem', fontSize: '12px', color: '#aaa' }}>
           <a href="/terminos" onClick={e => { e.preventDefault(); setSeccionActiva('terminos') }} style={{ color: '#1B4F8A', textDecoration: 'none', marginRight: '12px' }}>Términos y Condiciones</a>
           <a href="/terminos#privacidad" onClick={e => { e.preventDefault(); setSeccionActiva('privacidad') }} style={{ color: '#1B4F8A', textDecoration: 'none', marginRight: '12px' }}>Política de Privacidad</a>
-          <span>· © 2026 Pozero Agro · Febecos</span>
+          <span>· © 2026 Pozero Agro</span>
         </div>
       </div>
     </div>
