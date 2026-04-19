@@ -36,6 +36,19 @@ export default function Directorio() {
     return coincideBusqueda && coincideProvincia
   })
 
+  // Arma el link de WhatsApp con mensaje pre-cargado
+  function linkWhatsApp(numero) {
+    const limpio = numero.replace(/\D/g, '')
+    const mensaje = encodeURIComponent('Me contacto desde Pozero Agro')
+    return `https://wa.me/${limpio}?text=${mensaje}`
+  }
+
+  // Arma el link de Google Maps con localidad y provincia
+  function linkMaps(localidad, prov) {
+    const query = encodeURIComponent(`${localidad}, ${prov}, Argentina`)
+    return `https://www.google.com/maps/search/?api=1&query=${query}`
+  }
+
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
 
@@ -71,15 +84,15 @@ export default function Directorio() {
             placeholder="Buscar por nombre o localidad..."
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
-            style={{ padding: '9px 12px', borderRadius: '6px', border: 'none', fontSize: '14px', minWidth: '160px', background: '#fff', color: '#333' }}
+            style={{ padding: '9px 12px', borderRadius: '6px', border: 'none', fontSize: '14px', minWidth: '160px', background: 'rgba(255,255,255,0.15)', color: '#fff' }}
           />
           <select
             value={provincia}
             onChange={e => setProvincia(e.target.value)}
             style={{ padding: '9px 12px', borderRadius: '6px', border: 'none', fontSize: '14px', minWidth: '160px', background: 'rgba(255,255,255,0.15)', color: '#fff' }}
           >
-            <option value="">Todas las provincias</option>
-            {provincias.map(p => <option key={p} style={{ color: '#333' }}>{p}</option>)}
+            <option value="" style={{ background: '#1B4F8A', color: '#fff' }}>Todas las provincias</option>
+            {provincias.map(p => <option key={p} value={p} style={{ background: '#1B4F8A', color: '#fff' }}>{p}</option>)}
           </select>
           <button
             onClick={() => {}}
@@ -107,7 +120,16 @@ export default function Directorio() {
                 </div>
                 <div>
                   <div style={{ fontWeight: '600', fontSize: '15px', color: '#1a1a2e' }}>{p.nombre} {p.apellido}</div>
-                  <div style={{ fontSize: '12px', color: '#888' }}>{p.localidad} · {p.provincia}</div>
+                  {/* LOCALIDAD → abre Google Maps */}
+                  <a
+                    href={linkMaps(p.localidad, p.provincia)}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ fontSize: '12px', color: '#1B4F8A', textDecoration: 'none' }}
+                    title="Ver en Google Maps"
+                  >
+                    📍 {p.localidad} · {p.provincia}
+                  </a>
                 </div>
               </div>
 
@@ -137,10 +159,15 @@ export default function Directorio() {
                     📞 Llamar
                   </a>
                 )}
+                {/* WHATSAPP con mensaje pre-cargado */}
                 {p.visible_whatsapp && p.whatsapp ? (
-                  <a href={`https://wa.me/${p.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noreferrer"
-                    style={{ flex: 1, padding: '7px', borderRadius: '6px', background: '#25D366', color: '#fff', fontSize: '12px', textAlign: 'center', textDecoration: 'none', fontWeight: '600' }}>
-                    WhatsApp
+                  <a
+                    href={linkWhatsApp(p.whatsapp)}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ flex: 1, padding: '7px', borderRadius: '6px', background: '#25D366', color: '#fff', fontSize: '12px', textAlign: 'center', textDecoration: 'none', fontWeight: '600' }}
+                  >
+                    💬 WhatsApp
                   </a>
                 ) : p.visible_whatsapp === false ? (
                   <div style={{ flex: 1, padding: '7px', borderRadius: '6px', background: '#f0f0f0', color: '#aaa', fontSize: '12px', textAlign: 'center' }}>
