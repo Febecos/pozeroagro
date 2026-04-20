@@ -17,7 +17,7 @@ const MOTIVOS_REPORTE = [
   { value: 'falso', label: 'Comentario falso o inventado' },
   { value: 'ofensivo', label: 'Contenido ofensivo o discriminatorio' },
   { value: 'spam', label: 'Spam o publicidad no solicitada' },
-  { value: 'irrelevante', label: 'No tiene relación con el servicio' },
+  { value: 'irrelevante', label: 'No tiene relacion con el servicio' },
   { value: 'otro', label: 'Otro motivo' },
 ]
 
@@ -39,9 +39,7 @@ export default function PerfilPerforista() {
   const [enviando, setEnviando] = useState(false)
   const [enviado, setEnviado] = useState(false)
   const [errorEnvio, setErrorEnvio] = useState('')
-
-  // Estados de moderación / reporte
-  const [reporteModal, setReporteModal] = useState(null) // id del comentario a reportar
+  const [reporteModal, setReporteModal] = useState(null)
   const [motivoReporte, setMotivoReporte] = useState('')
   const [detalleReporte, setDetalleReporte] = useState('')
   const [enviandoReporte, setEnviandoReporte] = useState(false)
@@ -58,8 +56,6 @@ export default function PerfilPerforista() {
 
   async function verificarSesion() {
     if (typeof window === 'undefined') return
-
-    // Intentar desde hash (llegó directo al perfil)
     let token = null
     const hash = window.location.hash
     if (hash.includes('access_token')) {
@@ -67,23 +63,17 @@ export default function PerfilPerforista() {
       token = params.get('access_token')
       window.history.replaceState({}, '', window.location.pathname)
     }
-
-    // Si no hay token en hash, intentar desde sessionStorage (llegó por el directorio)
     if (!token) {
       token = sessionStorage.getItem('pza_auth_token')
       if (token) sessionStorage.removeItem('pza_auth_token')
     }
-
     if (!token) return
-
     try {
       const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
         headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
-      if (data?.email) {
-        setUsuario({ email: data.email, token })
-      }
+      if (data?.email) setUsuario({ email: data.email, token })
     } catch (e) {}
   }
 
@@ -125,9 +115,9 @@ export default function PerfilPerforista() {
         })
       })
       if (res.ok) setMagicEnviado(true)
-      else setErrorEnvio('No se pudo enviar el email. Intentá de nuevo.')
+      else setErrorEnvio('No se pudo enviar el email. Intenta de nuevo.')
     } catch (e) {
-      setErrorEnvio('Error de red. Intentá de nuevo.')
+      setErrorEnvio('Error de red. Intenta de nuevo.')
     }
     setEnviandoMagic(false)
   }
@@ -160,10 +150,9 @@ export default function PerfilPerforista() {
   }
 
   async function enviarComentario() {
-    if (!miRating) { setErrorEnvio('Por favor seleccioná una puntuación'); return }
-    if (!usuario) { setErrorEnvio('Necesitás verificar tu email primero'); return }
-    if (!aceptoTC) { setErrorEnvio('Debés aceptar los Términos y Condiciones para comentar'); return }
-
+    if (!miRating) { setErrorEnvio('Por favor selecciona una puntuacion'); return }
+    if (!usuario) { setErrorEnvio('Necesitas verificar tu email primero'); return }
+    if (!aceptoTC) { setErrorEnvio('Debes aceptar los Terminos y Condiciones para comentar'); return }
     setEnviando(true)
     setErrorEnvio('')
     try {
@@ -189,20 +178,17 @@ export default function PerfilPerforista() {
       })
       if (res.ok || res.status === 201) {
         await registrarAceptacionComentarista()
-        registrarEvento('comentario_enviado', id, {
-          estrellas: miRating,
-          tiene_texto: comentario.length > 0
-        })
+        registrarEvento('comentario_enviado', id, { estrellas: miRating, tiene_texto: comentario.length > 0 })
         setEnviado(true)
         setMiRating(0)
         setComentario('')
         setAceptoTC(false)
         cargarComentarios()
       } else {
-        setErrorEnvio('Hubo un error al enviar. Intentá de nuevo.')
+        setErrorEnvio('Hubo un error al enviar. Intenta de nuevo.')
       }
     } catch (e) {
-      setErrorEnvio('Error de red. Intentá de nuevo.')
+      setErrorEnvio('Error de red. Intenta de nuevo.')
     }
     setEnviando(false)
   }
@@ -224,18 +210,15 @@ export default function PerfilPerforista() {
   }
 
   async function enviarReporte() {
-    if (!motivoReporte) { setErrorReporte('Por favor seleccioná un motivo'); return }
+    if (!motivoReporte) { setErrorReporte('Por favor selecciona un motivo'); return }
     setEnviandoReporte(true)
     setErrorReporte('')
     try {
-      // 1. Insertar reporte
       const resReporte = await fetch(`${SUPABASE_URL}/rest/v1/comentarios_reportes`, {
         method: 'POST',
         headers: {
-          'apikey': ANON_KEY,
-          'Authorization': `Bearer ${ANON_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
+          'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}`,
+          'Content-Type': 'application/json', 'Prefer': 'return=minimal'
         },
         body: JSON.stringify({
           comentario_id: reporteModal,
@@ -245,33 +228,20 @@ export default function PerfilPerforista() {
           email_reportante: usuario?.email || null
         })
       })
-
       if (!resReporte.ok && resReporte.status !== 201) {
-        setErrorReporte('No se pudo enviar el reporte. Intentá de nuevo.')
+        setErrorReporte('No se pudo enviar el reporte. Intenta de nuevo.')
         setEnviandoReporte(false)
         return
       }
-
-      // 2. Marcar comentario como reportado
       await fetch(`${SUPABASE_URL}/rest/v1/comentarios?id=eq.${reporteModal}`, {
         method: 'PATCH',
-        headers: {
-          'apikey': ANON_KEY,
-          'Authorization': `Bearer ${ANON_KEY}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ reportado: true })
       })
-
-      // 3. Registrar evento
-      registrarEvento('comentario_reportado', id, {
-        comentario_id: reporteModal,
-        motivo: motivoReporte
-      })
-
+      registrarEvento('comentario_reportado', id, { comentario_id: reporteModal, motivo: motivoReporte })
       setReporteEnviado(true)
     } catch (e) {
-      setErrorReporte('Error de red. Intentá de nuevo.')
+      setErrorReporte('Error de red. Intenta de nuevo.')
     }
     setEnviandoReporte(false)
   }
@@ -304,7 +274,7 @@ export default function PerfilPerforista() {
   if (!p) return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
       <div style={{ fontSize: '18px', color: '#888' }}>Perforista no encontrado</div>
-      <button onClick={() => router.push('/')} style={{ padding: '8px 20px', background: '#1B4F8A', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>← Volver</button>
+      <button onClick={() => router.push('/')} style={{ padding: '8px 20px', background: '#1B4F8A', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Volver</button>
     </div>
   )
 
@@ -312,61 +282,38 @@ export default function PerfilPerforista() {
   const promedio = promedioEstrellas()
   const esValidado = p.estado === 'cliente'
   const nombreCompleto = `${p.nombre} ${p.apellido}`
+  const esPropietario = usuario?.email === p.email
 
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
 
-      {/* MODAL DE REPORTE */}
       {reporteModal && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000, padding: '1rem'
-        }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
           <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', maxWidth: '420px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}>
             {!reporteEnviado ? (
               <>
-                <div style={{ fontSize: '16px', fontWeight: '700', color: '#1a1a2e', marginBottom: '4px' }}>⚑ Reportar comentario</div>
+                <div style={{ fontSize: '16px', fontWeight: '700', color: '#1a1a2e', marginBottom: '4px' }}>Reportar comentario</div>
                 <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '16px' }}>
-                  Los reportes son revisados por el equipo de Pozero Agro. No implican eliminación automática.
+                  Los reportes son revisados por el equipo de Pozero Agro. No implican eliminacion automatica.
                 </div>
-
                 <div style={{ marginBottom: '12px' }}>
                   <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Motivo *</label>
                   {MOTIVOS_REPORTE.map(m => (
                     <label key={m.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', cursor: 'pointer' }}>
-                      <input
-                        type="radio"
-                        name="motivo"
-                        value={m.value}
-                        checked={motivoReporte === m.value}
-                        onChange={() => setMotivoReporte(m.value)}
-                      />
+                      <input type="radio" name="motivo" value={m.value} checked={motivoReporte === m.value} onChange={() => setMotivoReporte(m.value)} />
                       <span style={{ fontSize: '13px', color: '#444' }}>{m.label}</span>
                     </label>
                   ))}
                 </div>
-
                 <div style={{ marginBottom: '12px' }}>
                   <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>Detalle adicional (opcional)</label>
-                  <textarea
-                    value={detalleReporte}
-                    onChange={e => setDetalleReporte(e.target.value)}
-                    placeholder="Describí brevemente el problema..."
-                    rows={3}
-                    style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', resize: 'vertical' }}
-                  />
+                  <textarea value={detalleReporte} onChange={e => setDetalleReporte(e.target.value)}
+                    placeholder="Describe brevemente el problema..."
+                    rows={3} style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', resize: 'vertical' }} />
                 </div>
-
-                {errorReporte && (
-                  <div style={{ fontSize: '12px', color: '#e53e3e', marginBottom: '8px' }}>{errorReporte}</div>
-                )}
-
+                {errorReporte && <div style={{ fontSize: '12px', color: '#e53e3e', marginBottom: '8px' }}>{errorReporte}</div>}
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={cerrarReporte}
-                    style={{ flex: 1, padding: '9px', border: '1px solid #ddd', borderRadius: '6px', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#666' }}>
-                    Cancelar
-                  </button>
+                  <button onClick={cerrarReporte} style={{ flex: 1, padding: '9px', border: '1px solid #ddd', borderRadius: '6px', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#666' }}>Cancelar</button>
                   <button onClick={enviarReporte} disabled={enviandoReporte || !motivoReporte}
                     style={{ flex: 1, padding: '9px', background: motivoReporte ? '#e53e3e' : '#ccc', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: motivoReporte ? 'pointer' : 'not-allowed', opacity: enviandoReporte ? 0.7 : 1 }}>
                     {enviandoReporte ? 'Enviando...' : 'Enviar reporte'}
@@ -378,19 +325,15 @@ export default function PerfilPerforista() {
                 <div style={{ fontSize: '32px', marginBottom: '12px' }}>✅</div>
                 <div style={{ fontSize: '15px', fontWeight: '700', color: '#1a1a2e', marginBottom: '8px' }}>Reporte enviado</div>
                 <div style={{ fontSize: '13px', color: '#666', marginBottom: '16px', lineHeight: '1.6' }}>
-                  Gracias por tu reporte. El equipo de Pozero Agro lo revisará a la brevedad.
+                  Gracias por tu reporte. El equipo de Pozero Agro lo revisara a la brevedad.
                 </div>
-                <button onClick={cerrarReporte}
-                  style={{ padding: '9px 24px', background: '#1B4F8A', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
-                  Cerrar
-                </button>
+                <button onClick={cerrarReporte} style={{ padding: '9px 24px', background: '#1B4F8A', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Cerrar</button>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* HEADER */}
       <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => router.push('/')}>
           <div style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -406,9 +349,8 @@ export default function PerfilPerforista() {
             <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', letterSpacing: '2px', textTransform: 'uppercase' }}>Directorio Nacional</div>
           </div>
         </div>
-        <button onClick={() => router.push('/')}
-          style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
-          ← Volver
+        <button onClick={() => router.push('/')} style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+          Volver
         </button>
       </div>
 
@@ -416,7 +358,6 @@ export default function PerfilPerforista() {
 
         {/* TARJETA PRINCIPAL */}
         <div style={{ background: '#fff', borderRadius: '16px', border: esValidado ? '2px solid #1B4F8A' : '1px solid #e0e0e8', padding: '1.5rem', marginBottom: '16px' }}>
-
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' }}>
             <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#e8f0fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '22px', color: '#1B4F8A', flexShrink: 0 }}>
               {p.nombre?.[0]}{p.apellido?.[0]}
@@ -424,7 +365,6 @@ export default function PerfilPerforista() {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '20px', fontWeight: '700', color: '#1a1a2e' }}>{nombreCompleto}</div>
               <div style={{ fontSize: '13px', color: '#888', marginTop: '2px' }}>📍 {p.localidad} · {p.provincia}</div>
-
               {comentarios.length > 0 && (
                 <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <EstrellasDisplay valor={promedio} size={16} />
@@ -433,25 +373,23 @@ export default function PerfilPerforista() {
                   </span>
                 </div>
               )}
-
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
                 {esValidado && (
                   <span style={{ fontSize: '12px', background: 'linear-gradient(135deg, #F5A623, #F0C040)', color: '#fff', padding: '4px 10px', borderRadius: '5px', fontWeight: '700', boxShadow: '0 2px 6px rgba(245,166,35,0.4)' }}>
-                    ★ Perforista Validado
+                    Perforista Validado
                   </span>
                 )}
-                {p.conoce_solar === 'Sí, ya instalé sistemas solares' && (
-                  <span style={{ fontSize: '11px', background: '#fff3e0', color: '#E65100', padding: '3px 8px', borderRadius: '4px' }}>☀️ Instala solar</span>
+                {p.conoce_solar === 'Si, ya instale sistemas solares' && (
+                  <span style={{ fontSize: '11px', background: '#fff3e0', color: '#E65100', padding: '3px 8px', borderRadius: '4px' }}>Instala solar</span>
                 )}
                 {p.quiere_info_equipos && (
-                  <span style={{ fontSize: '11px', background: '#f0fdf4', color: '#166534', padding: '3px 8px', borderRadius: '4px' }}>🔧 Interesado en equipos</span>
+                  <span style={{ fontSize: '11px', background: '#f0fdf4', color: '#166534', padding: '3px 8px', borderRadius: '4px' }}>Interesado en equipos</span>
                 )}
               </div>
-
               {esValidado && (
                 <div style={{ marginTop: '8px', fontSize: '11px', color: '#aaa', lineHeight: '1.4' }}>
-                  La insignia indica revisión interna básica de datos. No implica certificación técnica ni garantía de calidad.{' '}
-                  <a href="/terminos" target="_blank" rel="noreferrer" style={{ color: '#1B4F8A' }}>Ver términos</a>
+                  La insignia indica revision interna basica de datos. No implica certificacion tecnica ni garantia de calidad.{' '}
+                  <a href="/terminos" target="_blank" rel="noreferrer" style={{ color: '#1B4F8A' }}>Ver terminos</a>
                 </div>
               )}
             </div>
@@ -466,76 +404,69 @@ export default function PerfilPerforista() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px', marginBottom: '16px' }}>
             {p.experiencia && <Dato icono="🗓️" label="Experiencia" valor={p.experiencia} />}
             {p.tipo_empresa && <Dato icono="🏢" label="Tipo de empresa" valor={p.tipo_empresa} />}
-            {p.profundidad_max && <Dato icono="⬇️" label="Profundidad máx." valor={`${p.profundidad_max} metros`} />}
+            {p.profundidad_max && <Dato icono="⬇️" label="Profundidad max." valor={`${p.profundidad_max} metros`} />}
             {p.trabajos_por_mes && <Dato icono="📊" label="Trabajos por mes" valor={p.trabajos_por_mes} />}
           </div>
 
           {p.servicios?.length > 0 && <TagGroup label="Servicios" items={p.servicios} color="#e8f0fa" textColor="#1B4F8A" />}
-          {p.diametros?.length > 0 && <TagGroup label="Diámetros" items={p.diametros} color="#f3e8ff" textColor="#6a0dad" />}
+          {p.diametros?.length > 0 && <TagGroup label="Diametros" items={p.diametros} color="#f3e8ff" textColor="#6a0dad" />}
           {p.terrenos?.length > 0 && <TagGroup label="Tipos de terreno" items={p.terrenos} color="#f0fdf4" textColor="#166534" />}
           {p.tipo_bomba?.length > 0 && <TagGroup label="Tipos de bomba" items={p.tipo_bomba} color="#fff3e0" textColor="#E65100" />}
           {p.zonas_trabajo?.length > 0 && <TagGroup label="Zonas de trabajo" items={p.zonas_trabajo} color="#fef3c7" textColor="#92400e" />}
 
-          {/* Contacto */}
           <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px', marginTop: '16px' }}>
             <div style={{ fontSize: '13px', fontWeight: '600', color: '#666', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>Contacto</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {p.visible_telefono && p.telefono && (
-                <a href={`tel:${p.telefono}`}
-                  onClick={() => trackTelefono(id, p.telefono, nombreCompleto)}
-                  style={btnStyle('#e8f0fa', '#1B4F8A', '1px solid #1B4F8A')}>
+                <a href={`tel:${p.telefono}`} onClick={() => trackTelefono(id, p.telefono, nombreCompleto)} style={btnStyle('#e8f0fa', '#1B4F8A', '1px solid #1B4F8A')}>
                   📞 {p.telefono}
                 </a>
               )}
               {wa && (
-                <button onClick={() => trackWhatsApp(id, wa, nombreCompleto)}
-                  style={{ ...btnStyle('#25D366', '#fff'), border: 'none', cursor: 'pointer' }}>
+                <button onClick={() => trackWhatsApp(id, wa, nombreCompleto)} style={{ ...btnStyle('#25D366', '#fff'), border: 'none', cursor: 'pointer' }}>
                   💬 WhatsApp
                 </button>
               )}
               {p.visible_email && p.email && (
-                <a href={`mailto:${p.email}?subject=Consulta desde Pozero Agro`}
-                  onClick={() => trackEmail(id, p.email, nombreCompleto)}
-                  style={btnStyle('#e8f0fa', '#1B4F8A', '1px solid #1B4F8A')}>
+                <a href={`mailto:${p.email}?subject=Consulta desde Pozero Agro`} onClick={() => trackEmail(id, p.email, nombreCompleto)} style={btnStyle('#e8f0fa', '#1B4F8A', '1px solid #1B4F8A')}>
                   ✉️ {p.email}
                 </a>
               )}
               {p.visible_instagram && p.instagram && (
-                <button onClick={() => trackInstagram(id, p.instagram, nombreCompleto)}
-                  style={{ ...btnStyle('#fce4ec', '#c2185b', '1px solid #c2185b'), border: '1px solid #c2185b', cursor: 'pointer' }}>
+                <button onClick={() => trackInstagram(id, p.instagram, nombreCompleto)} style={{ ...btnStyle('#fce4ec', '#c2185b', '1px solid #c2185b'), border: '1px solid #c2185b', cursor: 'pointer' }}>
                   📸 Instagram
                 </button>
               )}
               {p.visible_facebook && p.facebook && (
-                <button onClick={() => trackFacebook(id, p.facebook, nombreCompleto)}
-                  style={{ ...btnStyle('#e3f2fd', '#1565c0', '1px solid #1565c0'), border: '1px solid #1565c0', cursor: 'pointer' }}>
+                <button onClick={() => trackFacebook(id, p.facebook, nombreCompleto)} style={{ ...btnStyle('#e3f2fd', '#1565c0', '1px solid #1565c0'), border: '1px solid #1565c0', cursor: 'pointer' }}>
                   👍 Facebook
                 </button>
               )}
             </div>
           </div>
 
-         <div style={{ marginTop: '12px', padding: '10px 12px', background: '#f8f9fa', borderRadius: '6px', fontSize: '11px', color: '#aaa', lineHeight: '1.5' }}>
-            Pozero Agro facilita el contacto pero no garantiza la calidad ni los resultados de los servicios. La contratación es de exclusiva responsabilidad del usuario.{' '}
-            <a href="/terminos" target="_blank" rel="noreferrer" style={{ color: '#1B4F8A' }}>Términos y condiciones</a>
+          <div style={{ marginTop: '12px', padding: '10px 12px', background: '#f8f9fa', borderRadius: '6px', fontSize: '11px', color: '#aaa', lineHeight: '1.5' }}>
+            Pozero Agro facilita el contacto pero no garantiza la calidad ni los resultados de los servicios. La contratacion es de exclusiva responsabilidad del usuario.{' '}
+            <a href="/terminos" target="_blank" rel="noreferrer" style={{ color: '#1B4F8A' }}>Terminos y condiciones</a>
           </div>
 
-          {usuario?.email === p.email && (
-              <div style={{ marginTop: '12px', padding: '10px 14px', background: '#e8f0fa', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {esPropietario && (
+            <div style={{ marginTop: '12px', padding: '10px 14px', background: '#e8f0fa', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '13px', color: '#1B4F8A' }}>Este es tu perfil</span>
-                <a href="/mi-perfil" style={{ fontSize: '13px', fontWeight: '600', color: '#fff', background: '#1B4F8A', padding: '6px 14px', borderRadius: '6px', textDecoration: 'none' }}>
-                ✏️ Editar mis datos
-          </a>
-      </div>
-    )}
+              <a href="/mi-perfil" style={{ fontSize: '13px', fontWeight: '600', color: '#fff', background: '#1B4F8A', padding: '6px 14px', borderRadius: '6px', textDecoration: 'none' }}>
+                Editar mis datos
+              </a>
+            </div>
+          )}
+        </div>
+
         {/* COMENTARIOS */}
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e0e0e8', padding: '1.5rem', marginBottom: '16px' }}>
-          <div style={{ fontSize: '16px', fontWeight: '700', color: '#1a1a2e', marginBottom: '4px' }}>⭐ Comentarios y puntuación</div>
+          <div style={{ fontSize: '16px', fontWeight: '700', color: '#1a1a2e', marginBottom: '4px' }}>Comentarios y puntuacion</div>
           <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '16px' }}>
-            Opiniones de usuarios verificados. No representan la posición de Pozero Agro.
+            Opiniones de usuarios verificados. No representan la posicion de Pozero Agro.
           </div>
 
-          {/* Resumen */}
           {comentarios.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: '#f8f9fa', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px' }}>
               <div style={{ textAlign: 'center' }}>
@@ -564,74 +495,61 @@ export default function PerfilPerforista() {
             </div>
           )}
 
-          {/* Lista de comentarios */}
           {comentarios.map((r, i) => (
             <div key={r.id || i} style={{ borderBottom: i < comentarios.length - 1 ? '1px solid #f0f0f0' : 'none', paddingBottom: '14px', marginBottom: '14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ fontWeight: '600', fontSize: '13px', color: '#1a1a2e' }}>
                   {r.nombre_cliente || 'Usuario verificado'}
-                  <span style={{ marginLeft: '6px', fontSize: '10px', color: '#aaa', fontWeight: '400' }}>✓ email verificado</span>
+                  <span style={{ marginLeft: '6px', fontSize: '10px', color: '#aaa', fontWeight: '400' }}>email verificado</span>
                 </div>
                 <span style={{ fontSize: '14px', color: '#F5A623' }}>
                   {'★'.repeat(r.estrellas)}{'☆'.repeat(5 - r.estrellas)}
                 </span>
               </div>
-
               {r.comentario && (
                 <div style={{ fontSize: '13px', color: '#555', marginTop: '4px', lineHeight: '1.5' }}>{r.comentario}</div>
               )}
-
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
                 <div style={{ fontSize: '11px', color: '#bbb' }}>
                   {new Date(r.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </div>
-                {/* Botón reportar */}
                 {!r.reportado && (
-                  <button
-                    onClick={() => abrirReporte(r.id)}
+                  <button onClick={() => abrirReporte(r.id)}
                     style={{ fontSize: '11px', color: '#ccc', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px' }}
                     onMouseEnter={e => e.target.style.color = '#e53e3e'}
                     onMouseLeave={e => e.target.style.color = '#ccc'}
-                    title="Reportar este comentario"
-                  >
-                    ⚑ Reportar
+                    title="Reportar este comentario">
+                    Reportar
                   </button>
                 )}
-                {r.reportado && (
-                  <span style={{ fontSize: '11px', color: '#e0b0b0' }}>Reportado</span>
-                )}
+                {r.reportado && <span style={{ fontSize: '11px', color: '#e0b0b0' }}>Reportado</span>}
               </div>
             </div>
           ))}
 
           {comentarios.length === 0 && (
             <div style={{ color: '#aaa', fontSize: '13px', marginBottom: '16px' }}>
-              Todavía no hay comentarios. ¡Sé el primero en opinar!
+              Todavia no hay comentarios.
             </div>
           )}
 
-          {/* Formulario nuevo comentario */}
           <div style={{ background: '#f8f9fa', borderRadius: '10px', padding: '16px', marginTop: '8px' }}>
-            <div style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a2e', marginBottom: '4px' }}>Dejá tu opinión</div>
+            <div style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a2e', marginBottom: '4px' }}>Deja tu opinion</div>
             <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '12px' }}>
-              Tu comentario es tu opinión personal. Pozero Agro puede moderar contenido inapropiado.
+              Tu comentario es tu opinion personal. Pozero Agro puede moderar contenido inapropiado.
             </div>
 
             {!usuario ? (
               !magicEnviado ? (
                 <div>
                   <div style={{ fontSize: '13px', color: '#666', marginBottom: '10px' }}>
-                    Ingresá tu email para verificar tu identidad. Te enviamos un link, sin contraseña.
+                    Ingresa tu email para verificar tu identidad. Te enviamos un link, sin contrasena.
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      type="email"
-                      placeholder="tu@email.com"
-                      value={emailMagic}
+                    <input type="email" placeholder="tu@email.com" value={emailMagic}
                       onChange={e => setEmailMagic(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && enviarMagicLink()}
-                      style={{ flex: 1, padding: '9px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px' }}
-                    />
+                      style={{ flex: 1, padding: '9px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px' }} />
                     <button onClick={enviarMagicLink} disabled={enviandoMagic || !emailMagic}
                       style={{ padding: '9px 16px', background: '#1B4F8A', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', opacity: enviandoMagic ? 0.7 : 1, whiteSpace: 'nowrap' }}>
                       {enviandoMagic ? 'Enviando...' : 'Verificar email'}
@@ -642,10 +560,9 @@ export default function PerfilPerforista() {
               ) : (
                 <div style={{ textAlign: 'center', padding: '12px' }}>
                   <div style={{ fontSize: '32px', marginBottom: '8px' }}>📧</div>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#1B4F8A', marginBottom: '4px' }}>¡Revisá tu email!</div>
+                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#1B4F8A', marginBottom: '4px' }}>Revisa tu email!</div>
                   <div style={{ fontSize: '13px', color: '#666' }}>
-                    Te enviamos un link a <strong>{emailMagic}</strong>.<br />
-                    Hacé clic en el link y volvé a esta página para comentar.
+                    Te enviamos un link a <strong>{emailMagic}</strong>.
                   </div>
                 </div>
               )
@@ -653,11 +570,10 @@ export default function PerfilPerforista() {
               !enviado ? (
                 <div>
                   <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
-                    Comentando como <strong>{usuario.email}</strong> ✓
+                    Comentando como <strong>{usuario.email}</strong>
                   </div>
-
                   <div style={{ marginBottom: '12px' }}>
-                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>Tu puntuación *</div>
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>Tu puntuacion *</div>
                     <div style={{ display: 'flex', gap: '4px' }}>
                       {[1,2,3,4,5].map(n => (
                         <span key={n}
@@ -670,31 +586,20 @@ export default function PerfilPerforista() {
                       ))}
                     </div>
                   </div>
-
-                  <textarea
-                    placeholder="Contá tu experiencia (opcional)..."
-                    value={comentario}
-                    onChange={e => setComentario(e.target.value)}
-                    rows={3}
-                    style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', resize: 'vertical', background: '#fff', marginBottom: '10px' }}
-                  />
-
+                  <textarea placeholder="Conta tu experiencia (opcional)..." value={comentario}
+                    onChange={e => setComentario(e.target.value)} rows={3}
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px', resize: 'vertical', background: '#fff', marginBottom: '10px' }} />
                   <div style={{ background: aceptoTC ? '#f0fdf4' : '#fff8f0', border: `1px solid ${aceptoTC ? '#86efac' : '#fcd34d'}`, borderRadius: '8px', padding: '10px 12px', marginBottom: '10px' }}>
                     <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }}>
-                      <input type="checkbox" checked={aceptoTC} onChange={e => setAceptoTC(e.target.checked)}
-                        style={{ marginTop: '3px', flexShrink: 0 }} />
+                      <input type="checkbox" checked={aceptoTC} onChange={e => setAceptoTC(e.target.checked)} style={{ marginTop: '3px', flexShrink: 0 }} />
                       <span style={{ fontSize: '12px', color: '#444', lineHeight: '1.5' }}>
-                        Entiendo que este comentario es mi opinión personal y acepto los{' '}
-                        <a href="/terminos" target="_blank" rel="noreferrer" style={{ color: '#1B4F8A', fontWeight: '600' }}>
-                          Términos y Condiciones
-                        </a>{' '}
+                        Entiendo que este comentario es mi opinion personal y acepto los{' '}
+                        <a href="/terminos" target="_blank" rel="noreferrer" style={{ color: '#1B4F8A', fontWeight: '600' }}>Terminos y Condiciones</a>{' '}
                         de Pozero Agro. *
                       </span>
                     </label>
                   </div>
-
                   {errorEnvio && <div style={{ fontSize: '12px', color: '#e53e3e', marginBottom: '8px' }}>{errorEnvio}</div>}
-
                   <button onClick={enviarComentario} disabled={enviando || !aceptoTC}
                     style={{ padding: '9px 24px', background: aceptoTC ? '#1B4F8A' : '#ccc', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: aceptoTC ? 'pointer' : 'not-allowed', opacity: enviando ? 0.7 : 1 }}>
                     {enviando ? 'Enviando...' : 'Enviar comentario'}
@@ -702,21 +607,22 @@ export default function PerfilPerforista() {
                 </div>
               ) : (
                 <div style={{ background: '#f0fdf4', borderRadius: '10px', padding: '16px', textAlign: 'center', color: '#166534', fontWeight: '600', fontSize: '14px' }}>
-                  ✅ ¡Gracias por tu comentario!
+                  Gracias por tu comentario!
                 </div>
               )
             )}
           </div>
         </div>
 
-       {/* FOOTER */}
-          <div style={{ background: '#1B4F8A', borderRadius: '12px', padding: '1rem 1.5rem', textAlign: 'center' }}>
+        <div style={{ background: '#1B4F8A', borderRadius: '12px', padding: '1rem 1.5rem', textAlign: 'center' }}>
           <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <a href="/terminos" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Términos y condiciones</a>
-          <a href="/terminos#privacidad" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Política de privacidad</a>
-          <a href="/contacto" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Contacto</a>
-      </div>
-    </div>
+            <a href="/" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Inicio</a>
+            <a href="/terminos" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Terminos y condiciones</a>
+            <a href="/terminos#privacidad" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Privacidad</a>
+            <a href="/contacto" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Contacto</a>
+            <a href="/mi-perfil" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Editar mi perfil</a>
+          </div>
+        </div>
 
       </div>
     </div>
