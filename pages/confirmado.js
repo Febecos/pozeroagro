@@ -4,17 +4,25 @@ import { useRouter } from 'next/router'
 export default function Confirmado() {
   const router = useRouter()
   const [estado, setEstado] = useState('cargando')
+  const [perforistId, setPerforistId] = useState(null)
 
   useEffect(() => {
-    // Supabase redirige acá con el token en el hash
-    // El usuario ya quedó autenticado automáticamente
     const hash = window.location.hash
-    if (hash.includes('access_token') || hash.includes('type=signup') || hash.includes('type=magiclink')) {
-      setEstado('ok')
-    } else {
-      setEstado('ok') // igual mostramos confirmación
+    const pid = sessionStorage.getItem('pza_perforista_id')
+    if (pid) {
+      setPerforistId(pid)
+      sessionStorage.removeItem('pza_perforista_id')
     }
+    setEstado('ok')
   }, [])
+
+  function irAPerfil() {
+    if (perforistId) {
+      router.push(`/perforista/${perforistId}`)
+    } else {
+      router.push('/')
+    }
+  }
 
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -28,9 +36,18 @@ export default function Confirmado() {
         <div style={{ background: '#e8f0fa', borderRadius: '8px', padding: '12px', fontSize: '13px', color: '#1B4F8A', marginBottom: '1.5rem', lineHeight: '1.6' }}>
           🔔 Te avisaremos por email cuando tu perfil esté activo y visible para los productores.
         </div>
-        <a href="/" style={{ display: 'inline-block', background: '#1B4F8A', color: '#fff', padding: '11px 28px', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
-          Ver el directorio →
-        </a>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {perforistId && (
+            <button
+              onClick={irAPerfil}
+              style={{ display: 'inline-block', background: '#F26419', color: '#fff', padding: '11px 28px', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: '600', border: 'none', cursor: 'pointer' }}>
+              Ver mi perfil →
+            </button>
+          )}
+          <a href="/" style={{ display: 'inline-block', background: perforistId ? 'transparent' : '#1B4F8A', color: perforistId ? '#1B4F8A' : '#fff', padding: '11px 28px', borderRadius: '8px', textDecoration: perforistId ? 'underline' : 'none', fontSize: '14px', fontWeight: '600' }}>
+            Ver el directorio →
+          </a>
+        </div>
       </div>
     </div>
   )
