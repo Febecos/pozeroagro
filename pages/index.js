@@ -23,7 +23,7 @@ async function geocodificar(localidad, provincia) {
       geocodeCache[key] = { lat: data.lat, lng: data.lng }
       return geocodeCache[key]
     }
-  } catch (e) { console.warn('Geocodificación falló:', e.message) }
+  } catch (e) { console.warn('Geocodificacion fallo:', e.message) }
   return null
 }
 
@@ -51,10 +51,10 @@ export default function Directorio() {
 
   const provincias = [
     'Buenos Aires','CABA','Catamarca','Chaco','Chubut',
-    'Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy',
-    'La Pampa','La Rioja','Mendoza','Misiones','Neuquén',
-    'Río Negro','Salta','San Juan','San Luis','Santa Cruz',
-    'Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'
+    'Cordoba','Corrientes','Entre Rios','Formosa','Jujuy',
+    'La Pampa','La Rioja','Mendoza','Misiones','Neuquen',
+    'Rio Negro','Salta','San Juan','San Luis','Santa Cruz',
+    'Santa Fe','Santiago del Estero','Tierra del Fuego','Tucuman'
   ]
 
   useEffect(() => {
@@ -86,20 +86,19 @@ export default function Directorio() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     const hash = window.location.hash
-   if (hash.includes('access_token')) {
+    if (hash.includes('access_token')) {
       const params = new URLSearchParams(hash.replace('#', ''))
       const token = params.get('access_token')
-  if (token) {
-      sessionStorage.setItem('pza_auth_token', token)
-      window.history.replaceState({}, '', window.location.pathname)
-      // Si venía a editar su perfil, redirigir
-      cconst destino = localStorage.getItem('pza_auth_destino')
-      if (destino) {
+      if (token) {
+        sessionStorage.setItem('pza_auth_token', token)
+        window.history.replaceState({}, '', window.location.pathname)
+        const destino = localStorage.getItem('pza_auth_destino')
+        if (destino) {
           localStorage.removeItem('pza_auth_destino')
           window.location.href = destino
+        }
       }
     }
-  }
     registrarEvento('directorio_visto', null, { pagina: 'inicio' })
   }, [])
 
@@ -301,7 +300,6 @@ export default function Directorio() {
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
 
-      {/* Header */}
       <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -322,10 +320,9 @@ export default function Directorio() {
         </a>
       </div>
 
-      {/* Búsqueda */}
       <div style={{ background: '#1B4F8A', padding: '1.25rem 1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
         <div style={{ fontSize: '16px', color: '#fff', fontWeight: '600', marginBottom: '12px' }}>
-          Encontrá un perforista rural en tu zona
+          Encontra un perforista rural en tu zona
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <input
@@ -362,7 +359,6 @@ export default function Directorio() {
         <div style={{ padding: '1rem 1.5rem 0' }}>{MapaDiv}</div>
       )}
 
-      {/* Cuerpo principal */}
       <div style={{ display: 'flex', gap: '16px', padding: '1.25rem 1.5rem', alignItems: 'flex-start' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: '12px', color: '#888', marginBottom: '12px' }}>
@@ -415,7 +411,7 @@ export default function Directorio() {
                           ⬇️ {p.profundidad_max}m
                         </span>
                       )}
-                      {p.conoce_solar === 'Sí, ya instalé sistemas solares' && (
+                      {p.conoce_solar === 'Si, ya instale sistemas solares' && (
                         <span style={{ fontSize: '10px', background: '#fff3e0', color: '#E65100', padding: '2px 6px', borderRadius: '4px' }}>
                           ☀️ Solar
                         </span>
@@ -457,14 +453,14 @@ export default function Directorio() {
 
           {!cargando && filtrados.length === 0 && (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#888' }}>
-              No se encontraron perforistas para esa búsqueda.
+              No se encontraron perforistas para esa busqueda.
             </div>
           )}
 
           {!cargando && filtrados.length > 0 && (
             <div style={{ marginTop: '16px', padding: '10px 14px', background: '#fff', borderRadius: '8px', border: '0.5px solid #e0e0e8', fontSize: '11px', color: '#aaa', lineHeight: '1.6' }}>
-              Pozero Agro es un directorio informativo. No garantiza la calidad ni los resultados de los servicios publicados. La contratación es de exclusiva responsabilidad del usuario.{' '}
-              <a href="/terminos" style={{ color: '#1B4F8A', textDecoration: 'none' }}>Términos y condiciones</a>
+              Pozero Agro es un directorio informativo. No garantiza la calidad ni los resultados de los servicios publicados. La contratacion es de exclusiva responsabilidad del usuario.{' '}
+              <a href="/terminos" style={{ color: '#1B4F8A', textDecoration: 'none' }}>Terminos y condiciones</a>
               {' · '}
               <a href="/terminos#privacidad" style={{ color: '#1B4F8A', textDecoration: 'none' }}>Privacidad</a>
             </div>
@@ -476,19 +472,17 @@ export default function Directorio() {
         )}
       </div>
 
-      {/* Slot footer_top */}
       {adFooter && (
         <div style={{ padding: '0 1.5rem 1rem' }}>
           <AdBanner campaign={adFooter} />
         </div>
       )}
 
-      {/* Footer — solo links legales */}
       <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', marginTop: '0', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <a href="/terminos" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Términos y condiciones</a>
+          <a href="/terminos" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Terminos y condiciones</a>
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
-          <a href="/terminos#privacidad" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Política de privacidad</a>
+          <a href="/terminos#privacidad" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Politica de privacidad</a>
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
           <a href="/contacto" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Contacto</a>
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
