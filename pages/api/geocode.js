@@ -11,21 +11,24 @@ export default async function handler(req, res) {
   }
 
   try {
-    const address = encodeURIComponent(`${localidad}, ${provincia}, Argentina`)
-    const response = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${apiKey}`
+    // Intento 1: localidad + provincia + Argentina forzando país AR
+    // Usamos "provincia de X" para evitar confusión entre provincia y ciudad (ej: Buenos Aires)
+    const provinciaLabel = provincia === 'Buenos Aires' ? 'provincia de Buenos Aires' : provincia
+    const address1 = encodeURIComponent(`${localidad}, ${provinciaLabel}, Argentina`)
+    const response1 = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${address1}&region=ar&components=country:AR&key=${apiKey}`
     )
-    const data = await response.json()
+    const data1 = await response1.json()
 
-    if (data.results?.[0]) {
-      const loc = data.results[0].geometry.location
+    if (data1.results?.[0]) {
+      const loc = data1.results[0].geometry.location
       return res.json({ lat: loc.lat, lng: loc.lng })
     }
 
-    // Fallback: intentar solo con provincia
+    // Fallback: solo provincia forzando país AR
     const address2 = encodeURIComponent(`${provincia}, Argentina`)
     const response2 = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${address2}&key=${apiKey}`
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${address2}&region=ar&components=country:AR&key=${apiKey}`
     )
     const data2 = await response2.json()
 
