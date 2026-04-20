@@ -72,6 +72,9 @@ export default function Registro() {
       const place = autocompleteRef.current.getPlace()
       if (!place || !place.address_components) return
 
+      console.log('place.name:', place.name)
+      console.log('address_components:', JSON.stringify(place.address_components, null, 2))
+
       // Extraer nombre corto de la localidad desde address_components
       let localidadNombre = ''
       let provinciaNombre = ''
