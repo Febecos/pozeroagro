@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qfesxpcuhsrfdohnsleg.supabase.co'
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
+const MAPS_KEY = process.env.NEXT_PUBLIC_MAPS_KEY || 'AIzaSyAR7ZalO3stHEjFJWDdk58YlUYzNxHRmVs'
 
 async function sbFetch(path, options = {}) {
   const res = await fetch(`${SUPABASE_URL}${path}`, {
@@ -30,6 +31,9 @@ export default function Registro() {
     acepto_terminos: false
   })
 
+  const localidadRef = useRef(null)
+  const autocompleteRef = useRef(null)
+
   const provincias = [
     'Buenos Aires','CABA','Catamarca','Chaco','Chubut',
     'Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy',
@@ -37,6 +41,93 @@ export default function Registro() {
     'Río Negro','Salta','San Juan','San Luis','Santa Cruz',
     'Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'
   ]
+
+  // Cargar Google Maps con Places library
+  useEffect(() => {
+    if (window.google && window.google.maps && window.google.maps.places) {
+      initAutocomplete()
+      return
+    }
+    const script = document.createElement('script')
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=places`
+    script.async = true
+    script.onload = () => initAutocomplete()
+    document.head.appendChild(script)
+  }, [])
+
+  function initAutocomplete() {
+    if (!localidadRef.current) return
+    if (autocompleteRef.current) return
+
+    autocompleteRef.current = new window.google.maps.places.Autocomplete(
+      localidadRef.current,
+      {
+        componentRestrictions: { country: 'ar' },
+        types: ['(cities)'],
+        fields: ['address_components', 'name', 'geometry']
+      }
+    )
+
+    autocompleteRef.current.addListener('place_changed', () => {
+      const place = autocompleteRef.current.getPlace()
+      if (!place || !place.address_components) return
+
+      // Extraer nombre de localidad
+      const localidadNombre = place.name || ''
+
+      // Extraer provincia del resultado
+      let provinciaNombre = ''
+      for (const comp of place.address_components) {
+        if (comp.types.includes('administrative_area_level_1')) {
+          provinciaNombre = comp.long_name
+          break
+        }
+      }
+
+      // Mapear nombre de provincia de Google al formato del sistema
+      const mapaProvincias = {
+        'Buenos Aires': 'Buenos Aires',
+        'Ciudad Autónoma de Buenos Aires': 'CABA',
+        'Catamarca': 'Catamarca',
+        'Chaco': 'Chaco',
+        'Chubut': 'Chubut',
+        'Córdoba': 'Córdoba',
+        'Corrientes': 'Corrientes',
+        'Entre Ríos': 'Entre Ríos',
+        'Formosa': 'Formosa',
+        'Jujuy': 'Jujuy',
+        'La Pampa': 'La Pampa',
+        'La Rioja': 'La Rioja',
+        'Mendoza': 'Mendoza',
+        'Misiones': 'Misiones',
+        'Neuquén': 'Neuquén',
+        'Río Negro': 'Río Negro',
+        'Salta': 'Salta',
+        'San Juan': 'San Juan',
+        'San Luis': 'San Luis',
+        'Santa Cruz': 'Santa Cruz',
+        'Santa Fe': 'Santa Fe',
+        'Santiago del Estero': 'Santiago del Estero',
+        'Tierra del Fuego': 'Tierra del Fuego',
+        'Tucumán': 'Tucumán'
+      }
+
+      const provinciaFinal = mapaProvincias[provinciaNombre] || provinciaNombre
+
+      setForm(f => ({
+        ...f,
+        localidad: localidadNombre,
+        provincia: provinciaFinal || f.provincia
+      }))
+    })
+  }
+
+  // Re-inicializar autocomplete cuando el paso 1 se monta
+  useEffect(() => {
+    if (paso === 1 && window.google && window.google.maps && window.google.maps.places) {
+      setTimeout(() => initAutocomplete(), 100)
+    }
+  }, [paso])
 
   function set(campo, valor) { setForm(f => ({ ...f, [campo]: valor })) }
 
@@ -63,30 +154,6 @@ export default function Registro() {
     )
   }
 
-  async function geocodificarLocalidad(localidad, provincia) {
-    try {
-      const apiKey = process.env.NEXT_PUBLIC_MAPS_KEY
-      if (!apiKey) return { lat: null, lng: null }
-
-      const direccion = encodeURIComponent(`${localidad}, ${provincia}, Argentina`)
-      const geoRes = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${direccion}&key=${apiKey}`
-      )
-      const geoData = await geoRes.json()
-
-      if (geoData.status === 'OK' && geoData.results && geoData.results[0]) {
-        const location = geoData.results[0].geometry.location
-        return { lat: location.lat, lng: location.lng }
-      } else {
-        console.warn('Geocodificación sin resultados:', geoData.status)
-        return { lat: null, lng: null }
-      }
-    } catch (e) {
-      console.warn('Error en geocodificación:', e.message)
-      return { lat: null, lng: null }
-    }
-  }
-
   async function registrarAceptacion(perforista_id) {
     try {
       const docRes = await sbFetch(
@@ -95,9 +162,7 @@ export default function Registro() {
       )
       const docs = await docRes.json()
       const doc = Array.isArray(docs) && docs[0] ? docs[0] : null
-
       if (!doc) return
-
       await sbFetch('/rest/v1/legal_aceptaciones', {
         method: 'POST',
         headers: { 'Prefer': 'return=minimal' },
@@ -130,10 +195,19 @@ export default function Registro() {
     try {
       const ahora = new Date().toISOString()
 
-      // 1. Geocodificar la localidad antes de guardar
-      const { lat, lng } = await geocodificarLocalidad(form.localidad, form.provincia)
+      // Geocodificar via API route server-side
+      let lat = null, lng = null
+      try {
+        const geoRes = await fetch(
+          `/api/geocode?localidad=${encodeURIComponent(form.localidad)}&provincia=${encodeURIComponent(form.provincia)}`
+        )
+        const geoData = await geoRes.json()
+        lat = geoData.lat
+        lng = geoData.lng
+      } catch (e) {
+        console.warn('Geocodificación falló:', e.message)
+      }
 
-      // 2. Guardar perforista con lat/lng y flags legales
       const datosPerforista = {
         nombre: form.nombre,
         apellido: form.apellido,
@@ -185,10 +259,8 @@ export default function Registro() {
         ? perforistaNuevo[0]?.id
         : perforistaNuevo?.id
 
-      // 3. Registrar aceptación legal en tabla dedicada
       await registrarAceptacion(perforista_id)
 
-      // 4. Intentar envío de mail (no bloquea si falla)
       try {
         await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
           method: 'POST',
@@ -319,22 +391,36 @@ export default function Registro() {
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Apellido *</label><br />{input('apellido', 'Pérez')}</div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', color: '#666' }}>Provincia *</label><br />
-                  <select value={form.provincia} onChange={e => set('provincia', e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px' }}>
-                    <option value="">Seleccioná...</option>
-                    {provincias.map(p => <option key={p}>{p}</option>)}
-                  </select>
-                </div>
-                <div><label style={{ fontSize: '12px', color: '#666' }}>Localidad *</label><br />{input('localidad', 'Ej: Venado Tuerto')}</div>
+              {/* Localidad con autocomplete PRIMERO, provincia se autocompleta */}
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ fontSize: '12px', color: '#666' }}>Localidad * <span style={{ color: '#1B4F8A', fontWeight: '600' }}>(escribí y seleccioná de la lista)</span></label>
+                <input
+                  ref={localidadRef}
+                  type="text"
+                  placeholder="Ej: Bolívar, Venado Tuerto, Rafaela..."
+                  defaultValue={form.localidad}
+                  onChange={e => set('localidad', e.target.value)}
+                  style={{
+                    width: '100%', padding: '9px 12px',
+                    border: '0.5px solid #ccc', borderRadius: '8px',
+                    fontSize: '14px', boxSizing: 'border-box', marginTop: '2px'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ fontSize: '12px', color: '#666' }}>Provincia * <span style={{ color: '#aaa' }}>(se completa sola al elegir localidad)</span></label>
+                <select value={form.provincia} onChange={e => set('provincia', e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px', marginTop: '2px' }}>
+                  <option value="">Seleccioná...</option>
+                  {provincias.map(p => <option key={p}>{p}</option>)}
+                </select>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Teléfono *</label><br />{input('telefono', '+54 9 11 XXXX-XXXX', 'tel')}</div>
                 <div>
-                  <label style={{ fontSize: '12px', color: '#666' }}>WhatsApp <span style={{ color: '#aaa' }}>(si es distinto al tel.)</span></label><br />
+                  <label style={{ fontSize: '12px', color: '#666' }}>WhatsApp <span style={{ color: '#aaa' }}>(si es distinto)</span></label><br />
                   {input('whatsapp', 'Se usa el teléfono si no completás')}
                 </div>
               </div>
@@ -472,7 +558,6 @@ export default function Registro() {
               <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Últimos detalles</div>
               <div style={{ fontSize: '13px', color: '#888', marginBottom: '1rem' }}>Ya casi estás en el directorio</div>
 
-              {/* Bloque Febecos */}
               <div style={{ background: '#e8f0fa', border: '0.5px solid #1B4F8A', borderRadius: '8px', padding: '1rem', marginBottom: '1rem' }}>
                 <div style={{ fontSize: '14px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Accedé a equipos de bombeo solar</div>
                 <div style={{ fontSize: '13px', color: '#1B4F8A', lineHeight: '1.6' }}>
@@ -480,7 +565,6 @@ export default function Registro() {
                 </div>
               </div>
 
-              {/* Checkbox equipos */}
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', marginBottom: '16px' }}>
                 <input type="checkbox" checked={form.quiere_info_equipos}
                   onChange={e => set('quiere_info_equipos', e.target.checked)}
@@ -490,12 +574,10 @@ export default function Registro() {
                 </span>
               </label>
 
-              {/* Resumen */}
               <div style={{ fontSize: '13px', color: '#888', padding: '12px', background: '#f5f7fa', borderRadius: '8px', marginBottom: '16px' }}>
                 <strong>Resumen:</strong> {form.nombre} {form.apellido} · {form.localidad}, {form.provincia} · {form.profundidad_max}m máx
               </div>
 
-              {/* ── CHECKBOX T&C OBLIGATORIO ── */}
               <div style={{ background: form.acepto_terminos ? '#f0fdf4' : '#fff8f0', border: `1px solid ${form.acepto_terminos ? '#86efac' : '#fcd34d'}`, borderRadius: '8px', padding: '12px 14px', marginBottom: '12px' }}>
                 <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
                   <input
@@ -520,7 +602,6 @@ export default function Registro() {
                 </label>
               </div>
 
-              {/* Aviso email */}
               <div style={{ background: '#fff3e0', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', color: '#E65100' }}>
                 📧 Al publicar, te enviamos un mail a <strong>{form.email}</strong> para confirmar tu perfil.
               </div>
@@ -556,7 +637,6 @@ export default function Registro() {
             )}
           </div>
 
-          {/* Aviso T&C si no aceptó */}
           {paso === 4 && !form.acepto_terminos && (
             <div style={{ marginTop: '8px', fontSize: '12px', color: '#E65100', textAlign: 'center' }}>
               ⚠️ Debés aceptar los Términos y Condiciones para continuar
