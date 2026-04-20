@@ -30,7 +30,7 @@ export default function HomeV2() {
       router.push('/')
     }
   }
-
+ 
   return (
     <div style={{ fontFamily: "'Georgia', 'Times New Roman', serif", minHeight: '100vh', background: '#FAFAF7', overflowX: 'hidden' }}>
 
