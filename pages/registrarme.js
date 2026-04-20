@@ -72,13 +72,35 @@ export default function Registro() {
       const place = autocompleteRef.current.getPlace()
       if (!place || !place.address_components) return
 
-      const localidadNombre = place.name || ''
+      // Extraer nombre corto de la localidad desde address_components
+      let localidadNombre = ''
       let provinciaNombre = ''
+
       for (const comp of place.address_components) {
+        // locality = ciudad/pueblo principal
+        if (comp.types.includes('locality') && !localidadNombre) {
+          localidadNombre = comp.long_name
+        }
+        // sublocality = barrios o partidos dentro de una ciudad grande
+        if (comp.types.includes('sublocality_level_1') && !localidadNombre) {
+          localidadNombre = comp.long_name
+        }
+        // administrative_area_level_2 = partido/departamento (fallback para Buenos Aires)
+        if (comp.types.includes('administrative_area_level_2') && !localidadNombre) {
+          localidadNombre = comp.long_name
+        }
+        // administrative_area_level_1 = provincia
         if (comp.types.includes('administrative_area_level_1')) {
           provinciaNombre = comp.long_name
-          break
         }
+      }
+
+      // Fallback: si ningún componente dio nombre, usar place.name pero limpiar el sufijo
+      if (!localidadNombre) {
+        localidadNombre = place.name
+          .replace(/,\s*Provincia de [^,]+/, '')
+          .replace(/,\s*Argentina/, '')
+          .trim()
       }
 
       const mapaProvincias = {
@@ -109,6 +131,11 @@ export default function Registro() {
       }
 
       const provinciaFinal = mapaProvincias[provinciaNombre] || provinciaNombre
+
+      // Actualizar el input visualmente con el nombre corto
+      if (localidadRef.current) {
+        localidadRef.current.value = localidadNombre
+      }
 
       setForm(f => ({
         ...f,
@@ -257,7 +284,6 @@ export default function Registro() {
 
       await registrarAceptacion(perforista_id)
 
-      // Guardar ID para redirect después de confirmar email
       if (perforista_id) {
         sessionStorage.setItem('pza_perforista_id', perforista_id)
       }
@@ -448,7 +474,6 @@ export default function Registro() {
                 {input('email', 'juan@ejemplo.com', 'email')}
               </div>
 
-              {/* CUIT / DNI — opcionales */}
               <div style={{ borderTop: '0.5px solid #f0f0f0', paddingTop: '12px', marginTop: '4px' }}>
                 <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Identificación fiscal (opcional)
