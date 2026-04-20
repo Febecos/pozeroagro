@@ -17,51 +17,67 @@ export default function AdBanner({ campaign }) {
     }
   }
 
-  const etiquetas = {
-    propio:  { texto: 'Contenido propio',     color: 'bg-blue-100 text-blue-700' },
-    febecos: { texto: 'Solución recomendada', color: 'bg-green-100 text-green-700' },
-    tercero: { texto: 'Publicidad',           color: 'bg-gray-100 text-gray-600' },
+  const config = {
+    propio:  { label: 'Contenido propio',     labelBg: '#dbeafe', labelColor: '#1d4ed8', borderColor: '#bfdbfe', bg: '#f0f7ff' },
+    febecos: { label: 'Solución recomendada', labelBg: '#dcfce7', labelColor: '#15803d', borderColor: '#bbf7d0', bg: '#f0fdf4' },
+    tercero: { label: 'Publicidad',           labelBg: '#f3f4f6', labelColor: '#6b7280', borderColor: '#e5e7eb', bg: '#fafafa' },
   }
 
-  const etiqueta = etiquetas[campaign.ad_type] || etiquetas.tercero
+  const c = config[campaign.ad_type] || config.tercero
 
   return (
-    <div className="border border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 my-4">
+    <div style={{
+      border: `1px solid ${c.borderColor}`,
+      borderRadius: '10px',
+      padding: '12px 16px',
+      background: c.bg,
+      display: 'flex',
+      alignItems: 'center',
+      gap: '14px',
+      flexWrap: 'wrap',
+    }}>
 
-      {/* Etiqueta visible — separación comercial obligatoria */}
-      <span className={`text-xs font-semibold px-2 py-0.5 rounded mb-3 inline-block ${etiqueta.color}`}>
-        {etiqueta.texto}
-      </span>
+      {/* Izquierda: etiqueta + nombre */}
+      <div style={{ flex: '1 1 160px', minWidth: 0 }}>
+        <span style={{
+          fontSize: '10px', fontWeight: '700',
+          padding: '2px 8px', borderRadius: '4px',
+          background: c.labelBg, color: c.labelColor,
+          display: 'inline-block', marginBottom: '6px'
+        }}>
+          {c.label}
+        </span>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a2e', lineHeight: '1.3' }}>
+          {campaign.nombre}
+        </div>
+        <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '4px' }}>
+          {campaign.ad_type === 'tercero' ? 'Espacio publicitario pago.' : 'Contenido de la plataforma.'}{' '}
+          No afecta rankings.
+        </div>
+      </div>
 
       {/* Imagen opcional */}
       {campaign.imagen_url && (
         <img
           src={campaign.imagen_url}
           alt={campaign.nombre}
-          className="w-full rounded mb-3 object-cover max-h-40"
+          style={{ width: '80px', height: '50px', objectFit: 'contain', borderRadius: '6px', flexShrink: 0 }}
         />
       )}
-
-      {/* Nombre de la campaña */}
-      <p className="text-sm font-medium text-gray-700 mb-3">
-        {campaign.nombre}
-      </p>
 
       {/* Botón CTA */}
       <button
         onClick={handleClick}
-        className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition-colors text-sm font-medium"
+        style={{
+          flexShrink: 0,
+          background: '#F26419', color: '#fff',
+          padding: '8px 18px', borderRadius: '6px',
+          border: 'none', fontSize: '13px', fontWeight: '600',
+          cursor: 'pointer', whiteSpace: 'nowrap'
+        }}
       >
         {campaign.cta_texto || 'Ver más'}
       </button>
-
-      {/* Disclaimer legal — obligatorio */}
-      <p className="text-xs text-gray-400 mt-2 text-center leading-tight">
-        {campaign.ad_type === 'tercero'
-          ? 'Espacio publicitario pago.'
-          : 'Contenido de la plataforma.'}{' '}
-        No afecta rankings ni reputación de los perforistas.
-      </p>
 
     </div>
   )
