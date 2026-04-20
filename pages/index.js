@@ -6,6 +6,15 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qfesxpcuhs
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
 const MAPS_KEY = process.env.NEXT_PUBLIC_MAPS_KEY || 'AIzaSyAR7ZalO3stHEjFJWDdk58YlUYzNxHRmVs'
 
+// Normaliza texto: minúsculas + sin tildes
+function normalizar(texto) {
+  if (!texto) return ''
+  return texto
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
 const geocodeCache = {}
 async function geocodificar(localidad, provincia) {
   const key = `${localidad},${provincia}`
@@ -51,7 +60,6 @@ export default function Directorio() {
     'Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'
   ]
 
-  // Detectar mobile
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
@@ -59,7 +67,6 @@ export default function Directorio() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  // Cargar Google Maps
   useEffect(() => {
     if (window.google) { setMapaListo(true); return }
     const script = document.createElement('script')
@@ -69,7 +76,6 @@ export default function Directorio() {
     document.head.appendChild(script)
   }, [])
 
-  // Inicializar mapa
   useEffect(() => {
     if (!mapaListo || !mapRef.current || mapaInstancia.current) return
     mapaInstancia.current = new window.google.maps.Map(mapRef.current, {
@@ -80,7 +86,6 @@ export default function Directorio() {
     infoWindow.current = new window.google.maps.InfoWindow()
   }, [mapaListo])
 
-  // Capturar token del magic link si llegó al directorio
   useEffect(() => {
     if (typeof window === 'undefined') return
     const hash = window.location.hash
@@ -135,8 +140,9 @@ export default function Directorio() {
   }
 
   const filtrados = perforistas.filter(p => {
-    const q = busquedaActiva.toLowerCase()
-    const coincideBusqueda = !busquedaActiva || `${p.nombre} ${p.apellido} ${p.localidad}`.toLowerCase().includes(q)
+    const q = normalizar(busquedaActiva)
+    const texto = normalizar(`${p.nombre} ${p.apellido} ${p.localidad}`)
+    const coincideBusqueda = !busquedaActiva || texto.includes(q)
     const coincideProvincia = !provincia || p.provincia === provincia
     return coincideBusqueda && coincideProvincia
   })
@@ -160,7 +166,6 @@ export default function Directorio() {
     router.push(`/perforista/${p.id}`)
   }
 
-  // Geocodificar perforistas filtrados
   useEffect(() => {
     filtrados.forEach(async (p) => {
       if (!p.localidad || !p.provincia) return
@@ -171,7 +176,6 @@ export default function Directorio() {
     })
   }, [filtrados.length, busquedaActiva, provincia])
 
-  // Actualizar marcadores en el mapa
   useEffect(() => {
     if (!mapaInstancia.current || !window.google) return
     marcadores.current.forEach(m => m.setMap(null))
@@ -363,7 +367,6 @@ export default function Directorio() {
                   onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(27,79,138,0.15)'}
                   onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)'}
                 >
-                  {/* Avatar + nombre */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e8f0fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px', color: '#1B4F8A', flexShrink: 0 }}>
                       {p.nombre?.[0]}{p.apellido?.[0]}
@@ -376,12 +379,10 @@ export default function Directorio() {
                     </div>
                   </div>
 
-                  {/* Estrellas */}
                   <div style={{ marginBottom: '8px', minHeight: '18px' }}>
                     <Estrellas id={p.id} />
                   </div>
 
-                  {/* Badges */}
                   <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '10px' }}>
                     {esValidado && (
                       <span style={{ fontSize: '10px', background: 'linear-gradient(135deg, #F5A623, #F0C040)', color: '#fff', padding: '2px 7px', borderRadius: '4px', fontWeight: '700', boxShadow: '0 1px 4px rgba(245,166,35,0.4)' }}>
@@ -400,7 +401,6 @@ export default function Directorio() {
                     )}
                   </div>
 
-                  {/* Botones contacto con tracking */}
                   <div style={{ display: 'flex', gap: '6px' }} onClick={e => e.stopPropagation()}>
                     {p.visible_telefono && p.telefono && (
                       <a href={`tel:${p.telefono}`}
@@ -428,7 +428,6 @@ export default function Directorio() {
             </div>
           )}
 
-          {/* Disclaimer */}
           {!cargando && filtrados.length > 0 && (
             <div style={{ marginTop: '16px', padding: '10px 14px', background: '#fff', borderRadius: '8px', border: '0.5px solid #e0e0e8', fontSize: '11px', color: '#aaa', lineHeight: '1.6' }}>
               Pozero Agro es un directorio informativo. No garantiza la calidad ni los resultados de los servicios publicados. La contratación es de exclusiva responsabilidad del usuario.{' '}
