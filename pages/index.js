@@ -89,15 +89,17 @@ export default function Directorio() {
     if (hash.includes('access_token')) {
       const params = new URLSearchParams(hash.replace('#', ''))
       const token = params.get('access_token')
-      if (token) {
-        sessionStorage.setItem('pza_auth_token', token)
-        window.history.replaceState({}, '', window.location.pathname)
-        const destino = localStorage.getItem('pza_auth_destino')
-        if (destino) {
-          localStorage.removeItem('pza_auth_destino')
-          window.location.href = destino
-        }
-      }
+     if (token) {
+  sessionStorage.setItem('pza_auth_token', token)
+  window.history.replaceState({}, '', window.location.pathname)
+  setTimeout(() => {
+    const destino = localStorage.getItem('pza_auth_destino')
+    if (destino) {
+      localStorage.removeItem('pza_auth_destino')
+      window.location.href = destino
+    }
+  }, 100)
+}
     }
     registrarEvento('directorio_visto', null, { pagina: 'inicio' })
   }, [])
