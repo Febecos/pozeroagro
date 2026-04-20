@@ -58,11 +58,24 @@ export default function PerfilPerforista() {
 
   async function verificarSesion() {
     if (typeof window === 'undefined') return
+
+    // Intentar desde hash (llegó directo al perfil)
+    let token = null
     const hash = window.location.hash
-    if (!hash.includes('access_token')) return
-    const params = new URLSearchParams(hash.replace('#', ''))
-    const token = params.get('access_token')
+    if (hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.replace('#', ''))
+      token = params.get('access_token')
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+
+    // Si no hay token en hash, intentar desde sessionStorage (llegó por el directorio)
+    if (!token) {
+      token = sessionStorage.getItem('pza_auth_token')
+      if (token) sessionStorage.removeItem('pza_auth_token')
+    }
+
     if (!token) return
+
     try {
       const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
         headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${token}` }
@@ -70,7 +83,6 @@ export default function PerfilPerforista() {
       const data = await res.json()
       if (data?.email) {
         setUsuario({ email: data.email, token })
-        window.history.replaceState({}, '', window.location.pathname)
       }
     } catch (e) {}
   }
