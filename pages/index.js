@@ -84,11 +84,20 @@ export default function Directorio() {
     infoWindow.current = new window.google.maps.InfoWindow()
   }, [mapaListo])
 
-  // Registrar visita al directorio
+  // Capturar token del magic link si llegó al directorio
   useEffect(() => {
-    registrarEvento('directorio_visto', null, {
-      pagina: 'inicio'
-    })
+    if (typeof window === 'undefined') return
+    const hash = window.location.hash
+    if (hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.replace('#', ''))
+      const token = params.get('access_token')
+      if (token) {
+        sessionStorage.setItem('pza_auth_token', token)
+        window.history.replaceState({}, '', window.location.pathname)
+      }
+    }
+    // Registrar visita al directorio
+    registrarEvento('directorio_visto', null, { pagina: 'inicio' })
   }, [])
 
   useEffect(() => { cargar() }, [])
