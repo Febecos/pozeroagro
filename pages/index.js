@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { registrarEvento, trackWhatsApp, trackTelefono } from '../lib/tracker'
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qfesxpcuhsrfdohnsleg.supabase.co'
-const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
-const MAPS_KEY = process.env.NEXT_PUBLIC_MAPS_KEY || 'AIzaSyAR7ZalO3stHEjFJWDdk58YlUYzNxHRmVs'
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const MAPS_KEY = process.env.NEXT_PUBLIC_MAPS_KEY
 
 // Normaliza texto: minúsculas + sin tildes
 function normalizar(texto) {
@@ -275,7 +275,6 @@ export default function Directorio() {
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
 
-      {/* HEADER */}
       <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -296,7 +295,6 @@ export default function Directorio() {
         </a>
       </div>
 
-      {/* BUSCADOR */}
       <div style={{ background: '#1B4F8A', padding: '1.25rem 1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
         <div style={{ fontSize: '16px', color: '#fff', fontWeight: '600', marginBottom: '12px' }}>
           Encontrá un perforista rural en tu zona
@@ -332,15 +330,11 @@ export default function Directorio() {
         </div>
       </div>
 
-      {/* MAPA MOBILE */}
       {isMobile && mostrarMapa && (
         <div style={{ padding: '1rem 1.5rem 0' }}>{MapaDiv}</div>
       )}
 
-      {/* CONTENIDO */}
       <div style={{ display: 'flex', gap: '16px', padding: '1.25rem 1.5rem', alignItems: 'flex-start' }}>
-
-        {/* CARDS */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: '12px', color: '#888', marginBottom: '12px' }}>
             {cargando ? 'Cargando...' : `${filtrados.length} perforistas encontrados`}
@@ -360,8 +354,7 @@ export default function Directorio() {
                   style={{
                     background: '#fff', borderRadius: '12px', cursor: 'pointer',
                     border: esValidado ? '1.5px solid #1B4F8A' : '0.5px solid #e0e0e8',
-                    padding: '1rem',
-                    transition: 'box-shadow 0.15s',
+                    padding: '1rem', transition: 'box-shadow 0.15s',
                     boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
                   }}
                   onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(27,79,138,0.15)'}
@@ -438,13 +431,11 @@ export default function Directorio() {
           )}
         </div>
 
-        {/* MAPA DESKTOP */}
         {!isMobile && (
           <div style={{ width: '320px', flexShrink: 0 }}>{MapaDiv}</div>
         )}
       </div>
 
-      {/* FOOTER */}
       <div style={{ background: '#1B4F8A', padding: '1.25rem 1.5rem', marginTop: '2rem', textAlign: 'center' }}>
         <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>
           ¿Necesitás equipar tu pozo con energía solar?
