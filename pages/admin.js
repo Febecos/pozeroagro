@@ -372,7 +372,7 @@ function TabContactos() {
               </div>
 
               <div style={{ display: 'flex', gap: '8px' }}>
-                <a href={`mailto:${c.email}?subject=Re: Contacto desde Pozero Agro`}
+                <a href={`https://mail.google.com/mail/?view=cm&to=${c.email}&su=Re: Contacto desde Pozero Agro`}
                   style={{ padding: '6px 14px', background: '#1B4F8A', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontSize: '12px', fontWeight: '600' }}>
                   ✉️ Responder por email
                 </a>
