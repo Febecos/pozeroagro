@@ -287,9 +287,7 @@ export default function Registro() {
           body: JSON.stringify({
             email: form.email,
             options: {
-              emailRedirectTo: `${typeof window !== 'undefined'
-                ? window.location.origin
-                : 'https://pozeroagro.ar'}/confirmado`,
+              emailRedirectTo: 'https://pozeroagro.ar/confirmado',
               data: { tipo: 'perforista' }
             }
           })
