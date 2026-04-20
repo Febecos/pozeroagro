@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { registrarEvento, trackWhatsApp, trackTelefono } from '../lib/tracker'
+import AdBanner from '../components/AdBanner'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -46,6 +47,7 @@ export default function Directorio() {
   const [isMobile, setIsMobile] = useState(false)
   const [mostrarMapa, setMostrarMapa] = useState(false)
   const [ratings, setRatings] = useState({})
+  const [campana, setCampana] = useState(null)
 
   const mapRef = useRef(null)
   const mapaInstancia = useRef(null)
@@ -113,8 +115,20 @@ export default function Directorio() {
       const lista = Array.isArray(data) ? data : []
       setPerforistas(lista)
       cargarRatings()
+      cargarCampana()
     } catch (e) {}
     setCargando(false)
+  }
+
+  async function cargarCampana() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/campanas_activas?slot_id=eq.listado_mid&limit=1`,
+        { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
+      )
+      const data = await res.json()
+      if (Array.isArray(data) && data.length > 0) setCampana(data[0])
+    } catch (e) {}
   }
 
   async function cargarRatings() {
@@ -344,73 +358,82 @@ export default function Directorio() {
           )}
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
-            {filtrados.map(p => {
+            {filtrados.map((p, index) => {
               const wa = whatsappNum(p)
               const esValidado = p.estado === 'cliente'
               const nombreCompleto = `${p.nombre} ${p.apellido}`
               return (
-                <div key={p.id}
-                  onClick={() => handleCardClick(p)}
-                  style={{
-                    background: '#fff', borderRadius: '12px', cursor: 'pointer',
-                    border: esValidado ? '1.5px solid #1B4F8A' : '0.5px solid #e0e0e8',
-                    padding: '1rem', transition: 'box-shadow 0.15s',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(27,79,138,0.15)'}
-                  onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)'}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e8f0fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px', color: '#1B4F8A', flexShrink: 0 }}>
-                      {p.nombre?.[0]}{p.apellido?.[0]}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: '600', fontSize: '14px', color: '#1a1a2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {nombreCompleto}
+                <>
+                  <div key={p.id}
+                    onClick={() => handleCardClick(p)}
+                    style={{
+                      background: '#fff', borderRadius: '12px', cursor: 'pointer',
+                      border: esValidado ? '1.5px solid #1B4F8A' : '0.5px solid #e0e0e8',
+                      padding: '1rem', transition: 'box-shadow 0.15s',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(27,79,138,0.15)'}
+                    onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)'}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e8f0fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px', color: '#1B4F8A', flexShrink: 0 }}>
+                        {p.nombre?.[0]}{p.apellido?.[0]}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#888' }}>📍 {p.localidad} · {p.provincia}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: '600', fontSize: '14px', color: '#1a1a2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {nombreCompleto}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#888' }}>📍 {p.localidad} · {p.provincia}</div>
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: '8px', minHeight: '18px' }}>
+                      <Estrellas id={p.id} />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                      {esValidado && (
+                        <span style={{ fontSize: '10px', background: 'linear-gradient(135deg, #F5A623, #F0C040)', color: '#fff', padding: '2px 7px', borderRadius: '4px', fontWeight: '700', boxShadow: '0 1px 4px rgba(245,166,35,0.4)' }}>
+                          ★ Validado
+                        </span>
+                      )}
+                      {p.profundidad_max && (
+                        <span style={{ fontSize: '10px', background: '#f3e8ff', color: '#6a0dad', padding: '2px 6px', borderRadius: '4px' }}>
+                          ⬇️ {p.profundidad_max}m
+                        </span>
+                      )}
+                      {p.conoce_solar === 'Sí, ya instalé sistemas solares' && (
+                        <span style={{ fontSize: '10px', background: '#fff3e0', color: '#E65100', padding: '2px 6px', borderRadius: '4px' }}>
+                          ☀️ Solar
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '6px' }} onClick={e => e.stopPropagation()}>
+                      {p.visible_telefono && p.telefono && (
+                        <a href={`tel:${p.telefono}`}
+                          onClick={() => trackTelefono(p.id, p.telefono, nombreCompleto)}
+                          style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '0.5px solid #1B4F8A', background: '#e8f0fa', color: '#1B4F8A', fontSize: '11px', textAlign: 'center', textDecoration: 'none', fontWeight: '600' }}>
+                          📞 Llamar
+                        </a>
+                      )}
+                      {wa && (
+                        <button
+                          onClick={() => trackWhatsApp(p.id, wa, nombreCompleto)}
+                          style={{ flex: 1, padding: '6px', borderRadius: '6px', background: '#25D366', color: '#fff', fontSize: '11px', textAlign: 'center', fontWeight: '600', border: 'none', cursor: 'pointer' }}>
+                          💬 WA
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  <div style={{ marginBottom: '8px', minHeight: '18px' }}>
-                    <Estrellas id={p.id} />
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                    {esValidado && (
-                      <span style={{ fontSize: '10px', background: 'linear-gradient(135deg, #F5A623, #F0C040)', color: '#fff', padding: '2px 7px', borderRadius: '4px', fontWeight: '700', boxShadow: '0 1px 4px rgba(245,166,35,0.4)' }}>
-                        ★ Validado
-                      </span>
-                    )}
-                    {p.profundidad_max && (
-                      <span style={{ fontSize: '10px', background: '#f3e8ff', color: '#6a0dad', padding: '2px 6px', borderRadius: '4px' }}>
-                        ⬇️ {p.profundidad_max}m
-                      </span>
-                    )}
-                    {p.conoce_solar === 'Sí, ya instalé sistemas solares' && (
-                      <span style={{ fontSize: '10px', background: '#fff3e0', color: '#E65100', padding: '2px 6px', borderRadius: '4px' }}>
-                        ☀️ Solar
-                      </span>
-                    )}
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '6px' }} onClick={e => e.stopPropagation()}>
-                    {p.visible_telefono && p.telefono && (
-                      <a href={`tel:${p.telefono}`}
-                        onClick={() => trackTelefono(p.id, p.telefono, nombreCompleto)}
-                        style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '0.5px solid #1B4F8A', background: '#e8f0fa', color: '#1B4F8A', fontSize: '11px', textAlign: 'center', textDecoration: 'none', fontWeight: '600' }}>
-                        📞 Llamar
-                      </a>
-                    )}
-                    {wa && (
-                      <button
-                        onClick={() => trackWhatsApp(p.id, wa, nombreCompleto)}
-                        style={{ flex: 1, padding: '6px', borderRadius: '6px', background: '#25D366', color: '#fff', fontSize: '11px', textAlign: 'center', fontWeight: '600', border: 'none', cursor: 'pointer' }}>
-                        💬 WA
-                      </button>
-                    )}
-                  </div>
-                </div>
+                  {/* Banner publicitario después del item 3 — separación comercial */}
+                  {index === 2 && campana && (
+                    <div key="ad-banner" style={{ gridColumn: '1 / -1' }}>
+                      <AdBanner campaign={campana} />
+                    </div>
+                  )}
+                </>
               )
             })}
           </div>
