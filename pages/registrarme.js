@@ -63,9 +63,32 @@ export default function Registro() {
     )
   }
 
+  async function geocodificarLocalidad(localidad, provincia) {
+    try {
+      const apiKey = process.env.NEXT_PUBLIC_MAPS_KEY
+      if (!apiKey) return { lat: null, lng: null }
+
+      const direccion = encodeURIComponent(`${localidad}, ${provincia}, Argentina`)
+      const geoRes = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${direccion}&key=${apiKey}`
+      )
+      const geoData = await geoRes.json()
+
+      if (geoData.status === 'OK' && geoData.results && geoData.results[0]) {
+        const location = geoData.results[0].geometry.location
+        return { lat: location.lat, lng: location.lng }
+      } else {
+        console.warn('Geocodificación sin resultados:', geoData.status)
+        return { lat: null, lng: null }
+      }
+    } catch (e) {
+      console.warn('Error en geocodificación:', e.message)
+      return { lat: null, lng: null }
+    }
+  }
+
   async function registrarAceptacion(perforista_id) {
     try {
-      // Obtener documento legal activo
       const docRes = await sbFetch(
         '/rest/v1/legal_documentos?tipo=eq.terminos&activo=eq.true&select=id,version',
         { headers: { 'Prefer': 'return=representation' } }
@@ -73,7 +96,7 @@ export default function Registro() {
       const docs = await docRes.json()
       const doc = Array.isArray(docs) && docs[0] ? docs[0] : null
 
-      if (!doc) return // Si no hay doc activo, no bloquea el registro
+      if (!doc) return
 
       await sbFetch('/rest/v1/legal_aceptaciones', {
         method: 'POST',
@@ -89,7 +112,6 @@ export default function Registro() {
         })
       })
     } catch (e) {
-      // No bloquea el registro si falla el log
       console.warn('No se pudo registrar aceptación legal:', e.message)
     }
   }
@@ -108,7 +130,10 @@ export default function Registro() {
     try {
       const ahora = new Date().toISOString()
 
-      // 1. Guardar perforista con flags legales
+      // 1. Geocodificar la localidad antes de guardar
+      const { lat, lng } = await geocodificarLocalidad(form.localidad, form.provincia)
+
+      // 2. Guardar perforista con lat/lng y flags legales
       const datosPerforista = {
         nombre: form.nombre,
         apellido: form.apellido,
@@ -131,6 +156,8 @@ export default function Registro() {
         trabajos_por_mes: form.trabajos_por_mes,
         descripcion: form.descripcion,
         quiere_info_equipos: form.quiere_info_equipos,
+        lat: lat,
+        lng: lng,
         estado: 'pendiente',
         visible_telefono: true,
         visible_whatsapp: true,
@@ -158,10 +185,10 @@ export default function Registro() {
         ? perforistaNuevo[0]?.id
         : perforistaNuevo?.id
 
-      // 2. Registrar aceptación legal en tabla dedicada
+      // 3. Registrar aceptación legal en tabla dedicada
       await registrarAceptacion(perforista_id)
 
-      // 3. Intentar envío de mail (no bloquea si falla)
+      // 4. Intentar envío de mail (no bloquea si falla)
       try {
         await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
           method: 'POST',
