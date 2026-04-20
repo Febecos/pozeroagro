@@ -11,21 +11,17 @@ async function geocodificar(localidad, provincia) {
   const key = `${localidad},${provincia}`
   if (geocodeCache[key]) return geocodeCache[key]
   try {
-    const q1 = encodeURIComponent(`${localidad}, ${provincia}, Argentina`)
-    const res1 = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${q1}&key=${MAPS_KEY}`)
-    const data1 = await res1.json()
-    if (data1.results?.[0]) {
-      geocodeCache[key] = data1.results[0].geometry.location
+    const res = await fetch(
+      `/api/geocode?localidad=${encodeURIComponent(localidad)}&provincia=${encodeURIComponent(provincia)}`
+    )
+    const data = await res.json()
+    if (data.lat && data.lng) {
+      geocodeCache[key] = { lat: data.lat, lng: data.lng }
       return geocodeCache[key]
     }
-    const q2 = encodeURIComponent(`${provincia}, Argentina`)
-    const res2 = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${q2}&key=${MAPS_KEY}`)
-    const data2 = await res2.json()
-    if (data2.results?.[0]) {
-      geocodeCache[key] = data2.results[0].geometry.location
-      return geocodeCache[key]
-    }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Geocodificación falló:', e.message)
+  }
   return null
 }
 
@@ -96,7 +92,6 @@ export default function Directorio() {
         window.history.replaceState({}, '', window.location.pathname)
       }
     }
-    // Registrar visita al directorio
     registrarEvento('directorio_visto', null, { pagina: 'inicio' })
   }, [])
 
@@ -148,7 +143,6 @@ export default function Directorio() {
 
   function ejecutarBusqueda() {
     setBusquedaActiva(busqueda)
-    // Registrar búsqueda realizada
     if (busqueda || provincia) {
       registrarEvento('busqueda_realizada', null, {
         termino: busqueda || null,
@@ -159,7 +153,6 @@ export default function Directorio() {
   }
 
   function handleCardClick(p) {
-    // Registrar clic en card antes de navegar
     registrarEvento('card_vista', p.id, {
       perforista_nombre: `${p.nombre} ${p.apellido}`,
       origen: 'directorio'
@@ -218,7 +211,6 @@ export default function Directorio() {
         : ''
 
       marcador.addListener('click', () => {
-        // Registrar clic en pin del mapa
         registrarEvento('pin_mapa_click', p.id, {
           perforista_nombre: `${p.nombre} ${p.apellido}`,
           origen: 'mapa'
