@@ -86,14 +86,20 @@ export default function Directorio() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     const hash = window.location.hash
-    if (hash.includes('access_token')) {
+   if (hash.includes('access_token')) {
       const params = new URLSearchParams(hash.replace('#', ''))
       const token = params.get('access_token')
-      if (token) {
-        sessionStorage.setItem('pza_auth_token', token)
-        window.history.replaceState({}, '', window.location.pathname)
+  if (token) {
+      sessionStorage.setItem('pza_auth_token', token)
+      window.history.replaceState({}, '', window.location.pathname)
+      // Si venía a editar su perfil, redirigir
+      const destino = sessionStorage.getItem('pza_auth_destino')
+      if (destino) {
+        sessionStorage.removeItem('pza_auth_destino')
+        window.location.href = destino
       }
     }
+  }
     registrarEvento('directorio_visto', null, { pagina: 'inicio' })
   }, [])
 
