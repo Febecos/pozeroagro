@@ -279,6 +279,25 @@ export default function Registro() {
         console.warn('Mail no enviado, datos guardados igual:', mailErr.message)
       }
 
+      // Notificar al admin
+      try {
+        await fetch(`/api/notificar-alta`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nombre: form.nombre,
+            apellido: form.apellido,
+            localidad: form.localidad,
+            provincia: form.provincia,
+            telefono: form.telefono,
+            email: form.email,
+            experiencia: form.experiencia
+          })
+        })
+      } catch (notifErr) {
+        console.warn('Notificación admin falló:', notifErr.message)
+      }
+
       setExito(true)
 
     } catch (e) {
