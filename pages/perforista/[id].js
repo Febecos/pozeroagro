@@ -515,12 +515,19 @@ export default function PerfilPerforista() {
             </div>
           </div>
 
-          <div style={{ marginTop: '12px', padding: '10px 12px', background: '#f8f9fa', borderRadius: '6px', fontSize: '11px', color: '#aaa', lineHeight: '1.5' }}>
+         <div style={{ marginTop: '12px', padding: '10px 12px', background: '#f8f9fa', borderRadius: '6px', fontSize: '11px', color: '#aaa', lineHeight: '1.5' }}>
             Pozero Agro facilita el contacto pero no garantiza la calidad ni los resultados de los servicios. La contratación es de exclusiva responsabilidad del usuario.{' '}
             <a href="/terminos" target="_blank" rel="noreferrer" style={{ color: '#1B4F8A' }}>Términos y condiciones</a>
           </div>
-        </div>
 
+          {usuario?.email === p.email && (
+              <div style={{ marginTop: '12px', padding: '10px 14px', background: '#e8f0fa', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '13px', color: '#1B4F8A' }}>Este es tu perfil</span>
+                <a href="/mi-perfil" style={{ fontSize: '13px', fontWeight: '600', color: '#fff', background: '#1B4F8A', padding: '6px 14px', borderRadius: '6px', textDecoration: 'none' }}>
+                ✏️ Editar mis datos
+          </a>
+      </div>
+    )}
         {/* COMENTARIOS */}
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e0e0e8', padding: '1.5rem', marginBottom: '16px' }}>
           <div style={{ fontSize: '16px', fontWeight: '700', color: '#1a1a2e', marginBottom: '4px' }}>⭐ Comentarios y puntuación</div>
