@@ -108,6 +108,7 @@ export default function Registro() {
 
       const mapaProvincias = {
         'Buenos Aires': 'Buenos Aires',
+        'Provincia de Buenos Aires': 'Buenos Aires',
         'Ciudad Autónoma de Buenos Aires': 'CABA',
         'Catamarca': 'Catamarca',
         'Chaco': 'Chaco',
