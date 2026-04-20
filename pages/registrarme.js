@@ -257,6 +257,11 @@ export default function Registro() {
 
       await registrarAceptacion(perforista_id)
 
+      // Guardar ID para redirect después de confirmar email
+      if (perforista_id) {
+        sessionStorage.setItem('pza_perforista_id', perforista_id)
+      }
+
       try {
         await fetch('/api/notificar-alta', {
           method: 'POST',
