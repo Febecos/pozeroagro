@@ -39,7 +39,6 @@ export default function Directorio() {
   const [isMobile, setIsMobile] = useState(false)
   const [mostrarMapa, setMostrarMapa] = useState(false)
   const [ratings, setRatings] = useState({})
-  // Un estado por slot
   const [adMid, setAdMid] = useState(null)
   const [adBottom, setAdBottom] = useState(null)
   const [adMapa, setAdMapa] = useState(null)
@@ -285,7 +284,6 @@ export default function Directorio() {
           Cargando mapa...
         </div>
       )}
-      {/* Slot debajo_mapa — solo desktop */}
       {adMapa && !isMobile && (
         <div style={{ padding: '10px' }}>
           <AdBanner campaign={adMapa} />
@@ -368,7 +366,6 @@ export default function Directorio() {
             <div style={{ textAlign: 'center', padding: '3rem', color: '#888' }}>Cargando directorio...</div>
           )}
 
-          {/* Grid de cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
             {filtrados.map((p, index) => {
               const wa = whatsappNum(p)
@@ -376,7 +373,6 @@ export default function Directorio() {
               const nombreCompleto = `${p.nombre} ${p.apellido}`
               return (
                 <>
-                  {/* Card del perforista */}
                   <div key={p.id}
                     onClick={() => handleCardClick(p)}
                     style={{
@@ -437,7 +433,6 @@ export default function Directorio() {
                     </div>
                   </div>
 
-                  {/* Slot listado_mid — después del item 3, ancho de una card */}
                   {index === 2 && adMid && (
                     <div key="ad-mid">
                       <AdBanner campaign={adMid} />
@@ -448,7 +443,6 @@ export default function Directorio() {
             })}
           </div>
 
-          {/* Slot listado_bottom — al final del grid */}
           {!cargando && filtrados.length > 0 && adBottom && (
             <div style={{ marginTop: '12px' }}>
               <AdBanner campaign={adBottom} />
@@ -471,29 +465,21 @@ export default function Directorio() {
           )}
         </div>
 
-        {/* Mapa desktop — incluye slot debajo_mapa */}
         {!isMobile && (
           <div style={{ width: '320px', flexShrink: 0 }}>{MapaDiv}</div>
         )}
       </div>
 
-      {/* Slot footer_top — sobre el footer azul */}
+      {/* Slot footer_top */}
       {adFooter && (
         <div style={{ padding: '0 1.5rem 1rem' }}>
           <AdBanner campaign={adFooter} />
         </div>
       )}
 
-      {/* Footer */}
-      <div style={{ background: '#1B4F8A', padding: '1.25rem 1.5rem', marginTop: '0', textAlign: 'center' }}>
-        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>
-          ¿Necesitás equipar tu pozo con energía solar?
-        </div>
-        <a href="https://febecos.mitiendanube.com" target="_blank" rel="noreferrer"
-          style={{ background: '#F26419', color: '#fff', padding: '9px 24px', borderRadius: '6px', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>
-          Ver kits Febecos →
-        </a>
-        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+      {/* Footer — solo links legales */}
+      <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', marginTop: '0', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <a href="/terminos" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Términos y condiciones</a>
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
           <a href="/terminos#privacidad" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Política de privacidad</a>
