@@ -1,10 +1,9 @@
-// v5 — fix apiFetch bearer token
+// v6 — con pestaña Contactos
 import { useState, useEffect } from 'react'
 
 const SUPABASE_URL = 'https://qfesxpcuhsrfdohnsleg.supabase.co'
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
 
-// Fix: siempre usar ANON_KEY como Bearer — el admin_token no es un JWT de Supabase
 async function apiFetch(path, options = {}) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...options,
@@ -112,7 +111,7 @@ function Admin() {
       <div style={{ background: '#085041', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: '16px', fontWeight: '600', color: '#E1F5EE' }}>Panel Admin — Pozeros Agro</div>
-          <div style={{ fontSize: '12px', color: '#5DCAA5' }}>Gestioná perforistas y publicidades</div>
+          <div style={{ fontSize: '12px', color: '#5DCAA5' }}>Gestioná perforistas, publicidades y contactos</div>
         </div>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           <a href="/" style={{ fontSize: '13px', color: '#9FE1CB', textDecoration: 'none' }}>← Ver directorio</a>
@@ -124,6 +123,7 @@ function Admin() {
         {[
           { key: 'perforistas', label: '👷 Perforistas' },
           { key: 'publicidad',  label: '📢 Publicidad' },
+          { key: 'contactos',   label: '📬 Contactos' },
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             style={{
@@ -218,8 +218,182 @@ function Admin() {
         )}
 
         {tab === 'publicidad' && <TabPublicidad />}
+        {tab === 'contactos' && <TabContactos />}
 
       </div>
+    </div>
+  )
+}
+
+// ── TAB CONTACTOS ──
+function TabContactos() {
+  const [contactos, setContactos] = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [expandido, setExpandido] = useState(null)
+  const [filtro, setFiltro] = useState('todos')
+
+  useEffect(() => { cargar() }, [])
+
+  async function cargar() {
+    setCargando(true)
+    const data = await apiFetch('contactos?select=*&order=created_at.desc')
+    setContactos(Array.isArray(data) ? data : [])
+    setCargando(false)
+  }
+
+  async function marcarLeido(id, leido) {
+    await apiFetch(`contactos?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ leido })
+    })
+    setContactos(prev => prev.map(c => c.id === id ? { ...c, leido } : c))
+  }
+
+  async function eliminar(id) {
+    if (!confirm('¿Eliminar este contacto?')) return
+    await apiFetch(`contactos?id=eq.${id}`, { method: 'DELETE' })
+    setContactos(prev => prev.filter(c => c.id !== id))
+    if (expandido === id) setExpandido(null)
+  }
+
+  const tipoLabel = {
+    productor: '🌾 Productor',
+    perforista: '⛏️ Perforista',
+    empresa: '🏢 Empresa',
+    persona: '👤 Persona',
+  }
+
+  const filtrados = contactos.filter(c => {
+    if (filtro === 'no_leidos') return !c.leido
+    if (filtro === 'leidos') return c.leido
+    return true
+  })
+
+  const noLeidos = contactos.filter(c => !c.leido).length
+
+  return (
+    <div>
+      {/* Stats y filtros */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {[
+            { key: 'todos', label: `Todos (${contactos.length})` },
+            { key: 'no_leidos', label: `No leídos (${noLeidos})` },
+            { key: 'leidos', label: `Leídos (${contactos.length - noLeidos})` },
+          ].map(f => (
+            <button key={f.key} onClick={() => setFiltro(f.key)}
+              style={{ padding: '6px 14px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', border: filtro === f.key ? '1px solid #085041' : '0.5px solid #ccc', background: filtro === f.key ? '#E1F5EE' : '#fff', color: filtro === f.key ? '#085041' : '#666', fontWeight: filtro === f.key ? '600' : '400' }}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+        {noLeidos > 0 && (
+          <span style={{ fontSize: '12px', color: '#085041', fontWeight: '600' }}>
+            {noLeidos} mensaje{noLeidos !== 1 ? 's' : ''} sin leer
+          </span>
+        )}
+      </div>
+
+      {cargando && <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>Cargando...</div>}
+
+      {!cargando && filtrados.length === 0 && (
+        <div style={{ padding: '2rem', textAlign: 'center', color: '#aaa', background: '#fff', borderRadius: '12px', border: '0.5px solid #e0e0d8' }}>
+          No hay contactos {filtro !== 'todos' ? 'en esta categoría' : 'todavía'}.
+        </div>
+      )}
+
+      {filtrados.map(c => (
+        <div key={c.id} style={{
+          background: '#fff', borderRadius: '10px',
+          border: `0.5px solid ${!c.leido ? '#085041' : '#e0e0d8'}`,
+          marginBottom: '8px', overflow: 'hidden'
+        }}>
+          {/* Fila resumen */}
+          <div
+            onClick={() => {
+              setExpandido(expandido === c.id ? null : c.id)
+              if (!c.leido) marcarLeido(c.id, true)
+            }}
+            style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flexWrap: 'wrap' }}
+          >
+            {/* Indicador no leído */}
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: !c.leido ? '#085041' : '#e0e0e0', flexShrink: 0 }} />
+
+            {/* Tipo */}
+            <span style={{ fontSize: '11px', fontWeight: '600', color: '#666', flexShrink: 0 }}>
+              {tipoLabel[c.tipo] || c.tipo}
+            </span>
+
+            {/* Nombre */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: !c.leido ? '600' : '500', fontSize: '13px', color: '#1a1a2e' }}>
+                {c.nombre} {c.apellido}
+              </div>
+              <div style={{ fontSize: '11px', color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {c.mensaje}
+              </div>
+            </div>
+
+            {/* Fecha */}
+            <div style={{ fontSize: '11px', color: '#aaa', flexShrink: 0 }}>
+              {new Date(c.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </div>
+
+            {/* Flecha */}
+            <span style={{ fontSize: '12px', color: '#aaa', flexShrink: 0 }}>
+              {expandido === c.id ? '▲' : '▼'}
+            </span>
+          </div>
+
+          {/* Detalle expandido */}
+          {expandido === c.id && (
+            <div style={{ padding: '0 16px 16px', borderTop: '0.5px solid #f0f0f0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '12px', marginBottom: '12px' }}>
+                <div style={{ background: '#f8f9fa', borderRadius: '6px', padding: '8px 12px' }}>
+                  <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '2px' }}>EMAIL</div>
+                  <a href={`mailto:${c.email}`} style={{ fontSize: '13px', color: '#1B4F8A', textDecoration: 'none', fontWeight: '500' }}>{c.email}</a>
+                </div>
+                <div style={{ background: '#f8f9fa', borderRadius: '6px', padding: '8px 12px' }}>
+                  <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '2px' }}>WHATSAPP</div>
+                  <a href={`https://wa.me/${c.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noreferrer"
+                    style={{ fontSize: '13px', color: '#25D366', textDecoration: 'none', fontWeight: '500' }}>{c.whatsapp}</a>
+                </div>
+                {c.dni && (
+                  <div style={{ background: '#f8f9fa', borderRadius: '6px', padding: '8px 12px' }}>
+                    <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '2px' }}>DNI</div>
+                    <div style={{ fontSize: '13px', color: '#333' }}>{c.dni}</div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ background: '#f8f9fa', borderRadius: '6px', padding: '10px 12px', marginBottom: '12px' }}>
+                <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '4px' }}>MENSAJE</div>
+                <div style={{ fontSize: '13px', color: '#333', lineHeight: '1.6' }}>{c.mensaje}</div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <a href={`mailto:${c.email}?subject=Re: Contacto desde Pozero Agro`}
+                  style={{ padding: '6px 14px', background: '#1B4F8A', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontSize: '12px', fontWeight: '600' }}>
+                  ✉️ Responder por email
+                </a>
+                <a href={`https://wa.me/${c.whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent('Hola! Te contactamos desde Pozero Agro.')}`}
+                  target="_blank" rel="noreferrer"
+                  style={{ padding: '6px 14px', background: '#25D366', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontSize: '12px', fontWeight: '600' }}>
+                  💬 WhatsApp
+                </a>
+                <button onClick={() => marcarLeido(c.id, !c.leido)}
+                  style={{ padding: '6px 14px', background: '#f0f0f0', color: '#666', border: 'none', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>
+                  {c.leido ? 'Marcar no leído' : 'Marcar leído'}
+                </button>
+                <button onClick={() => eliminar(c.id)}
+                  style={{ padding: '6px 14px', background: '#fef2f2', color: '#b91c1c', border: 'none', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', marginLeft: 'auto' }}>
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   )
 }
