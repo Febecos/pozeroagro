@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qfesxpcuhsrfdohnsleg.supabase.co'
-const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
-const MAPS_KEY = process.env.NEXT_PUBLIC_MAPS_KEY || 'AIzaSyAR7ZalO3stHEjFJWDdk58YlUYzNxHRmVs'
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const MAPS_KEY = process.env.NEXT_PUBLIC_MAPS_KEY
 
 async function sbFetch(path, options = {}) {
   const res = await fetch(`${SUPABASE_URL}${path}`, {
@@ -42,7 +42,6 @@ export default function Registro() {
     'Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'
   ]
 
-  // Cargar Google Maps con Places library
   useEffect(() => {
     if (window.google && window.google.maps && window.google.maps.places) {
       initAutocomplete()
@@ -72,10 +71,7 @@ export default function Registro() {
       const place = autocompleteRef.current.getPlace()
       if (!place || !place.address_components) return
 
-      // Extraer nombre de localidad
       const localidadNombre = place.name || ''
-
-      // Extraer provincia del resultado
       let provinciaNombre = ''
       for (const comp of place.address_components) {
         if (comp.types.includes('administrative_area_level_1')) {
@@ -84,7 +80,6 @@ export default function Registro() {
         }
       }
 
-      // Mapear nombre de provincia de Google al formato del sistema
       const mapaProvincias = {
         'Buenos Aires': 'Buenos Aires',
         'Ciudad Autónoma de Buenos Aires': 'CABA',
@@ -122,7 +117,6 @@ export default function Registro() {
     })
   }
 
-  // Re-inicializar autocomplete cuando el paso 1 se monta
   useEffect(() => {
     if (paso === 1 && window.google && window.google.maps && window.google.maps.places) {
       setTimeout(() => initAutocomplete(), 100)
@@ -195,7 +189,6 @@ export default function Registro() {
     try {
       const ahora = new Date().toISOString()
 
-      // Geocodificar via API route server-side
       let lat = null, lng = null
       try {
         const geoRes = await fetch(
@@ -261,27 +254,9 @@ export default function Registro() {
 
       await registrarAceptacion(perforista_id)
 
-      try {
-        await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
-          method: 'POST',
-          headers: { 'apikey': ANON_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: form.email,
-            options: {
-              emailRedirectTo: `${typeof window !== 'undefined'
-                ? window.location.origin
-                : 'https://pozeroagro.vercel.app'}/confirmado`,
-              data: { tipo: 'perforista' }
-            }
-          })
-        })
-      } catch (mailErr) {
-        console.warn('Mail no enviado, datos guardados igual:', mailErr.message)
-      }
-
       // Notificar al admin
       try {
-        await fetch(`/api/notificar-alta`, {
+        await fetch('/api/notificar-alta', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -296,6 +271,24 @@ export default function Registro() {
         })
       } catch (notifErr) {
         console.warn('Notificación admin falló:', notifErr.message)
+      }
+
+      try {
+        await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
+          method: 'POST',
+          headers: { 'apikey': ANON_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: form.email,
+            options: {
+              emailRedirectTo: `${typeof window !== 'undefined'
+                ? window.location.origin
+                : 'https://pozeroagro.ar'}/confirmado`,
+              data: { tipo: 'perforista' }
+            }
+          })
+        })
+      } catch (mailErr) {
+        console.warn('Mail no enviado, datos guardados igual:', mailErr.message)
       }
 
       setExito(true)
@@ -345,7 +338,6 @@ export default function Registro() {
     />
   )
 
-  // ─── PANTALLA DE ÉXITO ───────────────────────────────────────────────────────
   if (exito) return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: '#fff', borderRadius: '12px', padding: '2rem', textAlign: 'center', maxWidth: '420px', margin: '1rem', border: '0.5px solid #e0e0e8' }}>
@@ -367,11 +359,9 @@ export default function Registro() {
     </div>
   )
 
-  // ─── FORMULARIO ─────────────────────────────────────────────────────────────
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
 
-      {/* HEADER */}
       <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{ width: '32px', height: '32px', background: 'rgba(255,255,255,0.15)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="20" height="20" viewBox="0 0 100 100">
@@ -389,7 +379,6 @@ export default function Registro() {
 
       <div style={{ maxWidth: '560px', margin: '1.5rem auto', padding: '0 1rem' }}>
 
-        {/* BARRA DE PROGRESO */}
         <div style={{ marginBottom: '1rem' }}>
           <div style={{ fontSize: '12px', color: '#888', marginBottom: '6px' }}>Paso {paso} de 4</div>
           <div style={{ height: '5px', background: '#e0e0e8', borderRadius: '3px' }}>
@@ -399,7 +388,6 @@ export default function Registro() {
 
         <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e0e0e8', padding: '1.5rem' }}>
 
-          {/* ── PASO 1: DATOS PERSONALES ── */}
           {paso === 1 && (
             <div>
               <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Datos personales</div>
@@ -410,7 +398,6 @@ export default function Registro() {
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Apellido *</label><br />{input('apellido', 'Pérez')}</div>
               </div>
 
-              {/* Localidad con autocomplete PRIMERO, provincia se autocompleta */}
               <div style={{ marginBottom: '10px' }}>
                 <label style={{ fontSize: '12px', color: '#666' }}>Localidad * <span style={{ color: '#1B4F8A', fontWeight: '600' }}>(escribí y seleccioná de la lista)</span></label>
                 <input
@@ -462,7 +449,6 @@ export default function Registro() {
             </div>
           )}
 
-          {/* ── PASO 2: EXPERIENCIA ── */}
           {paso === 2 && (
             <div>
               <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Experiencia técnica</div>
@@ -518,7 +504,6 @@ export default function Registro() {
             </div>
           )}
 
-          {/* ── PASO 3: SERVICIOS ── */}
           {paso === 3 && (
             <div>
               <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Servicios y equipos</div>
@@ -571,7 +556,6 @@ export default function Registro() {
             </div>
           )}
 
-          {/* ── PASO 4: CONFIRMACIÓN + T&C ── */}
           {paso === 4 && (
             <div>
               <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '4px' }}>Últimos detalles</div>
@@ -627,7 +611,6 @@ export default function Registro() {
             </div>
           )}
 
-          {/* ── NAVEGACIÓN ── */}
           <div style={{ display: 'flex', gap: '10px', marginTop: '1.25rem' }}>
             {paso > 1 && (
               <button onClick={() => setPaso(p => p - 1)}
