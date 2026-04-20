@@ -24,6 +24,7 @@ export default function Registro() {
   const [form, setForm] = useState({
     nombre: '', apellido: '', provincia: '', localidad: '',
     telefono: '', whatsapp: '', instagram: '', facebook: '', email: '',
+    cuit: '', dni: '',
     experiencia: '', tipo_empresa: '', profundidad_max: 80,
     diametros: [], terrenos: [], zonas_trabajo: [], servicios: [],
     tipo_bomba: [], conoce_solar: '', trabajos_por_mes: '', descripcion: '',
@@ -211,6 +212,8 @@ export default function Registro() {
         instagram: form.instagram,
         facebook: form.facebook,
         email: form.email,
+        cuit: form.cuit || null,
+        dni: form.dni || null,
         experiencia: form.experiencia,
         tipo_empresa: form.tipo_empresa,
         profundidad_max: form.profundidad_max,
@@ -254,7 +257,6 @@ export default function Registro() {
 
       await registrarAceptacion(perforista_id)
 
-      // Notificar al admin
       try {
         await fetch('/api/notificar-alta', {
           method: 'POST',
@@ -436,11 +438,45 @@ export default function Registro() {
                 <div><label style={{ fontSize: '12px', color: '#666' }}>Facebook</label><br />{input('facebook', 'fb.com/tuperfil')}</div>
               </div>
 
-              <div>
+              <div style={{ marginBottom: '10px' }}>
                 <label style={{ fontSize: '12px', color: '#666' }}>
                   Email * <span style={{ color: '#1B4F8A', fontWeight: '600' }}>(para confirmar tu registro)</span>
                 </label><br />
                 {input('email', 'juan@ejemplo.com', 'email')}
+              </div>
+
+              {/* CUIT / DNI — opcionales */}
+              <div style={{ borderTop: '0.5px solid #f0f0f0', paddingTop: '12px', marginTop: '4px' }}>
+                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Identificación fiscal (opcional)
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontSize: '12px', color: '#666' }}>CUIT <span style={{ color: '#aaa' }}>(sin guiones)</span></label><br />
+                    <input
+                      type="text"
+                      placeholder="20123456789"
+                      value={form.cuit}
+                      onChange={e => set('cuit', e.target.value.replace(/\D/g, '').slice(0, 11))}
+                      maxLength={11}
+                      style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '12px', color: '#666' }}>DNI <span style={{ color: '#aaa' }}>(sin puntos)</span></label><br />
+                    <input
+                      type="text"
+                      placeholder="12345678"
+                      value={form.dni}
+                      onChange={e => set('dni', e.target.value.replace(/\D/g, '').slice(0, 8))}
+                      maxLength={8}
+                      style={{ width: '100%', padding: '9px 12px', border: '0.5px solid #ccc', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                </div>
+                <div style={{ fontSize: '11px', color: '#bbb', marginTop: '6px' }}>
+                  No se muestran públicamente. Solo para verificación interna.
+                </div>
               </div>
 
               <div style={{ marginTop: '10px', background: '#fff3e0', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', color: '#E65100' }}>
@@ -579,6 +615,8 @@ export default function Registro() {
 
               <div style={{ fontSize: '13px', color: '#888', padding: '12px', background: '#f5f7fa', borderRadius: '8px', marginBottom: '16px' }}>
                 <strong>Resumen:</strong> {form.nombre} {form.apellido} · {form.localidad}, {form.provincia} · {form.profundidad_max}m máx
+                {form.cuit && <span> · CUIT: {form.cuit}</span>}
+                {form.dni && <span> · DNI: {form.dni}</span>}
               </div>
 
               <div style={{ background: form.acepto_terminos ? '#f0fdf4' : '#fff8f0', border: `1px solid ${form.acepto_terminos ? '#86efac' : '#fcd34d'}`, borderRadius: '8px', padding: '12px 14px', marginBottom: '12px' }}>
