@@ -702,18 +702,14 @@ export default function PerfilPerforista() {
           </div>
         </div>
 
-        {/* FOOTER */}
-        <div style={{ background: '#1B4F8A', borderRadius: '12px', padding: '1rem 1.5rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>¿Necesitás equipar tu pozo con energía solar?</div>
-          <a href="https://febecos.mitiendanube.com" target="_blank" rel="noreferrer"
-            style={{ background: '#F26419', color: '#fff', padding: '9px 24px', borderRadius: '6px', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>
-            Ver kits Febecos →
-          </a>
-          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
-            <a href="/terminos" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', marginRight: '12px' }}>Términos y condiciones</a>
-            <a href="/terminos#privacidad" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Política de privacidad</a>
-          </div>
-        </div>
+       {/* FOOTER */}
+          <div style={{ background: '#1B4F8A', borderRadius: '12px', padding: '1rem 1.5rem', textAlign: 'center' }}>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <a href="/terminos" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Términos y condiciones</a>
+          <a href="/terminos#privacidad" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Política de privacidad</a>
+          <a href="/contacto" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Contacto</a>
+      </div>
+    </div>
 
       </div>
     </div>
