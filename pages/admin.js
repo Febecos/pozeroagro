@@ -1,17 +1,17 @@
-// v4 — con módulo de publicidad
+// v5 — fix apiFetch bearer token
 import { useState, useEffect } from 'react'
 
 const SUPABASE_URL = 'https://qfesxpcuhsrfdohnsleg.supabase.co'
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
 
+// Fix: siempre usar ANON_KEY como Bearer — el admin_token no es un JWT de Supabase
 async function apiFetch(path, options = {}) {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : ''
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       'apikey': ANON_KEY,
-      'Authorization': `Bearer ${token || ANON_KEY}`,
+      'Authorization': `Bearer ${ANON_KEY}`,
       'Prefer': 'return=representation',
       ...(options.headers || {})
     }
@@ -109,7 +109,6 @@ function Admin() {
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f5f0' }}>
 
-      {/* Header */}
       <div style={{ background: '#085041', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: '16px', fontWeight: '600', color: '#E1F5EE' }}>Panel Admin — Pozeros Agro</div>
@@ -121,7 +120,6 @@ function Admin() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div style={{ background: '#fff', borderBottom: '0.5px solid #e0e0d8', padding: '0 1.5rem', display: 'flex', gap: '0' }}>
         {[
           { key: 'perforistas', label: '👷 Perforistas' },
@@ -142,7 +140,6 @@ function Admin() {
 
       <div style={{ padding: '1.25rem 1.5rem' }}>
 
-        {/* ── TAB PERFORISTAS ── */}
         {tab === 'perforistas' && (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '1.25rem' }}>
@@ -220,7 +217,6 @@ function Admin() {
           </>
         )}
 
-        {/* ── TAB PUBLICIDAD ── */}
         {tab === 'publicidad' && <TabPublicidad />}
 
       </div>
@@ -228,7 +224,6 @@ function Admin() {
   )
 }
 
-// ── SLOTS disponibles ──
 const SLOTS = [
   { id: 'listado_mid',    label: 'Después de fila 1 (entre perforistas)' },
   { id: 'listado_bottom', label: 'Al final del listado' },
@@ -268,11 +263,12 @@ function TabPublicidad() {
   }
 
   async function toggleActivo(camp) {
+    const nuevoValor = !camp.activo
     await apiFetch(`ad_campaigns?id=eq.${camp.id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ activo: !camp.activo })
+      body: JSON.stringify({ activo: nuevoValor })
     })
-    setCampanas(prev => prev.map(c => c.id === camp.id ? { ...c, activo: !c.activo } : c))
+    setCampanas(prev => prev.map(c => c.id === camp.id ? { ...c, activo: nuevoValor } : c))
   }
 
   async function eliminar(id) {
@@ -349,8 +345,6 @@ function TabPublicidad() {
 
   return (
     <div>
-
-      {/* Botón nueva campaña */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <div style={{ fontSize: '13px', color: '#666' }}>
           {campanas.length} campaña{campanas.length !== 1 ? 's' : ''} registrada{campanas.length !== 1 ? 's' : ''}
@@ -361,74 +355,57 @@ function TabPublicidad() {
         </button>
       </div>
 
-      {/* Formulario */}
       {mostrarForm && (
         <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e0e0d8', padding: '1.25rem', marginBottom: '1.25rem' }}>
           <div style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a2e', marginBottom: '1rem' }}>
             {editandoId ? 'Editar campaña' : 'Nueva campaña'}
           </div>
-
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Nombre de la campaña *</label>
               <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
-                placeholder="Ej: Kits solares Febecos — Q2 2026"
-                style={inputStyle} />
+                placeholder="Ej: Kits solares Febecos — Q2 2026" style={inputStyle} />
             </div>
-
             <div>
               <label style={labelStyle}>Tipo</label>
               <select value={form.ad_type} onChange={e => setForm(f => ({ ...f, ad_type: e.target.value }))} style={inputStyle}>
                 {AD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
-
             <div>
               <label style={labelStyle}>Ubicación (slot)</label>
               <select value={form.slot_id} onChange={e => setForm(f => ({ ...f, slot_id: e.target.value }))} style={inputStyle}>
                 {SLOTS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
               </select>
             </div>
-
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>URL destino (al hacer clic) *</label>
               <input value={form.cta_url} onChange={e => setForm(f => ({ ...f, cta_url: e.target.value }))}
-                placeholder="https://febecos.mitiendanube.com"
-                style={inputStyle} />
+                placeholder="https://febecos.mitiendanube.com" style={inputStyle} />
             </div>
-
             <div>
               <label style={labelStyle}>Texto del botón</label>
               <input value={form.cta_texto} onChange={e => setForm(f => ({ ...f, cta_texto: e.target.value }))}
-                placeholder="Ver más"
-                style={inputStyle} />
+                placeholder="Ver más" style={inputStyle} />
             </div>
-
             <div>
               <label style={labelStyle}>URL de imagen (opcional)</label>
               <input value={form.imagen_url} onChange={e => setForm(f => ({ ...f, imagen_url: e.target.value }))}
-                placeholder="https://..."
-                style={inputStyle} />
+                placeholder="https://..." style={inputStyle} />
             </div>
-
             <div>
               <label style={labelStyle}>Fecha inicio (opcional)</label>
               <input type="date" value={form.fecha_inicio} onChange={e => setForm(f => ({ ...f, fecha_inicio: e.target.value }))} style={inputStyle} />
             </div>
-
             <div>
               <label style={labelStyle}>Fecha fin (opcional)</label>
               <input type="date" value={form.fecha_fin} onChange={e => setForm(f => ({ ...f, fecha_fin: e.target.value }))} style={inputStyle} />
             </div>
-
             <div>
               <label style={labelStyle}>Máx. impresiones (opcional)</label>
               <input type="number" value={form.max_impresiones} onChange={e => setForm(f => ({ ...f, max_impresiones: e.target.value }))}
-                placeholder="Sin límite"
-                style={inputStyle} />
+                placeholder="Sin límite" style={inputStyle} />
             </div>
-
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingTop: '20px' }}>
               <div onClick={() => setForm(f => ({ ...f, activo: !f.activo }))}
                 style={{ width: '36px', height: '20px', borderRadius: '10px', background: form.activo ? '#1D9E75' : '#ccc', position: 'relative', cursor: 'pointer', transition: 'background .2s', flexShrink: 0 }}>
@@ -436,11 +413,8 @@ function TabPublicidad() {
               </div>
               <span style={{ fontSize: '13px', color: '#444' }}>Activa al guardar</span>
             </div>
-
           </div>
-
           {msg && <div style={{ marginTop: '10px', fontSize: '12px', color: '#c0392b' }}>{msg}</div>}
-
           <div style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
             <button onClick={guardar} disabled={guardando}
               style={{ padding: '8px 20px', background: '#085041', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', opacity: guardando ? 0.6 : 1 }}>
@@ -454,7 +428,6 @@ function TabPublicidad() {
         </div>
       )}
 
-      {/* Lista de campañas */}
       {cargando && <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>Cargando...</div>}
 
       {!cargando && campanas.length === 0 && (
@@ -465,14 +438,10 @@ function TabPublicidad() {
 
       {campanas.map(c => (
         <div key={c.id} style={{ background: '#fff', borderRadius: '10px', border: '0.5px solid #e0e0d8', padding: '12px 16px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-
-          {/* Toggle activo */}
           <div onClick={() => toggleActivo(c)}
             style={{ width: '36px', height: '20px', borderRadius: '10px', background: c.activo ? '#1D9E75' : '#ccc', position: 'relative', cursor: 'pointer', transition: 'background .2s', flexShrink: 0 }}>
             <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '2px', left: c.activo ? '18px' : '2px', transition: 'left .2s' }} />
           </div>
-
-          {/* Info */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: '600', fontSize: '13px', color: '#1a1a2e' }}>{c.nombre}</div>
             <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
@@ -481,13 +450,9 @@ function TabPublicidad() {
               {c.fecha_fin && ` · Vence ${c.fecha_fin.slice(0,10)}`}
             </div>
           </div>
-
-          {/* Estado badge */}
           <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px', background: c.activo ? '#E1F5EE' : '#f0f0f0', color: c.activo ? '#085041' : '#888', flexShrink: 0 }}>
             {c.activo ? 'ACTIVA' : 'INACTIVA'}
           </span>
-
-          {/* Acciones */}
           <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
             <button onClick={() => editar(c)}
               style={{ padding: '4px 12px', fontSize: '11px', borderRadius: '4px', background: '#E6F1FB', color: '#0C447C', border: 'none', cursor: 'pointer', fontWeight: '500' }}>
@@ -498,10 +463,8 @@ function TabPublicidad() {
               Eliminar
             </button>
           </div>
-
         </div>
       ))}
-
     </div>
   )
 }
