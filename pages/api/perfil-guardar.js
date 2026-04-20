@@ -57,7 +57,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'contacto@pozeroagro.ar',
+        from: 'Pozero Agro <contacto@pozeroagro.ar>',
         to: email,
         subject: '✅ Confirmá los cambios en tu perfil — Pozero Agro',
         html: `
