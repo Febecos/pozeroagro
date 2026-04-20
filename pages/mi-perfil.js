@@ -101,7 +101,7 @@ export default function MiPerfil() {
     if (!email) return
     setEnviandoLink(true)
     setError('')
-    sessionStorage.setItem('pza_auth_destino', '/mi-perfil')
+    localStorage.setItem('pza_auth_destino', '/mi-perfil')
     try {
       const res = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
         method: 'POST',
