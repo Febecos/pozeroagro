@@ -3,17 +3,14 @@ import { useRouter } from 'next/router'
 
 export default function Confirmado() {
   const router = useRouter()
-  const [estado, setEstado] = useState('cargando')
   const [perforistId, setPerforistId] = useState(null)
 
   useEffect(() => {
-    const hash = window.location.hash
     const pid = sessionStorage.getItem('pza_perforista_id')
     if (pid) {
       setPerforistId(pid)
       sessionStorage.removeItem('pza_perforista_id')
     }
-    setEstado('ok')
   }, [])
 
   function irAPerfil() {
@@ -44,7 +41,10 @@ export default function Confirmado() {
               Ver mi perfil →
             </button>
           )}
-          <a href="/" style={{ display: 'inline-block', background: perforistId ? 'transparent' : '#1B4F8A', color: perforistId ? '#1B4F8A' : '#fff', padding: '11px 28px', borderRadius: '8px', textDecoration: perforistId ? 'underline' : 'none', fontSize: '14px', fontWeight: '600' }}>
+          <a href="/mi-perfil" style={{ display: 'inline-block', background: '#1B4F8A', color: '#fff', padding: '11px 28px', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
+            Editar mi perfil →
+          </a>
+          <a href="/" style={{ display: 'inline-block', background: 'transparent', color: '#1B4F8A', padding: '11px 28px', borderRadius: '8px', textDecoration: 'underline', fontSize: '14px', fontWeight: '600' }}>
             Ver el directorio →
           </a>
         </div>
