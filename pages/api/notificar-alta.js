@@ -43,7 +43,7 @@ export default async function handler(req, res) {
                 </tr>
               </table>
               <div style="margin-top: 24px; text-align: center;">
-                <a href="https://pozeroagro.ar/perforista/admin" 
+                <a href="https://pozeroagro.ar/admin" 
                    style="background: #1B4F8A; color: #fff; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600;">
                   Ver panel admin →
                 </a>
