@@ -106,7 +106,7 @@ export default function Directorio() {
     setCargando(true)
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/perforistas?select=*&estado=in.(activo,cliente)&order=created_at.desc`,
+        `${SUPABASE_URL}/rest/v1/perforistas?select=*&estado=in.(activo,cliente)&order=score_visibilidad.desc,created_at.desc`,
         { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
       )
       const data = await res.json()
