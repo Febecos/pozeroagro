@@ -6,7 +6,7 @@ const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const MAPS_KEY = process.env.NEXT_PUBLIC_MAPS_KEY
 
 export default function MiPerfil() {
-  const [paso, setPaso] = useState('login') // login | cargando | editar | enviado
+  const [paso, setPaso] = useState('login')
   const [email, setEmail] = useState('')
   const [enviandoLink, setEnviandoLink] = useState(false)
   const [usuario, setUsuario] = useState(null)
@@ -34,6 +34,13 @@ export default function MiPerfil() {
       if (token) {
         window.history.replaceState({}, '', window.location.pathname)
         verificarToken(token)
+      }
+    } else {
+      // Token guardado desde el redirect del home
+      const tokenGuardado = localStorage.getItem('pza_auth_token_perfil')
+      if (tokenGuardado) {
+        localStorage.removeItem('pza_auth_token_perfil')
+        verificarToken(tokenGuardado)
       }
     }
   }, [])
@@ -224,8 +231,6 @@ export default function MiPerfil() {
     setGuardando(false)
   }
 
-  // ── PANTALLAS ──
-
   if (paso === 'cargando') return (
     <Wrapper>
       <div style={{ textAlign: 'center', padding: '3rem', color: '#888' }}>Cargando tu perfil...</div>
@@ -284,7 +289,6 @@ export default function MiPerfil() {
   if (paso === 'editar' && form) return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
 
-      {/* Header */}
       <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <svg width="22" height="22" viewBox="0 0 100 100">
@@ -302,10 +306,9 @@ export default function MiPerfil() {
 
       <div style={{ maxWidth: '600px', margin: '1.5rem auto', padding: '0 1rem' }}>
 
-        {/* Aviso datos bloqueados */}
         <div style={{ background: '#fff3e0', borderRadius: '8px', padding: '10px 14px', marginBottom: '1rem', fontSize: '12px', color: '#E65100', lineHeight: '1.6' }}>
-          📞 Para cambiar teléfono, WhatsApp o email escribinos a{' '}
-          <a href={`mailto:contacto@pozeroagro.ar?subject=Solicito Modificacion de Telefono y/o Email`}
+          Para cambiar teléfono, WhatsApp o email escribinos a{' '}
+          <a href="mailto:contacto@pozeroagro.ar?subject=Solicito Modificacion de Telefono y/o Email"
             style={{ color: '#1B4F8A', fontWeight: '600' }}>
             contacto@pozeroagro.ar
           </a>
@@ -314,17 +317,15 @@ export default function MiPerfil() {
         <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e0e0e8', padding: '1.5rem', marginBottom: '1rem' }}>
           <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '1rem' }}>Datos personales</div>
 
-          {/* Campos bloqueados */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
             <Campo label="Email (no editable)" valor={perforista.email} bloqueado />
-            <Campo label="Teléfono (no editable)" valor={perforista.telefono} bloqueado />
+            <Campo label="Telefono (no editable)" valor={perforista.telefono} bloqueado />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
             {perforista.dni && <Campo label="DNI (no editable)" valor={perforista.dni} bloqueado />}
             {perforista.cuit && <Campo label="CUIT (no editable)" valor={perforista.cuit} bloqueado />}
           </div>
 
-          {/* Campos editables */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
             <div>
               <label style={labelStyle}>Nombre *</label>
@@ -350,7 +351,7 @@ export default function MiPerfil() {
           <div style={{ marginBottom: '12px' }}>
             <label style={labelStyle}>Provincia *</label>
             <select value={form.provincia} onChange={e => set('provincia', e.target.value)} style={inputStyle}>
-              <option value="">Seleccioná...</option>
+              <option value="">Selecciona...</option>
               {provincias.map(p => <option key={p}>{p}</option>)}
             </select>
           </div>
@@ -368,27 +369,27 @@ export default function MiPerfil() {
         </div>
 
         <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e0e0e8', padding: '1.5rem', marginBottom: '1rem' }}>
-          <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '1rem' }}>Experiencia técnica</div>
+          <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B4F8A', marginBottom: '1rem' }}>Experiencia tecnica</div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
             <div>
-              <label style={labelStyle}>Años de experiencia</label>
+              <label style={labelStyle}>Anos de experiencia</label>
               <select value={form.experiencia} onChange={e => set('experiencia', e.target.value)} style={inputStyle}>
-                <option value="">Seleccioná...</option>
+                <option value="">Selecciona...</option>
                 {['Menos de 2 años','2 a 5 años','5 a 10 años','10 a 20 años','Más de 20 años'].map(o => <option key={o}>{o}</option>)}
               </select>
             </div>
             <div>
               <label style={labelStyle}>Tipo de empresa</label>
               <select value={form.tipo_empresa} onChange={e => set('tipo_empresa', e.target.value)} style={inputStyle}>
-                <option value="">Seleccioná...</option>
+                <option value="">Selecciona...</option>
                 {['Trabajador independiente','Empresa unipersonal','Empresa con empleados'].map(o => <option key={o}>{o}</option>)}
               </select>
             </div>
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={labelStyle}>Profundidad máxima</label>
+            <label style={labelStyle}>Profundidad maxima</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px' }}>
               <input type="range" min="10" max="200" step="5" value={form.profundidad_max}
                 onChange={e => set('profundidad_max', parseInt(e.target.value))} style={{ flex: 1 }} />
@@ -397,7 +398,7 @@ export default function MiPerfil() {
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={labelStyle}>Diámetros</label>
+            <label style={labelStyle}>Diametros</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
               {['3 pulgadas','4 pulgadas','6 pulgadas','8 pulgadas','Más de 8"'].map(v => <Tag key={v} campo="diametros" valor={v} />)}
             </div>
@@ -429,9 +430,9 @@ export default function MiPerfil() {
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={labelStyle}>¿Instalás sistemas solares?</label>
+            <label style={labelStyle}>Instala sistemas solares?</label>
             <select value={form.conoce_solar} onChange={e => set('conoce_solar', e.target.value)} style={{ ...inputStyle, marginTop: '6px' }}>
-              <option value="">Seleccioná...</option>
+              <option value="">Selecciona...</option>
               {['Sí, ya instalé sistemas solares','Conozco el sistema pero no lo instalé','Me interesa aprender','No trabajo con solar'].map(o => <option key={o}>{o}</option>)}
             </select>
           </div>
@@ -439,13 +440,13 @@ export default function MiPerfil() {
           <div style={{ marginBottom: '16px' }}>
             <label style={labelStyle}>Trabajos por mes</label>
             <select value={form.trabajos_por_mes} onChange={e => set('trabajos_por_mes', e.target.value)} style={{ ...inputStyle, marginTop: '6px' }}>
-              <option value="">Seleccioná...</option>
+              <option value="">Selecciona...</option>
               {['1 a 2','3 a 5','6 a 10','Más de 10'].map(o => <option key={o}>{o}</option>)}
             </select>
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={labelStyle}>Descripción / diferencial</label>
+            <label style={labelStyle}>Descripcion / diferencial</label>
             <textarea value={form.descripcion} onChange={e => set('descripcion', e.target.value)}
               rows={3}
               style={{ ...inputStyle, resize: 'vertical', minHeight: '80px', fontFamily: 'sans-serif' }} />
@@ -502,7 +503,7 @@ function Campo({ label, valor, bloqueado }) {
     <div>
       <label style={{ ...labelStyle, color: bloqueado ? '#aaa' : '#666' }}>{label}</label>
       <input
-        value={valor || '—'}
+        value={valor || '-'}
         disabled={bloqueado}
         style={{ ...inputStyle, background: bloqueado ? '#f5f5f5' : '#fff', color: bloqueado ? '#aaa' : '#333', cursor: bloqueado ? 'not-allowed' : 'text' }}
       />
