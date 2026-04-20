@@ -93,10 +93,10 @@ export default function Directorio() {
       sessionStorage.setItem('pza_auth_token', token)
       window.history.replaceState({}, '', window.location.pathname)
       // Si venía a editar su perfil, redirigir
-      const destino = sessionStorage.getItem('pza_auth_destino')
+      cconst destino = localStorage.getItem('pza_auth_destino')
       if (destino) {
-        sessionStorage.removeItem('pza_auth_destino')
-        window.location.href = destino
+          localStorage.removeItem('pza_auth_destino')
+          window.location.href = destino
       }
     }
   }
