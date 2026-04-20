@@ -7,13 +7,9 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const MAPS_KEY = process.env.NEXT_PUBLIC_MAPS_KEY
 
-// Normaliza texto: minúsculas + sin tildes
 function normalizar(texto) {
   if (!texto) return ''
-  return texto
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+  return texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
 const geocodeCache = {}
@@ -21,17 +17,13 @@ async function geocodificar(localidad, provincia) {
   const key = `${localidad},${provincia}`
   if (geocodeCache[key]) return geocodeCache[key]
   try {
-    const res = await fetch(
-      `/api/geocode?localidad=${encodeURIComponent(localidad)}&provincia=${encodeURIComponent(provincia)}`
-    )
+    const res = await fetch(`/api/geocode?localidad=${encodeURIComponent(localidad)}&provincia=${encodeURIComponent(provincia)}`)
     const data = await res.json()
     if (data.lat && data.lng) {
       geocodeCache[key] = { lat: data.lat, lng: data.lng }
       return geocodeCache[key]
     }
-  } catch (e) {
-    console.warn('Geocodificación falló:', e.message)
-  }
+  } catch (e) { console.warn('Geocodificación falló:', e.message) }
   return null
 }
 
@@ -47,7 +39,11 @@ export default function Directorio() {
   const [isMobile, setIsMobile] = useState(false)
   const [mostrarMapa, setMostrarMapa] = useState(false)
   const [ratings, setRatings] = useState({})
-  const [campana, setCampana] = useState(null)
+  // Un estado por slot
+  const [adMid, setAdMid] = useState(null)
+  const [adBottom, setAdBottom] = useState(null)
+  const [adMapa, setAdMapa] = useState(null)
+  const [adFooter, setAdFooter] = useState(null)
 
   const mapRef = useRef(null)
   const mapaInstancia = useRef(null)
@@ -112,23 +108,35 @@ export default function Directorio() {
         { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
       )
       const data = await res.json()
-      const lista = Array.isArray(data) ? data : []
-      setPerforistas(lista)
+      setPerforistas(Array.isArray(data) ? data : [])
       cargarRatings()
-      cargarCampana()
+      cargarAds()
     } catch (e) {}
     setCargando(false)
   }
 
-  async function cargarCampana() {
+  async function cargarSlot(slot_id) {
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/campanas_activas?slot_id=eq.listado_mid&limit=1`,
+        `${SUPABASE_URL}/rest/v1/campanas_activas?slot_id=eq.${slot_id}&limit=1`,
         { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
       )
       const data = await res.json()
-      if (Array.isArray(data) && data.length > 0) setCampana(data[0])
-    } catch (e) {}
+      return Array.isArray(data) && data.length > 0 ? data[0] : null
+    } catch (e) { return null }
+  }
+
+  async function cargarAds() {
+    const [mid, bottom, mapa, footer] = await Promise.all([
+      cargarSlot('listado_mid'),
+      cargarSlot('listado_bottom'),
+      cargarSlot('debajo_mapa'),
+      cargarSlot('footer_top'),
+    ])
+    setAdMid(mid)
+    setAdBottom(bottom)
+    setAdMapa(mapa)
+    setAdFooter(footer)
   }
 
   async function cargarRatings() {
@@ -173,10 +181,7 @@ export default function Directorio() {
   }
 
   function handleCardClick(p) {
-    registrarEvento('card_vista', p.id, {
-      perforista_nombre: `${p.nombre} ${p.apellido}`,
-      origen: 'directorio'
-    })
+    registrarEvento('card_vista', p.id, { perforista_nombre: `${p.nombre} ${p.apellido}`, origen: 'directorio' })
     router.push(`/perforista/${p.id}`)
   }
 
@@ -229,10 +234,7 @@ export default function Directorio() {
         : ''
 
       marcador.addListener('click', () => {
-        registrarEvento('pin_mapa_click', p.id, {
-          perforista_nombre: `${p.nombre} ${p.apellido}`,
-          origen: 'mapa'
-        })
+        registrarEvento('pin_mapa_click', p.id, { perforista_nombre: `${p.nombre} ${p.apellido}`, origen: 'mapa' })
         infoWindow.current.setContent(`
           <div style="font-family:sans-serif;min-width:190px;padding:4px">
             <div style="font-weight:700;font-size:14px;color:#1a1a2e">${p.nombre} ${p.apellido}</div>
@@ -276,11 +278,17 @@ export default function Directorio() {
   }
 
   const MapaDiv = (
-    <div style={{ position: 'sticky', top: 0, height: '300px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e0e0e8', background: '#e8f0fa' }}>
-      <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+    <div style={{ position: 'sticky', top: 0, borderRadius: '12px', overflow: 'hidden', border: '1px solid #e0e0e8', background: '#e8f0fa' }}>
+      <div ref={mapRef} style={{ width: '100%', height: '300px' }} />
       {!mapaListo && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '13px' }}>
           Cargando mapa...
+        </div>
+      )}
+      {/* Slot debajo_mapa — solo desktop */}
+      {adMapa && !isMobile && (
+        <div style={{ padding: '10px' }}>
+          <AdBanner campaign={adMapa} />
         </div>
       )}
     </div>
@@ -289,6 +297,7 @@ export default function Directorio() {
   return (
     <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
 
+      {/* Header */}
       <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -309,6 +318,7 @@ export default function Directorio() {
         </a>
       </div>
 
+      {/* Búsqueda */}
       <div style={{ background: '#1B4F8A', padding: '1.25rem 1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
         <div style={{ fontSize: '16px', color: '#fff', fontWeight: '600', marginBottom: '12px' }}>
           Encontrá un perforista rural en tu zona
@@ -348,6 +358,7 @@ export default function Directorio() {
         <div style={{ padding: '1rem 1.5rem 0' }}>{MapaDiv}</div>
       )}
 
+      {/* Cuerpo principal */}
       <div style={{ display: 'flex', gap: '16px', padding: '1.25rem 1.5rem', alignItems: 'flex-start' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: '12px', color: '#888', marginBottom: '12px' }}>
@@ -357,6 +368,7 @@ export default function Directorio() {
             <div style={{ textAlign: 'center', padding: '3rem', color: '#888' }}>Cargando directorio...</div>
           )}
 
+          {/* Grid de cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
             {filtrados.map((p, index) => {
               const wa = whatsappNum(p)
@@ -364,6 +376,7 @@ export default function Directorio() {
               const nombreCompleto = `${p.nombre} ${p.apellido}`
               return (
                 <>
+                  {/* Card del perforista */}
                   <div key={p.id}
                     onClick={() => handleCardClick(p)}
                     style={{
@@ -386,11 +399,9 @@ export default function Directorio() {
                         <div style={{ fontSize: '11px', color: '#888' }}>📍 {p.localidad} · {p.provincia}</div>
                       </div>
                     </div>
-
                     <div style={{ marginBottom: '8px', minHeight: '18px' }}>
                       <Estrellas id={p.id} />
                     </div>
-
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '10px' }}>
                       {esValidado && (
                         <span style={{ fontSize: '10px', background: 'linear-gradient(135deg, #F5A623, #F0C040)', color: '#fff', padding: '2px 7px', borderRadius: '4px', fontWeight: '700', boxShadow: '0 1px 4px rgba(245,166,35,0.4)' }}>
@@ -408,7 +419,6 @@ export default function Directorio() {
                         </span>
                       )}
                     </div>
-
                     <div style={{ display: 'flex', gap: '6px' }} onClick={e => e.stopPropagation()}>
                       {p.visible_telefono && p.telefono && (
                         <a href={`tel:${p.telefono}`}
@@ -427,16 +437,23 @@ export default function Directorio() {
                     </div>
                   </div>
 
-                  {/* Banner publicitario después del item 3 — separación comercial */}
-                  {index === 2 && campana && (
-                    <div key="ad-banner" style={{ gridColumn: '1 / -1' }}>
-                      <AdBanner campaign={campana} />
+                  {/* Slot listado_mid — después del item 3, ancho de una card */}
+                  {index === 2 && adMid && (
+                    <div key="ad-mid">
+                      <AdBanner campaign={adMid} />
                     </div>
                   )}
                 </>
               )
             })}
           </div>
+
+          {/* Slot listado_bottom — al final del grid */}
+          {!cargando && filtrados.length > 0 && adBottom && (
+            <div style={{ marginTop: '12px' }}>
+              <AdBanner campaign={adBottom} />
+            </div>
+          )}
 
           {!cargando && filtrados.length === 0 && (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#888' }}>
@@ -454,12 +471,21 @@ export default function Directorio() {
           )}
         </div>
 
+        {/* Mapa desktop — incluye slot debajo_mapa */}
         {!isMobile && (
           <div style={{ width: '320px', flexShrink: 0 }}>{MapaDiv}</div>
         )}
       </div>
 
-      <div style={{ background: '#1B4F8A', padding: '1.25rem 1.5rem', marginTop: '2rem', textAlign: 'center' }}>
+      {/* Slot footer_top — sobre el footer azul */}
+      {adFooter && (
+        <div style={{ padding: '0 1.5rem 1rem' }}>
+          <AdBanner campaign={adFooter} />
+        </div>
+      )}
+
+      {/* Footer */}
+      <div style={{ background: '#1B4F8A', padding: '1.25rem 1.5rem', marginTop: '0', textAlign: 'center' }}>
         <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginBottom: '8px' }}>
           ¿Necesitás equipar tu pozo con energía solar?
         </div>
