@@ -484,7 +484,7 @@ export default function Directorio() {
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
           <a href="/terminos#privacidad" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Política de privacidad</a>
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
-          <a href="mailto:pozeroagro@gmail.com" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Contacto</a>
+          <a href="/contacto" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Contacto</a>
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>© 2026 Pozero Agro</span>
         </div>
