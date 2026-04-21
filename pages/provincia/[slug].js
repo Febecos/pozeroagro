@@ -177,14 +177,14 @@ export default function LandingProvincia({ slug, nombre, contexto, perforistasIn
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    "name": `Poceros en ${nombre}`,
+    "name": `Pozeros en ${nombre}`,
     "description": `Directorio de perforistas rurales en ${nombre}, Argentina. ${contexto.slice(0, 140)}`,
     "url": `https://pozeroagro.ar/provincia/${slug}`,
     "breadcrumb": {
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://pozeroagro.ar" },
-        { "@type": "ListItem", "position": 2, "name": "Buscar pocero", "item": "https://pozeroagro.ar/buscar" },
+        { "@type": "ListItem", "position": 2, "name": "Buscar Pozero", "item": "https://pozeroagro.ar/buscar" },
         { "@type": "ListItem", "position": 3, "name": nombre, "item": `https://pozeroagro.ar/provincia/${slug}` }
       ]
     },
@@ -225,8 +225,8 @@ export default function LandingProvincia({ slug, nombre, contexto, perforistasIn
     <>
       <SEO
         path={`/provincia/${slug}`}
-        title={`Poceros en ${nombre}`}
-        description={`Encontrá perforistas rurales en ${nombre}. ${perforistas.length > 0 ? `${perforistas.length} ${perforistas.length === 1 ? 'pocero disponible' : 'poceros disponibles'}.` : ''} Directorio con contacto directo por WhatsApp, sin comisiones.`}
+        title={`Pozeros en ${nombre}`}
+        description={`Encontrá perforistas rurales en ${nombre}. ${perforistas.length > 0 ? `${perforistas.length} ${perforistas.length === 1 ? 'Pozero disponible' : 'Pozeros disponibles'}.` : ''} Directorio con contacto directo por WhatsApp, sin comisiones.`}
         structuredData={jsonLd}
       />
       <Head>
@@ -280,11 +280,11 @@ export default function LandingProvincia({ slug, nombre, contexto, perforistasIn
             <nav className="breadcrumb" aria-label="Migas de pan">
               <a href="/">Inicio</a>
               <span>›</span>
-              <a href="/buscar">Poceros</a>
+              <a href="/buscar">Pozeros</a>
               <span>›</span>
               <span className="current">{nombre}</span>
             </nav>
-            <h1 className="mh-title">Poceros en {nombre}</h1>
+            <h1 className="mh-title">Pozeros en {nombre}</h1>
             <p className="mh-sub">
               {perforistas.length > 0
                 ? `${perforistas.length} ${perforistas.length === 1 ? 'perforista disponible' : 'perforistas disponibles'} en ${nombre}. Contactalos directo.`
@@ -307,7 +307,7 @@ export default function LandingProvincia({ slug, nombre, contexto, perforistasIn
             {/* ─── LISTA DE PERFORISTAS ─── */}
             {perforistas.length > 0 ? (
               <section className="listado">
-                <h2 className="h2">{perforistas.length === 1 ? 'Pocero disponible' : 'Poceros disponibles'}</h2>
+                <h2 className="h2">{perforistas.length === 1 ? 'Pozero disponible' : 'Pozeros disponibles'}</h2>
                 <div className="cards-grid">
                   {perforistas.map(p => {
                     const wa = whatsappNum(p)
@@ -357,7 +357,7 @@ export default function LandingProvincia({ slug, nombre, contexto, perforistasIn
             ) : (
               <section className="empty">
                 <div className="empty-icon">🔍</div>
-                <h2 className="empty-title">Todavía no hay poceros registrados en {nombre}</h2>
+                <h2 className="empty-title">Todavía no hay Pozeros registrados en {nombre}</h2>
                 <p className="empty-desc">
                   ¿Sos perforista en {nombre}? Sumate gratis al directorio nacional y empezá a recibir contactos de productores de tu zona.
                 </p>
@@ -375,7 +375,7 @@ export default function LandingProvincia({ slug, nombre, contexto, perforistasIn
                 <p className="cta-sub">Buscá por nombre o localidad específica en el directorio completo.</p>
                 <div className="cta-buttons">
                   <a href="/buscar" className="cta-primary">Ver todo el directorio</a>
-                  <a href="/registrarme" className="cta-secondary">Soy pocero, sumarme</a>
+                  <a href="/registrarme" className="cta-secondary">Soy Pozero, sumarme</a>
                 </div>
               </section>
             )}
