@@ -182,6 +182,39 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ─── BUSCAR POR PROVINCIA (SEO) ─── */}
+        <section className="provincias-links">
+          <div className="provincias-inner">
+            <h2 className="provincias-title">Encontrá poceros por provincia</h2>
+            <div className="provincias-grid">
+              <a href="/provincia/buenos-aires">Buenos Aires</a>
+              <a href="/provincia/caba">CABA</a>
+              <a href="/provincia/catamarca">Catamarca</a>
+              <a href="/provincia/chaco">Chaco</a>
+              <a href="/provincia/chubut">Chubut</a>
+              <a href="/provincia/cordoba">Córdoba</a>
+              <a href="/provincia/corrientes">Corrientes</a>
+              <a href="/provincia/entre-rios">Entre Ríos</a>
+              <a href="/provincia/formosa">Formosa</a>
+              <a href="/provincia/jujuy">Jujuy</a>
+              <a href="/provincia/la-pampa">La Pampa</a>
+              <a href="/provincia/la-rioja">La Rioja</a>
+              <a href="/provincia/mendoza">Mendoza</a>
+              <a href="/provincia/misiones">Misiones</a>
+              <a href="/provincia/neuquen">Neuquén</a>
+              <a href="/provincia/rio-negro">Río Negro</a>
+              <a href="/provincia/salta">Salta</a>
+              <a href="/provincia/san-juan">San Juan</a>
+              <a href="/provincia/san-luis">San Luis</a>
+              <a href="/provincia/santa-cruz">Santa Cruz</a>
+              <a href="/provincia/santa-fe">Santa Fe</a>
+              <a href="/provincia/santiago-del-estero">Santiago del Estero</a>
+              <a href="/provincia/tierra-del-fuego">Tierra del Fuego</a>
+              <a href="/provincia/tucuman">Tucumán</a>
+            </div>
+          </div>
+        </section>
+
         {/* ─── FOOTER ─── */}
         <footer className="site-footer">
           <div className="footer-links">
@@ -467,6 +500,44 @@ export default function Home() {
         .trust-icon :global(svg) {
           width: 20px;
           height: 20px;
+        }
+
+        .provincias-links {
+          background: #fff;
+          padding: 36px 24px;
+          border-bottom: 1px solid var(--line);
+        }
+        .provincias-inner {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        .provincias-title {
+          font-family: "Montserrat", sans-serif;
+          font-size: 18px;
+          font-weight: 700;
+          color: var(--ink);
+          margin-bottom: 18px;
+          text-align: center;
+        }
+        .provincias-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+          gap: 8px;
+        }
+        .provincias-grid a {
+          padding: 9px 14px;
+          background: var(--off-white);
+          color: var(--azul-pozero);
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 500;
+          text-align: left;
+          transition: background 0.15s;
+          border: 1px solid transparent;
+        }
+        .provincias-grid a:hover {
+          background: #e8f0fa;
+          border-color: var(--line);
         }
 
         .site-footer {
