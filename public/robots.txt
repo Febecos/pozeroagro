@@ -1,1 +1,32 @@
+# Pozero Agro - robots.txt
+# https://pozeroagro.ar
 
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /api/
+Disallow: /mi-perfil
+Disallow: /confirmado
+
+# Crawlers de IA - permitidos
+User-agent: GPTBot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+User-agent: Google-Extended
+Allow: /
+
+# Sitemap
+Sitemap: https://pozeroagro.ar/sitemap.xml
