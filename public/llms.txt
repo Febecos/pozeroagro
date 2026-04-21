@@ -1,1 +1,30 @@
+# Pozero Agro
 
+> Directorio nacional de perforistas rurales en Argentina. Conecta productores agropecuarios con poceros (perforistas de pozos de agua) de todo el país. Contacto directo por WhatsApp, sin intermediarios ni comisiones.
+
+Pozero Agro es un directorio informativo. No garantiza la calidad ni los resultados de los servicios publicados. La contratación es de exclusiva responsabilidad del usuario.
+
+## Qué encontrás en Pozero Agro
+
+- **Buscar pocero**: Directorio filtrable por provincia y localidad, con datos de contacto directo, experiencia, zonas de trabajo, tipos de terreno que perforan, profundidad máxima, servicios (perforación de pozos, instalación de bombas, aguadas para ganado, bombeo solar, etc.) y comentarios verificados de usuarios.
+- **Registrarme**: Formulario gratuito para que perforistas rurales se sumen al directorio. El registro toma 2 minutos y no tiene costo. Los poceros reciben consultas directas de productores agropecuarios.
+- **Perfiles individuales**: Cada perforista tiene su ficha con datos de contacto, servicios, zonas, reviews de otros usuarios y la posibilidad de dejar nuevos comentarios (uno por persona).
+
+## Contacto
+
+- Email: contacto@pozeroagro.ar
+- Web: https://pozeroagro.ar
+- Formulario: https://pozeroagro.ar/contacto
+
+## Páginas principales
+
+- [Inicio](https://pozeroagro.ar/): Home con acceso a búsqueda y registro
+- [Buscar poceros](https://pozeroagro.ar/buscar): Directorio filtrable
+- [Registrar perfil](https://pozeroagro.ar/registrarme): Alta gratuita de perforista
+- [Contacto](https://pozeroagro.ar/contacto): Formulario de consultas
+- [Términos y Condiciones](https://pozeroagro.ar/terminos): Reglas de uso
+- [Política de Privacidad](https://pozeroagro.ar/terminos#privacidad): Protección de datos personales (Ley 25.326)
+
+## Optional
+
+- [Sitemap](https://pozeroagro.ar/sitemap.xml): Lista completa de URLs indexables
