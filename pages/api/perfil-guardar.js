@@ -1,6 +1,7 @@
 // pages/api/perfil-guardar.js
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
+import { emailConfirmarCambios } from '../../lib/emailTemplate'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -50,6 +51,11 @@ export default async function handler(req, res) {
   const urlConfirmar = `https://pozeroagro.ar/api/perfil-confirmar?token=${token}`
 
   try {
+    const html = emailConfirmarCambios({
+      nombre: perf.nombre,
+      urlConfirmar
+    })
+
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -60,31 +66,7 @@ export default async function handler(req, res) {
         from: 'Pozero Agro <contacto@pozeroagro.ar>',
         to: email,
         subject: '✅ Confirmá los cambios en tu perfil — Pozero Agro',
-        html: `
-          <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; background: #f5f7fa;">
-            <div style="background: #1B4F8A; padding: 16px 24px; border-radius: 8px 8px 0 0;">
-              <h2 style="color: #fff; margin: 0; font-size: 18px;">Confirmá los cambios en tu perfil</h2>
-            </div>
-            <div style="background: #fff; padding: 24px; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e8;">
-              <p style="font-size: 14px; color: #444; line-height: 1.6;">
-                Hola <strong>${perf.nombre}</strong>, recibimos una solicitud para modificar tu perfil en Pozero Agro.
-              </p>
-              <p style="font-size: 14px; color: #444; line-height: 1.6;">
-                Si fuiste vos, hacé click en el botón para confirmar los cambios. Si no fuiste vos, ignorá este email — tus datos no cambiarán.
-              </p>
-              <div style="text-align: center; margin: 24px 0;">
-                <a href="${urlConfirmar}"
-                   style="background: #1B4F8A; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
-                  Confirmar cambios →
-                </a>
-              </div>
-              <p style="font-size: 12px; color: #aaa; text-align: center; line-height: 1.6;">
-                Este link expira en 24 horas.<br/>
-                Si no solicitaste cambios, ignorá este mensaje.
-              </p>
-            </div>
-          </div>
-        `,
+        html,
       }),
     })
   } catch (e) {
