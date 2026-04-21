@@ -497,6 +497,14 @@ export default function Directorio() {
           </div>
         )}
 
+        {/* ─── BOTÓN FLOTANTE: SOS POCERO? ─── */}
+        <a href="/registrarme" className="fab" aria-label="Soy pocero, sumarme a la red">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <span className="fab-text">Soy pocero</span>
+        </a>
+
         {/* ─── FOOTER ─── */}
         <footer className="site-footer">
           <div className="footer-links">
@@ -830,6 +838,58 @@ export default function Directorio() {
           font-weight: 500;
         }
         .disclaimer a:hover { text-decoration: underline; }
+
+        /* ─── FAB FLOTANTE SOS POCERO? ─── */
+        .fab {
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          z-index: 30;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 14px 20px;
+          background: var(--azul-pozero);
+          color: #fff;
+          border-radius: 999px;
+          font-family: "Inter", sans-serif;
+          font-size: 14px;
+          font-weight: 600;
+          box-shadow: 0 8px 24px -4px rgba(15, 76, 129, 0.45), 0 2px 6px rgba(0,0,0,0.1);
+          transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+          text-decoration: none;
+        }
+        .fab:hover {
+          background: var(--azul-pozero-deep);
+          transform: translateY(-2px);
+          box-shadow: 0 12px 30px -4px rgba(15, 76, 129, 0.55), 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .fab:active {
+          transform: translateY(0);
+        }
+        .fab svg {
+          flex-shrink: 0;
+          background: rgba(255,255,255,0.2);
+          border-radius: 50%;
+          padding: 3px;
+          width: 24px;
+          height: 24px;
+        }
+        .fab-text {
+          line-height: 1;
+        }
+
+        /* En mobile, solo el icono (sin texto) para no estorbar */
+        @media (max-width: 640px) {
+          .fab {
+            padding: 14px;
+            bottom: 20px;
+            right: 20px;
+          }
+          .fab-text {
+            display: none;
+          }
+        }
 
         /* ─── FOOTER ─── */
         .site-footer {
