@@ -45,34 +45,69 @@ export default function Terminos() {
   }, [])
 
   return (
-    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
+    <>
+      <style jsx global>{`
+        :root {
+          --azul-pozero: #0F4C81;
+          --azul-pozero-deep: #0A3A63;
+          --gris-agro: #94A3B8;
+          --off-white: #F8FAFC;
+          --verde-solar: #22C55E;
+          --ink: #0F1E2E;
+          --line: rgba(15, 76, 129, 0.12);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { -webkit-text-size-adjust: 100%; }
+        body {
+          font-family: "Inter", -apple-system, system-ui, sans-serif;
+          color: var(--ink);
+          background: var(--off-white);
+          min-height: 100vh;
+        }
+        a { color: inherit; text-decoration: none; }
+      `}</style>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-      {/* HEADER */}
-      <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => router.push('/')}>
-          <div style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="22" height="22" viewBox="0 0 100 100">
-              <polygon points="15,15 85,15 50,75" fill="#fff"/>
-              <rect x="44" y="8" width="12" height="38" fill="#1B4F8A" rx="2"/>
-              <circle cx="50" cy="80" r="9" fill="#fff"/>
-              <circle cx="50" cy="80" r="3.5" fill="#1B4F8A"/>
+    <div style={{ minHeight: '100vh', background: 'var(--off-white)', display: 'flex', flexDirection: 'column' }}>
+
+      {/* ─── HEADER ─── */}
+      <header style={{ background: '#fff', borderBottom: '1px solid var(--line)', padding: '16px 0', position: 'sticky', top: 0, zIndex: 20 }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center' }}>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px' }} aria-label="Volver al inicio">
+            <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M23.5 21H76.5L50 85L23.5 21Z" fill="#0F4C81" stroke="#0F4C81" strokeWidth="2.5" strokeLinejoin="round"/>
+              <path d="M46 12H54V59H46V12Z" fill="#F8FAFC"/>
+              <path d="M50 97C55 97 59 93 59 88.5C59 84 50 75 50 75C50 75 41 84 41 88.5C41 93 45 97 50 97Z" fill="#0F4C81" stroke="#0F4C81" strokeWidth="1" strokeLinejoin="round"/>
+              <circle cx="50" cy="88" r="1.5" fill="white" fillOpacity="0.4"/>
             </svg>
-          </div>
-          <div>
-            <div style={{ fontSize: '16px', fontWeight: '700', color: '#fff' }}>Pozero Agro</div>
-            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', letterSpacing: '2px', textTransform: 'uppercase' }}>Directorio Nacional</div>
-          </div>
+            <span style={{ display: 'flex', alignItems: 'baseline', gap: '5px', fontFamily: 'Montserrat, sans-serif', lineHeight: 1 }}>
+              <span style={{ fontWeight: 800, letterSpacing: '0.005em', fontSize: '18px', color: 'var(--azul-pozero)' }}>POZERO</span>
+              <span style={{ fontWeight: 500, letterSpacing: '0.04em', fontSize: '13px', color: 'var(--gris-agro)', textTransform: 'uppercase' }}>AGRO</span>
+            </span>
+          </a>
         </div>
-        <button onClick={() => router.push('/')}
-          style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
-          ← Volver
-        </button>
-      </div>
+      </header>
 
-      <div style={{ maxWidth: '780px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+      {/* ─── MINI HERO AZUL ─── */}
+      <section style={{ background: 'linear-gradient(135deg, var(--azul-pozero) 0%, var(--azul-pozero-deep) 100%)', padding: '36px 20px 28px', color: '#fff' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 'clamp(28px, 5vw, 42px)', letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: '8px' }}>
+            {seccionActiva === 'terminos' ? 'Términos y Condiciones' : 'Política de Privacidad'}
+          </h1>
+          <p style={{ fontSize: 'clamp(14px, 1.4vw, 16px)', color: 'rgba(255,255,255,0.85)', maxWidth: '620px', lineHeight: 1.4 }}>
+            {seccionActiva === 'terminos'
+              ? 'Reglas de uso del directorio Pozero Agro. Leelos antes de registrarte o contratar servicios.'
+              : 'Cómo cuidamos tus datos personales. En línea con la Ley 25.326 de Argentina.'}
+          </p>
+        </div>
+      </section>
+
+      <div style={{ maxWidth: '780px', margin: '0 auto', padding: '2rem 1.5rem', width: '100%', flex: 1 }}>
 
         {/* TABS */}
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', background: '#fff', borderRadius: '10px', padding: '4px', border: '1px solid #e0e0e8', width: 'fit-content' }}>
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', background: '#fff', borderRadius: '10px', padding: '4px', border: '1px solid var(--line)', width: 'fit-content' }}>
           {[
             { id: 'terminos', label: '📋 Términos y Condiciones' },
             { id: 'privacidad', label: '🔒 Política de Privacidad' },
@@ -81,9 +116,10 @@ export default function Terminos() {
               style={{
                 padding: '8px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer',
                 fontSize: '13px', fontWeight: seccionActiva === tab.id ? '600' : '400',
-                background: seccionActiva === tab.id ? '#1B4F8A' : 'transparent',
+                background: seccionActiva === tab.id ? 'var(--azul-pozero)' : 'transparent',
                 color: seccionActiva === tab.id ? '#fff' : '#666',
-                transition: 'all 0.15s'
+                transition: 'all 0.15s',
+                fontFamily: 'Inter, sans-serif'
               }}>
               {tab.label}
             </button>
@@ -236,14 +272,26 @@ export default function Terminos() {
           </div>
         )}
 
-        {/* FOOTER */}
+        {/* FOOTER INTERNO - TABS */}
         <div style={{ textAlign: 'center', padding: '1rem', fontSize: '12px', color: '#aaa' }}>
-          <a href="/terminos" onClick={e => { e.preventDefault(); setSeccionActiva('terminos') }} style={{ color: '#1B4F8A', textDecoration: 'none', marginRight: '12px' }}>Términos y Condiciones</a>
-          <a href="/terminos#privacidad" onClick={e => { e.preventDefault(); setSeccionActiva('privacidad') }} style={{ color: '#1B4F8A', textDecoration: 'none', marginRight: '12px' }}>Política de Privacidad</a>
-          <span>· © 2026 Pozero Agro</span>
+          <a href="/terminos" onClick={e => { e.preventDefault(); setSeccionActiva('terminos') }} style={{ color: 'var(--azul-pozero)', textDecoration: 'none', marginRight: '12px', fontWeight: 500 }}>Términos y Condiciones</a>
+          <a href="/terminos#privacidad" onClick={e => { e.preventDefault(); setSeccionActiva('privacidad') }} style={{ color: 'var(--azul-pozero)', textDecoration: 'none', marginRight: '12px', fontWeight: 500 }}>Política de Privacidad</a>
         </div>
       </div>
+
+      {/* ─── FOOTER ─── */}
+      <footer style={{ background: 'var(--azul-pozero)', padding: '20px', textAlign: 'center', marginTop: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '6px' }}>
+          <a href="/terminos" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Términos y condiciones</a>
+          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
+          <a href="/terminos#privacidad" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Política de privacidad</a>
+          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
+          <a href="/contacto" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Contacto</a>
+        </div>
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>© 2026 Pozero Agro · Argentina</div>
+      </footer>
     </div>
+    </>
   )
 }
 
