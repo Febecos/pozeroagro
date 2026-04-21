@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
+import Head from 'next/head'
+import SEO from '../../components/SEO'
 import {
   registrarEvento,
   getSessionId,
@@ -291,8 +293,51 @@ export default function PerfilPerforista() {
   const nombreCompleto = `${p.nombre} ${p.apellido}`
   const esPropietario = usuario?.email === p.email
 
+  // Construir JSON-LD LocalBusiness para SEO
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": nombreCompleto,
+    "description": p.descripcion || `Perforista rural en ${p.localidad}, ${p.provincia}. ${p.experiencia ? `Experiencia: ${p.experiencia}. ` : ''}${p.servicios?.length ? `Servicios: ${p.servicios.join(', ')}.` : ''}`,
+    "url": `https://pozeroagro.ar/perforista/${p.id}`,
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": p.localidad,
+      "addressRegion": p.provincia,
+      "addressCountry": "AR"
+    },
+    ...(p.lat && p.lng ? {
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": p.lat,
+        "longitude": p.lng
+      }
+    } : {}),
+    ...(p.telefono && p.visible_telefono ? { "telephone": p.telefono } : {}),
+    ...(p.servicios?.length ? { "knowsAbout": p.servicios } : {}),
+    ...(comentarios.length > 0 ? {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": promedio.toFixed(1),
+        "reviewCount": comentarios.length,
+        "bestRating": "5",
+        "worstRating": "1"
+      }
+    } : {})
+  }
+
+  const seoDescription = p.descripcion
+    ? p.descripcion.slice(0, 155)
+    : `Pocero en ${p.localidad}, ${p.provincia}. ${p.experiencia ? `${p.experiencia} de experiencia. ` : ''}Contacto directo por WhatsApp.`
+
   return (
     <>
+      <SEO
+        path={`/perforista/${p.id}`}
+        title={`${nombreCompleto} — Pocero en ${p.localidad}, ${p.provincia}`}
+        description={seoDescription}
+        structuredData={jsonLd}
+      />
       <style jsx global>{`
         :root {
           --azul-pozero: #0F4C81;
