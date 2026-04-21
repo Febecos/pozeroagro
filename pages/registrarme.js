@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import SEO from '../components/SEO'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -473,6 +474,11 @@ export default function Registro() {
 
   return (
     <>
+      <SEO
+        path="/registrarme"
+        title="Registrar mi perfil de pocero"
+        description="Sumate gratis al directorio nacional de perforistas rurales de Argentina. 2 minutos de registro. Los productores te contactan directo por WhatsApp. Sin comisiones."
+      />
       <style jsx global>{`
         :root {
           --azul-pozero: #0F4C81;
