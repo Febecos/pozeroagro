@@ -483,19 +483,19 @@ export default function Home() {
           align-items: center;
           justify-content: center;
           gap: 10px;
-          font-size: 13px;
-          font-weight: 500;
-          color: rgba(255, 255, 255, 0.85);
-          letter-spacing: 0.2px;
+          font-size: 12px;
+          font-weight: 400;
+          color: rgba(255, 255, 255, 0.55);
+          letter-spacing: 0.3px;
         }
         .mini-trust-dot {
-          color: rgba(255, 255, 255, 0.4);
-          font-weight: 700;
+          color: rgba(255, 255, 255, 0.25);
+          font-weight: 400;
         }
         @media (min-width: 640px) {
           .mini-trust {
             justify-content: flex-start;
-            font-size: 14px;
+            font-size: 13px;
           }
         }
 
@@ -665,4 +665,3 @@ export default function Home() {
     </>
   )
 }
- 
