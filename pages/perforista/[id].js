@@ -10,8 +10,9 @@ import {
   trackFacebook
 } from '../../lib/tracker'
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qfesxpcuhsrfdohnsleg.supabase.co'
-const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 const MOTIVOS_REPORTE = [
   { value: 'falso', label: 'Comentario falso o inventado' },
@@ -185,7 +186,13 @@ export default function PerfilPerforista() {
         setAceptoTC(false)
         cargarComentarios()
       } else {
-        setErrorEnvio('Hubo un error al enviar. Intenta de nuevo.')
+        // Detectar violación de unicidad (ya comentó antes este mismo pocero)
+        const errText = await res.text().catch(() => '')
+        if (res.status === 409 || errText.includes('23505') || errText.includes('duplicate') || errText.includes('unique')) {
+          setErrorEnvio('Ya dejaste un comentario a este pocero. Cada persona puede comentar una sola vez.')
+        } else {
+          setErrorEnvio('Hubo un error al enviar. Intenta de nuevo.')
+        }
       }
     } catch (e) {
       setErrorEnvio('Error de red. Intenta de nuevo.')
@@ -285,7 +292,32 @@ export default function PerfilPerforista() {
   const esPropietario = usuario?.email === p.email
 
   return (
-    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
+    <>
+      <style jsx global>{`
+        :root {
+          --azul-pozero: #0F4C81;
+          --azul-pozero-deep: #0A3A63;
+          --gris-agro: #94A3B8;
+          --off-white: #F8FAFC;
+          --verde-solar: #22C55E;
+          --ink: #0F1E2E;
+          --line: rgba(15, 76, 129, 0.12);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { -webkit-text-size-adjust: 100%; }
+        body {
+          font-family: "Inter", -apple-system, system-ui, sans-serif;
+          color: var(--ink);
+          background: var(--off-white);
+          min-height: 100vh;
+        }
+        a { color: inherit; text-decoration: none; }
+      `}</style>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <div style={{ minHeight: '100vh', background: 'var(--off-white)', display: 'flex', flexDirection: 'column' }}>
 
       {reporteModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
@@ -334,51 +366,57 @@ export default function PerfilPerforista() {
         </div>
       )}
 
-      <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => router.push('/')}>
-          <div style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="22" height="22" viewBox="0 0 100 100">
-              <polygon points="15,15 85,15 50,75" fill="#fff"/>
-              <rect x="44" y="8" width="12" height="38" fill="#1B4F8A" rx="2"/>
-              <circle cx="50" cy="80" r="9" fill="#fff"/>
-              <circle cx="50" cy="80" r="3.5" fill="#1B4F8A"/>
+      {/* ─── HEADER ─── */}
+      <header style={{ background: '#fff', borderBottom: '1px solid var(--line)', padding: '16px 0', position: 'sticky', top: 0, zIndex: 20 }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center' }}>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px' }} aria-label="Volver al inicio">
+            <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M23.5 21H76.5L50 85L23.5 21Z" fill="#0F4C81" stroke="#0F4C81" strokeWidth="2.5" strokeLinejoin="round"/>
+              <path d="M46 12H54V59H46V12Z" fill="#F8FAFC"/>
+              <path d="M50 97C55 97 59 93 59 88.5C59 84 50 75 50 75C50 75 41 84 41 88.5C41 93 45 97 50 97Z" fill="#0F4C81" stroke="#0F4C81" strokeWidth="1" strokeLinejoin="round"/>
+              <circle cx="50" cy="88" r="1.5" fill="white" fillOpacity="0.4"/>
             </svg>
-          </div>
-          <div>
-            <div style={{ fontSize: '16px', fontWeight: '700', color: '#fff' }}>Pozero Agro</div>
-            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', letterSpacing: '2px', textTransform: 'uppercase' }}>Directorio Nacional</div>
-          </div>
+            <span style={{ display: 'flex', alignItems: 'baseline', gap: '5px', fontFamily: 'Montserrat, sans-serif', lineHeight: 1 }}>
+              <span style={{ fontWeight: 800, letterSpacing: '0.005em', fontSize: '18px', color: 'var(--azul-pozero)' }}>POZERO</span>
+              <span style={{ fontWeight: 500, letterSpacing: '0.04em', fontSize: '13px', color: 'var(--gris-agro)', textTransform: 'uppercase' }}>AGRO</span>
+            </span>
+          </a>
         </div>
-        <button onClick={() => router.push('/')} style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
-          Volver
-        </button>
-      </div>
+      </header>
 
-      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '1.5rem' }}>
+      {/* ─── MINI HERO AZUL ─── */}
+      <section style={{ background: 'linear-gradient(135deg, var(--azul-pozero) 0%, var(--azul-pozero-deep) 100%)', padding: '32px 20px 24px', color: '#fff' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          <a href="/buscar" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.75)', marginBottom: '12px' }}>
+            ← Volver al directorio
+          </a>
+          <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 'clamp(24px, 4vw, 34px)', letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: '4px' }}>
+            {nombreCompleto}
+          </h1>
+          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
+            📍 {p.localidad} · {p.provincia}
+          </p>
+        </div>
+      </section>
+
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '1.5rem', width: '100%', flex: 1 }}>
 
         {/* TARJETA PRINCIPAL */}
-        <div style={{ background: '#fff', borderRadius: '16px', border: esValidado ? '2px solid #1B4F8A' : '1px solid #e0e0e8', padding: '1.5rem', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#e8f0fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '22px', color: '#1B4F8A', flexShrink: 0 }}>
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid var(--line)', padding: '1.5rem', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#e8f0fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '22px', color: '#0F4C81', flexShrink: 0, fontFamily: 'Montserrat, sans-serif' }}>
               {p.nombre?.[0]}{p.apellido?.[0]}
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '20px', fontWeight: '700', color: '#1a1a2e' }}>{nombreCompleto}</div>
-              <div style={{ fontSize: '13px', color: '#888', marginTop: '2px' }}>📍 {p.localidad} · {p.provincia}</div>
               {comentarios.length > 0 && (
-                <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                   <EstrellasDisplay valor={promedio} size={16} />
                   <span style={{ fontSize: '13px', color: '#666' }}>
                     {promedio.toFixed(1)} ({comentarios.length} {comentarios.length === 1 ? 'comentario' : 'comentarios'})
                   </span>
                 </div>
               )}
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
-                {esValidado && (
-                  <span style={{ fontSize: '12px', background: 'linear-gradient(135deg, #F5A623, #F0C040)', color: '#fff', padding: '4px 10px', borderRadius: '5px', fontWeight: '700', boxShadow: '0 2px 6px rgba(245,166,35,0.4)' }}>
-                    Perforista Validado
-                  </span>
-                )}
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {p.conoce_solar === 'Si, ya instale sistemas solares' && (
                   <span style={{ fontSize: '11px', background: '#fff3e0', color: '#E65100', padding: '3px 8px', borderRadius: '4px' }}>Instala solar</span>
                 )}
@@ -386,12 +424,6 @@ export default function PerfilPerforista() {
                   <span style={{ fontSize: '11px', background: '#f0fdf4', color: '#166534', padding: '3px 8px', borderRadius: '4px' }}>Interesado en equipos</span>
                 )}
               </div>
-              {esValidado && (
-                <div style={{ marginTop: '8px', fontSize: '11px', color: '#aaa', lineHeight: '1.4' }}>
-                  La insignia indica revision interna basica de datos. No implica certificacion tecnica ni garantia de calidad.{' '}
-                  <a href="/terminos" target="_blank" rel="noreferrer" style={{ color: '#1B4F8A' }}>Ver terminos</a>
-                </div>
-              )}
             </div>
           </div>
 
@@ -566,6 +598,15 @@ export default function PerfilPerforista() {
                   </div>
                 </div>
               )
+            ) : comentarios.some(c => (c.email_verificado || '').toLowerCase() === (usuario.email || '').toLowerCase()) ? (
+              <div style={{ textAlign: 'center', padding: '16px', background: '#e8f0fa', borderRadius: '8px' }}>
+                <div style={{ fontSize: '28px', marginBottom: '6px' }}>✅</div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#1B4F8A', marginBottom: '4px' }}>Ya dejaste tu comentario</div>
+                <div style={{ fontSize: '12px', color: '#666', lineHeight: 1.6 }}>
+                  Cada persona puede comentar una sola vez por pocero.<br/>
+                  Si querés modificar tu opinión, escribinos a <a href="/contacto" style={{ color: '#1B4F8A', fontWeight: 500 }}>Contacto</a>.
+                </div>
+              </div>
             ) : (
               !enviado ? (
                 <div>
@@ -614,18 +655,23 @@ export default function PerfilPerforista() {
           </div>
         </div>
 
-        <div style={{ background: '#1B4F8A', borderRadius: '12px', padding: '1rem 1.5rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <a href="/" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Inicio</a>
-            <a href="/terminos" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Terminos y condiciones</a>
-            <a href="/terminos#privacidad" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Privacidad</a>
-            <a href="/contacto" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Contacto</a>
-            <a href="/mi-perfil" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Editar mi perfil</a>
-          </div>
-        </div>
-
       </div>
+
+      {/* ─── FOOTER ─── */}
+      <footer style={{ background: 'var(--azul-pozero)', padding: '20px', textAlign: 'center', marginTop: '40px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '6px' }}>
+          <a href="/terminos" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Términos y condiciones</a>
+          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
+          <a href="/terminos#privacidad" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Política de privacidad</a>
+          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
+          <a href="/contacto" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Contacto</a>
+          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
+          <a href="/mi-perfil" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Editar mi perfil</a>
+        </div>
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>© 2026 Pozero Agro · Argentina</div>
+      </footer>
     </div>
+    </>
   )
 }
 

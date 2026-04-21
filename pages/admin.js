@@ -1,20 +1,38 @@
 // v6 — con pestaña Contactos
 import { useState, useEffect } from 'react'
 
-const SUPABASE_URL = 'https://qfesxpcuhsrfdohnsleg.supabase.co'
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXN4cGN1aHNyZmRvaG5zbGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTI5ODMsImV4cCI6MjA5MjA4ODk4M30.oWNCt4XUMfhcubdVOzHd1-o340nRHc9n9ipQTw1pdiI'
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+// apiFetch usa el token de sesión del admin guardado en localStorage.
+// La apikey sigue siendo la anon (es el identificador público del proyecto),
+// pero el Authorization ahora lleva el JWT del usuario autenticado.
+// Esto permite que las RLS policies lo reconozcan como admin.
 async function apiFetch(path, options = {}) {
+  const adminToken = typeof window !== 'undefined'
+    ? localStorage.getItem('admin_token')
+    : null
+
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       'apikey': ANON_KEY,
-      'Authorization': `Bearer ${ANON_KEY}`,
+      'Authorization': `Bearer ${adminToken || ANON_KEY}`,
       'Prefer': 'return=representation',
       ...(options.headers || {})
     }
   })
+
+  // Si el token expiró o no tenemos permiso, volvemos a login
+  if (res.status === 401 || res.status === 403) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('admin_token')
+      window.location.href = '/login'
+    }
+    return []
+  }
+
   if (!res.ok) return []
   const text = await res.text()
   return text ? JSON.parse(text) : []
@@ -71,6 +89,36 @@ function Admin() {
     setPerforistas(prev => prev.map(p => p.id === id ? { ...p, estado, ...extras } : p))
   }
 
+  async function eliminarPerforista(p) {
+    const nombre = `${p.nombre} ${p.apellido}`
+    const confirm1 = confirm(`¿Eliminar definitivamente a "${nombre}"?\n\nEsta acción NO se puede deshacer.`)
+    if (!confirm1) return
+    const confirm2 = prompt(`Para confirmar, escribí ELIMINAR (en mayúsculas):`)
+    if (confirm2 !== 'ELIMINAR') {
+      alert('Eliminación cancelada.')
+      return
+    }
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/perforistas?id=eq.${p.id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': ANON_KEY,
+          'Authorization': `Bearer ${localStorage.getItem('admin_token') || ANON_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      if (res.ok) {
+        setPerforistas(prev => prev.filter(x => x.id !== p.id))
+      } else {
+        alert('Error al eliminar. Revisá la consola.')
+        console.error('Delete error:', await res.text())
+      }
+    } catch (e) {
+      alert('Error de red al eliminar.')
+      console.error(e)
+    }
+  }
+
   function cerrarSesion() {
     localStorage.removeItem('admin_token')
     window.location.href = '/login'
@@ -124,6 +172,7 @@ function Admin() {
           { key: 'perforistas', label: '👷 Perforistas' },
           { key: 'publicidad',  label: '📢 Publicidad' },
           { key: 'contactos',   label: '📬 Contactos' },
+          { key: 'comentarios', label: '💬 Comentarios' },
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             style={{
@@ -203,9 +252,14 @@ function Admin() {
                   <div style={{ display: 'flex', justifyContent: 'center' }}><Toggle id={p.id} campo="visible_facebook" valor={p.visible_facebook} /></div>
                   <div style={{ display: 'flex', justifyContent: 'center' }}><Toggle id={p.id} campo="visible_email" valor={p.visible_email} /></div>
                   <div style={{ textAlign: 'center', color: '#666' }}>{p.profundidad_max ? `${p.profundidad_max}m` : '—'}</div>
-                  <div style={{ display: 'flex', gap: '4px' }}>
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                     {p.telefono && <a href={`tel:${p.telefono}`} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: '#E1F5EE', color: '#085041', textDecoration: 'none' }}>📞</a>}
                     {p.whatsapp && <a href={`https://wa.me/${p.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: '#EAF3DE', color: '#27500A', textDecoration: 'none' }}>WA</a>}
+                    <button onClick={() => eliminarPerforista(p)}
+                      title="Eliminar definitivamente"
+                      style={{ fontSize: '11px', padding: '3px 7px', borderRadius: '4px', background: '#FEE2E2', color: '#991B1B', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
+                      🗑
+                    </button>
                   </div>
                 </div>
               ))}
@@ -219,6 +273,7 @@ function Admin() {
 
         {tab === 'publicidad' && <TabPublicidad />}
         {tab === 'contactos' && <TabContactos />}
+        {tab === 'comentarios' && <TabComentarios />}
 
       </div>
     </div>
@@ -646,6 +701,223 @@ function TabPublicidad() {
 const labelStyle = {
   display: 'block', fontSize: '11px', fontWeight: '600',
   color: '#666', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.3px'
+}
+
+// ── TAB COMENTARIOS ──
+function TabComentarios() {
+  const [comentarios, setComentarios] = useState([])
+  const [perforistas, setPerforistas] = useState({})
+  const [reportesPorComentario, setReportesPorComentario] = useState({})
+  const [reportesDetalle, setReportesDetalle] = useState({}) // id comentario -> lista de reportes
+  const [cargando, setCargando] = useState(true)
+  const [filtro, setFiltro] = useState('todos')
+  const [busqueda, setBusqueda] = useState('')
+  const [verReportesDe, setVerReportesDe] = useState(null)
+
+  useEffect(() => { cargar() }, [])
+
+  async function cargar() {
+    setCargando(true)
+
+    // Traer todos los comentarios (admin ve todos gracias a la policy)
+    const coms = await apiFetch('comentarios?select=*&order=created_at.desc')
+    setComentarios(Array.isArray(coms) ? coms : [])
+
+    // Traer perforistas para mostrar nombre en cada comentario
+    const perfs = await apiFetch('perforistas?select=id,nombre,apellido')
+    if (Array.isArray(perfs)) {
+      const map = {}
+      perfs.forEach(p => { map[p.id] = `${p.nombre} ${p.apellido}` })
+      setPerforistas(map)
+    }
+
+    // Traer reportes para saber cuáles comentarios están reportados
+    const reps = await apiFetch('comentarios_reportes?select=*&order=created_at.desc')
+    if (Array.isArray(reps)) {
+      const conteo = {}
+      const detalle = {}
+      reps.forEach(r => {
+        const cid = r.comentario_id
+        conteo[cid] = (conteo[cid] || 0) + 1
+        if (!detalle[cid]) detalle[cid] = []
+        detalle[cid].push(r)
+      })
+      setReportesPorComentario(conteo)
+      setReportesDetalle(detalle)
+    }
+
+    setCargando(false)
+  }
+
+  async function cambiarEstado(id, nuevoEstado) {
+    await apiFetch(`comentarios?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ estado: nuevoEstado })
+    })
+    setComentarios(prev => prev.map(c => c.id === id ? { ...c, estado: nuevoEstado } : c))
+  }
+
+  async function eliminar(id) {
+    if (!confirm('¿Eliminar este comentario definitivamente? Esta acción no se puede deshacer.')) return
+    await apiFetch(`comentarios?id=eq.${id}`, { method: 'DELETE' })
+    setComentarios(prev => prev.filter(c => c.id !== id))
+  }
+
+  const badgeEstado = {
+    publicado: { bg: '#E1F5EE', color: '#085041', label: 'Publicado' },
+    oculto:    { bg: '#FAEEDA', color: '#8A5A0F', label: 'Oculto' },
+    eliminado: { bg: '#F8D7DA', color: '#8B1E26', label: 'Eliminado' },
+  }
+
+  const filtrados = comentarios.filter(c => {
+    const q = busqueda.trim().toLowerCase()
+    const perfNombre = (perforistas[c.perforista_id] || '').toLowerCase()
+    const texto = `${c.comentario || ''} ${c.nombre_cliente || ''} ${perfNombre}`.toLowerCase()
+    const coincideBusqueda = !q || texto.includes(q)
+
+    if (filtro === 'reportados') return coincideBusqueda && reportesPorComentario[c.id]
+    if (filtro === 'publicados') return coincideBusqueda && c.estado === 'publicado'
+    if (filtro === 'ocultos')    return coincideBusqueda && c.estado === 'oculto'
+    return coincideBusqueda
+  })
+
+  const stats = {
+    total: comentarios.length,
+    publicados: comentarios.filter(c => c.estado === 'publicado').length,
+    ocultos: comentarios.filter(c => c.estado === 'oculto').length,
+    reportados: Object.keys(reportesPorComentario).length,
+  }
+
+  return (
+    <div>
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '1.25rem' }}>
+        {[
+          { label: 'Total', valor: stats.total, bg: '#fff' },
+          { label: 'Publicados', valor: stats.publicados, bg: '#E1F5EE' },
+          { label: 'Ocultos', valor: stats.ocultos, bg: '#FAEEDA' },
+          { label: 'Reportados', valor: stats.reportados, bg: '#F8D7DA' },
+        ].map(s => (
+          <div key={s.label} style={{ background: s.bg, borderRadius: '8px', padding: '.75rem 1rem', border: '0.5px solid #e0e0d8' }}>
+            <div style={{ fontSize: '22px', fontWeight: '600', color: '#1a1a2e' }}>{s.valor}</div>
+            <div style={{ fontSize: '12px', color: '#888' }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filtros y búsqueda */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {[
+            { key: 'todos',       label: `Todos (${stats.total})` },
+            { key: 'publicados',  label: `Publicados (${stats.publicados})` },
+            { key: 'ocultos',     label: `Ocultos (${stats.ocultos})` },
+            { key: 'reportados',  label: `Reportados (${stats.reportados})` },
+          ].map(f => (
+            <button key={f.key} onClick={() => setFiltro(f.key)}
+              style={{
+                padding: '6px 12px', fontSize: '12px', borderRadius: '6px',
+                border: filtro === f.key ? '1px solid #085041' : '0.5px solid #ccc',
+                background: filtro === f.key ? '#085041' : '#fff',
+                color: filtro === f.key ? '#fff' : '#666',
+                cursor: 'pointer', fontWeight: filtro === f.key ? '600' : '400'
+              }}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <input
+          type="text"
+          placeholder="Buscar en texto, cliente, perforista..."
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+          style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: '0.5px solid #ccc', minWidth: '220px' }}
+        />
+      </div>
+
+      {/* Lista */}
+      {cargando && <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>Cargando comentarios...</div>}
+      {!cargando && filtrados.length === 0 && <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No hay comentarios para mostrar.</div>}
+
+      {!cargando && filtrados.map(c => {
+        const estadoInfo = badgeEstado[c.estado] || { bg: '#eee', color: '#666', label: c.estado }
+        const cantReportes = reportesPorComentario[c.id] || 0
+        const estrellas = '★'.repeat(c.estrellas || 0) + '☆'.repeat(5 - (c.estrellas || 0))
+        return (
+          <div key={c.id} style={{
+            background: '#fff',
+            border: cantReportes > 0 ? '1px solid #F8D7DA' : '0.5px solid #e0e0d8',
+            borderRadius: '8px', padding: '1rem', marginBottom: '10px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ flex: 1, minWidth: '200px' }}>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a2e', marginBottom: '2px' }}>
+                  {c.nombre_cliente || c.email_verificado || 'Anónimo'}
+                  <span style={{ color: '#F5A623', marginLeft: '8px', fontSize: '13px' }}>{estrellas}</span>
+                </div>
+                <div style={{ fontSize: '11px', color: '#888' }}>
+                  Sobre: <strong>{perforistas[c.perforista_id] || 'Perforista desconocido'}</strong>
+                  {' · '}
+                  {new Date(c.created_at).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: estadoInfo.bg, color: estadoInfo.color, fontWeight: '600' }}>
+                  {estadoInfo.label}
+                </span>
+                {cantReportes > 0 && (
+                  <button onClick={() => setVerReportesDe(verReportesDe === c.id ? null : c.id)}
+                    style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: '#F8D7DA', color: '#8B1E26', fontWeight: '600', border: 'none', cursor: 'pointer' }}>
+                    ⚠ {cantReportes} reporte{cantReportes !== 1 ? 's' : ''}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div style={{ fontSize: '13px', color: '#444', lineHeight: '1.5', background: '#f9f9f7', padding: '10px 12px', borderRadius: '6px', marginBottom: '10px' }}>
+              {c.comentario || <em style={{ color: '#aaa' }}>Sin texto</em>}
+            </div>
+
+            {/* Detalle de reportes si están expandidos */}
+            {verReportesDe === c.id && reportesDetalle[c.id] && (
+              <div style={{ background: '#FEF5F6', border: '1px solid #F8D7DA', borderRadius: '6px', padding: '10px 12px', marginBottom: '10px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '600', color: '#8B1E26', marginBottom: '6px' }}>Reportes:</div>
+                {reportesDetalle[c.id].map(r => (
+                  <div key={r.id} style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                    <strong>{r.motivo || 'Sin motivo'}</strong>
+                    {r.detalle && ` — ${r.detalle}`}
+                    <span style={{ color: '#aaa', marginLeft: '8px' }}>
+                      {new Date(r.created_at).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Acciones */}
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {c.estado !== 'publicado' && (
+                <button onClick={() => cambiarEstado(c.id, 'publicado')}
+                  style={{ fontSize: '11px', padding: '5px 12px', borderRadius: '5px', border: '0.5px solid #085041', background: '#E1F5EE', color: '#085041', cursor: 'pointer', fontWeight: '500' }}>
+                  ✓ Publicar
+                </button>
+              )}
+              {c.estado !== 'oculto' && (
+                <button onClick={() => cambiarEstado(c.id, 'oculto')}
+                  style={{ fontSize: '11px', padding: '5px 12px', borderRadius: '5px', border: '0.5px solid #8A5A0F', background: '#FAEEDA', color: '#8A5A0F', cursor: 'pointer', fontWeight: '500' }}>
+                  👁‍🗨 Ocultar
+                </button>
+              )}
+              <button onClick={() => eliminar(c.id)}
+                style={{ fontSize: '11px', padding: '5px 12px', borderRadius: '5px', border: 'none', background: '#b91c1c', color: '#fff', cursor: 'pointer', fontWeight: '500' }}>
+                🗑 Borrar
+              </button>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 const inputStyle = {
