@@ -14,6 +14,23 @@ function normalizar(texto) {
   return texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
+// Sinónimos de la profesión. Si el usuario busca cualquiera de estos términos,
+// lo tratamos como "busca un profesional" (matchea con todos los perforistas).
+const SINONIMOS_POZERO = [
+  'pozero', 'pozera', 'pozeros', 'pozeras',
+  'pocero', 'pocera', 'poceros', 'poceras',
+  'posero', 'poseros',
+  'perforista', 'perforistas', 'perforador', 'perforadores',
+  'pocista', 'pocistas',
+  'pozo', 'pozos', 'pozero', 'poceria'
+]
+
+function esTerminoProfesion(q) {
+  if (!q) return false
+  const normalizado = normalizar(q).trim()
+  return SINONIMOS_POZERO.includes(normalizado)
+}
+
 const geocodeCache = {}
 async function geocodificar(localidad, provincia) {
   const key = `${localidad},${provincia}`
@@ -171,7 +188,9 @@ export default function Directorio() {
   const filtrados = perforistas.filter(p => {
     const q = normalizar(busquedaActiva)
     const texto = normalizar(`${p.nombre} ${p.apellido} ${p.localidad}`)
-    const coincideBusqueda = !busquedaActiva || texto.includes(q)
+    // Si busca un sinónimo de profesión ("pocero", "perforista", etc.), matchea a todos
+    const esProfesion = esTerminoProfesion(busquedaActiva)
+    const coincideBusqueda = !busquedaActiva || esProfesion || texto.includes(q)
     const coincideProvincia = !provincia || normalizar(p.provincia) === normalizar(provincia)
     return coincideBusqueda && coincideProvincia
   })
@@ -293,7 +312,7 @@ export default function Directorio() {
     <>
       <SEO
         path="/buscar"
-        title="Buscar pocero"
+        title="Buscar Pozero"
         description="Encontrá perforistas rurales en Argentina por provincia o localidad. Perfiles con reviews, zonas de trabajo, y contacto directo por WhatsApp."
       />
       <Head>
@@ -349,7 +368,7 @@ export default function Directorio() {
         {/* ─── MINI HERO AZUL ─── */}
         <section className="minihero">
           <div className="minihero-inner">
-            <h1 className="mh-title">Encontrá tu pocero</h1>
+            <h1 className="mh-title">Encontrá tu Pozero</h1>
             <p className="mh-sub">Buscá por nombre, localidad o filtrá por provincia. Contactá directo, sin intermediarios.</p>
             <div className="search-bar">
               <input
@@ -392,7 +411,7 @@ export default function Directorio() {
           <div className="content-inner">
             <div className="results-col">
               <div className="results-count">
-                {cargando ? 'Cargando...' : `${filtrados.length} ${filtrados.length === 1 ? 'pocero encontrado' : 'poceros encontrados'}`}
+                {cargando ? 'Cargando...' : `${filtrados.length} ${filtrados.length === 1 ? 'Pozero encontrado' : 'Pozeros encontrados'}`}
               </div>
 
               {cargando && (
@@ -466,7 +485,7 @@ export default function Directorio() {
               )}
 
               {!cargando && filtrados.length === 0 && (
-                <div className="empty-msg">No se encontraron poceros para esa búsqueda.</div>
+                <div className="empty-msg">No se encontraron Pozeros para esa búsqueda.</div>
               )}
 
               {!cargando && filtrados.length > 0 && (
@@ -492,11 +511,11 @@ export default function Directorio() {
         )}
 
         {/* ─── BOTÓN FLOTANTE: SOS POCERO? ─── */}
-        <a href="/registrarme" className="fab" aria-label="Soy pocero, sumarme a la red">
+        <a href="/registrarme" className="fab" aria-label="Soy Pozero, sumarme a la red">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M12 5v14M5 12h14"/>
           </svg>
-          <span className="fab-text">Soy pocero</span>
+          <span className="fab-text">Soy Pozero</span>
         </a>
 
         {/* ─── FOOTER ─── */}
