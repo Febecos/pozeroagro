@@ -87,6 +87,19 @@ function Admin() {
       body: JSON.stringify({ estado, ...extras })
     })
     setPerforistas(prev => prev.map(p => p.id === id ? { ...p, estado, ...extras } : p))
+
+    // Si se aprueba (activo o cliente), mandar mail al pocero
+    if (['activo', 'cliente'].includes(estado)) {
+      try {
+        await fetch('/api/notificar-aprobacion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ perforista_id: id })
+        })
+      } catch (e) {
+        console.warn('No se pudo notificar aprobación:', e.message)
+      }
+    }
   }
 
   async function eliminarPerforista(p) {
