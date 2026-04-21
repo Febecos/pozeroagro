@@ -222,7 +222,7 @@ export default function Directorio() {
         icon: {
           path: window.google.maps.SymbolPath.CIRCLE,
           scale: 10,
-          fillColor: '#1B4F8A',
+          fillColor: '#0F4C81',
           fillOpacity: 1,
           strokeColor: '#fff',
           strokeWeight: 2
@@ -234,9 +234,9 @@ export default function Directorio() {
         ? `<a href="javascript:void(0)" onclick="window.open('https://wa.me/${wa}?text=${encodeURIComponent('Me contacto desde Pozero Agro')}','_blank')" style="display:inline-block;margin-top:6px;padding:5px 12px;background:#25D366;color:#fff;border-radius:5px;text-decoration:none;font-size:12px;font-weight:600;">💬 WhatsApp</a>`
         : ''
       const telLink = p.visible_telefono && p.telefono
-        ? `<a href="tel:${p.telefono}" style="display:inline-block;margin-top:6px;margin-left:4px;padding:5px 12px;background:#e8f0fa;color:#1B4F8A;border-radius:5px;text-decoration:none;font-size:12px;font-weight:600;">📞 Llamar</a>`
+        ? `<a href="tel:${p.telefono}" style="display:inline-block;margin-top:6px;margin-left:4px;padding:5px 12px;background:#e8f0fa;color:#0F4C81;border-radius:5px;text-decoration:none;font-size:12px;font-weight:600;">📞 Llamar</a>`
         : ''
-      const nombreColor = p.estado === 'cliente' ? '#1B4F8A' : '#4a5568'
+      const nombreColor = p.estado === 'cliente' ? '#0F4C81' : '#4a5568'
 
       marcador.addListener('click', () => {
         registrarEvento('pin_mapa_click', p.id, { perforista_nombre: `${p.nombre} ${p.apellido}`, origen: 'mapa' })
@@ -247,7 +247,7 @@ export default function Directorio() {
             ${p.profundidad_max ? `<div style="font-size:11px;color:#6a0dad;margin-top:3px">⬇️ Hasta ${p.profundidad_max}m</div>` : ''}
             <div style="margin-top:6px">${waLink}${telLink}</div>
             <div style="margin-top:8px">
-              <a href="/perforista/${p.id}" style="font-size:11px;color:#1B4F8A;font-weight:600;">Ver perfil completo →</a>
+              <a href="/perforista/${p.id}" style="font-size:11px;color:#0F4C81;font-weight:600;">Ver perfil completo →</a>
             </div>
           </div>
         `)
@@ -298,60 +298,64 @@ export default function Directorio() {
   )
 
   return (
-    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
+    <div style={{ fontFamily: '"Inter", -apple-system, system-ui, sans-serif', minHeight: '100vh', background: '#F8FAFC' }}>
 
-      <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="22" height="22" viewBox="0 0 100 100">
-              <polygon points="15,15 85,15 50,75" fill="#fff"/>
-              <rect x="44" y="8" width="12" height="38" fill="#1B4F8A" rx="2"/>
-              <circle cx="50" cy="80" r="9" fill="#fff"/>
-              <circle cx="50" cy="80" r="3.5" fill="#1B4F8A"/>
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontSize: '16px', fontWeight: '700', color: '#fff' }}>Pozero Agro</div>
-            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', letterSpacing: '2px', textTransform: 'uppercase' }}>Directorio Nacional</div>
-          </div>
-        </div>
-        <a href="/registrarme" style={{ background: '#F26419', color: '#fff', padding: '8px 16px', borderRadius: '6px', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>
-          Registrarme gratis
+      {/* HEADER — blanco con wordmark nuevo */}
+      <div style={{ background: '#fff', padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', borderBottom: '1px solid rgba(15,76,129,0.1)' }}>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: '#0F4C81' }}>
+          <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M23.5 21H76.5L50 85L23.5 21Z" fill="#0F4C81" stroke="#0F4C81" strokeWidth="2.5" strokeLinejoin="round"/>
+            <path d="M46 12H54V59H46V12Z" fill="#F8FAFC"/>
+            <path d="M50 97C55 97 59 93 59 88.5C59 84 50 75 50 75C50 75 41 84 41 88.5C41 93 45 97 50 97Z" fill="#0F4C81" stroke="#0F4C81" strokeWidth="1" strokeLinejoin="round"/>
+            <circle cx="50" cy="88" r="1.5" fill="white" fillOpacity="0.4"/>
+          </svg>
+          <span style={{ display: 'flex', alignItems: 'baseline', gap: '5px', fontFamily: '"Montserrat", sans-serif', lineHeight: 1 }}>
+            <span style={{ fontWeight: 800, letterSpacing: '0.005em', fontSize: '20px', color: '#0F4C81' }}>POZERO</span>
+            <span style={{ fontWeight: 500, letterSpacing: '0.04em', fontSize: '15px', color: '#94A3B8', textTransform: 'uppercase' }}>AGRO</span>
+          </span>
         </a>
       </div>
 
-      <div style={{ background: '#1B4F8A', padding: '1.25rem 1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-        <div style={{ fontSize: '16px', color: '#fff', fontWeight: '600', marginBottom: '12px' }}>
-          Encontra un perforista rural en tu zona
-        </div>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <input
-            type="text"
-            placeholder="Buscar por nombre o localidad..."
-            value={busqueda}
-            onChange={e => setBusqueda(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && ejecutarBusqueda()}
-            style={{ flex: '2 1 200px', padding: '10px 14px', borderRadius: '6px', border: '1.5px solid rgba(255,255,255,0.4)', fontSize: '14px', boxSizing: 'border-box', background: '#fff', color: '#333' }}
-          />
-          <select
-            value={provincia}
-            onChange={e => { setProvincia(e.target.value); setBusquedaActiva(busqueda) }}
-            style={{ flex: '1 1 160px', padding: '10px 14px', borderRadius: '6px', border: '1.5px solid rgba(255,255,255,0.4)', fontSize: '14px', background: '#fff', color: '#333' }}>
-            <option value="">Todas las provincias</option>
-            {provincias.map(p => <option key={p} value={p}>{p}</option>)}
-          </select>
-          <button
-            onClick={ejecutarBusqueda}
-            style={{ padding: '10px 24px', background: '#F26419', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            Buscar
-          </button>
-          {isMobile && (
+      {/* BANNER DE BÚSQUEDA — fondo claro, título con Montserrat */}
+      <div style={{ background: '#fff', padding: '28px 24px 24px', borderBottom: '1px solid rgba(15,76,129,0.1)' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ fontSize: '24px', fontWeight: 700, fontFamily: '"Montserrat", sans-serif', color: '#0F1E2E', marginBottom: '4px', letterSpacing: '-0.02em' }}>
+            Encontrá un pocero en tu zona
+          </div>
+          <div style={{ fontSize: '14px', color: '#334155', marginBottom: '18px' }}>
+            Directorio nacional de perforistas rurales
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              placeholder="Buscar por nombre o localidad..."
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && ejecutarBusqueda()}
+              style={{ flex: '2 1 200px', padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(15,76,129,0.2)', fontSize: '14px', boxSizing: 'border-box', background: '#F8FAFC', color: '#0F1E2E', fontFamily: 'inherit' }}
+            />
+            <select
+              value={provincia}
+              onChange={e => { setProvincia(e.target.value); setBusquedaActiva(busqueda) }}
+              style={{ flex: '1 1 160px', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(15,76,129,0.2)', fontSize: '14px', background: '#F8FAFC', color: '#0F1E2E', fontFamily: 'inherit', cursor: 'pointer' }}>
+              <option value="">Todas las provincias</option>
+              {provincias.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
             <button
-              onClick={() => setMostrarMapa(v => !v)}
-              style={{ padding: '10px 14px', background: mostrarMapa ? '#fff' : 'rgba(255,255,255,0.15)', color: mostrarMapa ? '#1B4F8A' : '#fff', border: 'none', borderRadius: '6px', fontSize: '18px', cursor: 'pointer' }}>
-              🗺️
+              onClick={ejecutarBusqueda}
+              style={{ padding: '12px 28px', background: '#0F4C81', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit', transition: 'background 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#0A3A63'}
+              onMouseLeave={e => e.currentTarget.style.background = '#0F4C81'}>
+              Buscar
             </button>
-          )}
+            {isMobile && (
+              <button
+                onClick={() => setMostrarMapa(v => !v)}
+                style={{ padding: '12px 16px', background: mostrarMapa ? '#0F4C81' : '#F8FAFC', color: mostrarMapa ? '#fff' : '#0F4C81', border: '1px solid rgba(15,76,129,0.2)', borderRadius: '8px', fontSize: '18px', cursor: 'pointer' }}>
+                🗺️
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -387,11 +391,11 @@ export default function Directorio() {
                     onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)'}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e8f0fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px', color: '#1B4F8A', flexShrink: 0 }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e8f0fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px', color: '#0F4C81', flexShrink: 0 }}>
                         {p.nombre?.[0]}{p.apellido?.[0]}
                       </div>
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: '600', fontSize: '14px', color: esCliente ? '#1B4F8A' : '#4a5568', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ fontWeight: '600', fontSize: '14px', color: esCliente ? '#0F4C81' : '#4a5568', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {nombreCompleto}
                         </div>
                         <div style={{ fontSize: '11px', color: '#888' }}>📍 {p.localidad} · {p.provincia}</div>
@@ -416,7 +420,7 @@ export default function Directorio() {
                       {p.visible_telefono && p.telefono && (
                         <a href={`tel:${p.telefono}`}
                           onClick={() => trackTelefono(p.id, p.telefono, nombreCompleto)}
-                          style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '0.5px solid #1B4F8A', background: '#e8f0fa', color: '#1B4F8A', fontSize: '11px', textAlign: 'center', textDecoration: 'none', fontWeight: '600' }}>
+                          style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '0.5px solid #0F4C81', background: '#e8f0fa', color: '#0F4C81', fontSize: '11px', textAlign: 'center', textDecoration: 'none', fontWeight: '600' }}>
                           📞 Llamar
                         </a>
                       )}
@@ -454,10 +458,10 @@ export default function Directorio() {
 
           {!cargando && filtrados.length > 0 && (
             <div style={{ marginTop: '16px', padding: '10px 14px', background: '#fff', borderRadius: '8px', border: '0.5px solid #e0e0e8', fontSize: '11px', color: '#aaa', lineHeight: '1.6' }}>
-              Pozero Agro es un directorio informativo. No garantiza la calidad ni los resultados de los servicios publicados. La contratacion es de exclusiva responsabilidad del usuario.{' '}
-              <a href="/terminos" style={{ color: '#1B4F8A', textDecoration: 'none' }}>Terminos y condiciones</a>
+              Pozero Agro es un directorio informativo. No garantiza la calidad ni los resultados de los servicios publicados. La contratación es de exclusiva responsabilidad del usuario.{' '}
+              <a href="/terminos" style={{ color: '#0F4C81', textDecoration: 'none' }}>Términos y condiciones</a>
               {' · '}
-              <a href="/terminos#privacidad" style={{ color: '#1B4F8A', textDecoration: 'none' }}>Privacidad</a>
+              <a href="/terminos#privacidad" style={{ color: '#0F4C81', textDecoration: 'none' }}>Privacidad</a>
             </div>
           )}
         </div>
@@ -473,16 +477,21 @@ export default function Directorio() {
         </div>
       )}
 
-      <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', marginTop: '0', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <a href="/terminos" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Terminos y condiciones</a>
+      <div style={{ background: '#0F4C81', padding: '20px 24px', marginTop: '0', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '4px' }}>
+          <a href="/terminos" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', transition: 'color 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}>Términos y condiciones</a>
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
-          <a href="/terminos#privacidad" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Politica de privacidad</a>
+          <a href="/terminos#privacidad" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', transition: 'color 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}>Política de privacidad</a>
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
-          <a href="/contacto" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Contacto</a>
-          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
-          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>© 2026 Pozero Agro</span>
+          <a href="/contacto" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', transition: 'color 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}>Contacto</a>
         </div>
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>© 2026 Pozero Agro · Argentina</div>
       </div>
 
     </div>
