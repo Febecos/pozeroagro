@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
+import SEO from '../components/SEO'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -46,6 +47,14 @@ export default function Terminos() {
 
   return (
     <>
+      <SEO
+        path={seccionActiva === 'privacidad' ? '/terminos#privacidad' : '/terminos'}
+        title={seccionActiva === 'privacidad' ? 'Política de Privacidad' : 'Términos y Condiciones'}
+        description={seccionActiva === 'privacidad'
+          ? 'Política de Privacidad de Pozero Agro. Cómo tratamos tus datos personales bajo la Ley 25.326 de Argentina.'
+          : 'Términos y Condiciones de uso del directorio Pozero Agro. Reglas de uso del directorio de perforistas rurales.'
+        }
+      />
       <style jsx global>{`
         :root {
           --azul-pozero: #0F4C81;
