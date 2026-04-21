@@ -85,12 +85,12 @@ export default function PerfilPerforista() {
   async function cargar() {
     setCargando(true)
     try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/perforistas?id=eq.${id}&select=*`,
-        { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
-      )
-      const data = await res.json()
-      setP(Array.isArray(data) && data[0] ? data[0] : null)
+      // Endpoint propio que NO expone whatsapp/teléfono/email/cuit/dni
+      const res = await fetch(`/api/perforista/${id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setP(data)
+      }
     } catch (e) {}
     setCargando(false)
   }
@@ -270,11 +270,6 @@ export default function PerfilPerforista() {
     setEnviandoReporte(false)
   }
 
-  function whatsappNum(perf) {
-    const num = perf.whatsapp || perf.telefono || ''
-    return num.replace(/\D/g, '')
-  }
-
   function promedioEstrellas() {
     if (!comentarios.length) return 0
     return comentarios.reduce((a, b) => a + b.estrellas, 0) / comentarios.length
@@ -302,11 +297,11 @@ export default function PerfilPerforista() {
     </div>
   )
 
-  const wa = whatsappNum(p)
   const promedio = promedioEstrellas()
   const esValidado = p.estado === 'cliente'
   const nombreCompleto = `${p.nombre} ${p.apellido}`
-  const esPropietario = usuario?.email === p.email
+  // esPropietario lo veremos via /mi-perfil (no dejamos p.email en respuesta pública)
+  const esPropietario = false
 
   // Construir JSON-LD LocalBusiness para SEO
   const jsonLd = {
@@ -328,7 +323,6 @@ export default function PerfilPerforista() {
         "longitude": p.lng
       }
     } : {}),
-    ...(p.telefono && p.visible_telefono ? { "telephone": p.telefono } : {}),
     ...(p.servicios?.length ? { "knowsAbout": p.servicios } : {}),
     ...(comentarios.length > 0 ? {
       "aggregateRating": {
@@ -509,20 +503,20 @@ export default function PerfilPerforista() {
           <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px', marginTop: '16px' }}>
             <div style={{ fontSize: '13px', fontWeight: '600', color: '#666', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>Contacto</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {p.visible_telefono && p.telefono && (
-                <a href={`tel:${p.telefono}`} onClick={() => trackTelefono(id, p.telefono, nombreCompleto)} style={btnStyle('#e8f0fa', '#1B4F8A', '1px solid #1B4F8A')}>
-                  📞 {p.telefono}
-                </a>
-              )}
-              {wa && (
-                <button onClick={() => trackWhatsApp(id, wa, nombreCompleto)} style={{ ...btnStyle('#25D366', '#fff'), border: 'none', cursor: 'pointer' }}>
-                  💬 WhatsApp
+              {p.visible_telefono && (
+                <button
+                  onClick={async () => {
+                    const num = await trackTelefono(id, null, nombreCompleto)
+                    if (num) window.location.href = `tel:${num}`
+                  }}
+                  style={{ ...btnStyle('#e8f0fa', '#1B4F8A', '1px solid #1B4F8A'), border: '1px solid #1B4F8A', cursor: 'pointer' }}>
+                  📞 Llamar
                 </button>
               )}
-              {p.visible_email && p.email && (
-                <a href={`mailto:${p.email}?subject=Consulta desde Pozero Agro`} onClick={() => trackEmail(id, p.email, nombreCompleto)} style={btnStyle('#e8f0fa', '#1B4F8A', '1px solid #1B4F8A')}>
-                  ✉️ {p.email}
-                </a>
+              {p.visible_whatsapp && (
+                <button onClick={() => trackWhatsApp(id, null, nombreCompleto)} style={{ ...btnStyle('#25D366', '#fff'), border: 'none', cursor: 'pointer' }}>
+                  💬 WhatsApp
+                </button>
               )}
               {p.visible_instagram && p.instagram && (
                 <button onClick={() => trackInstagram(id, p.instagram, nombreCompleto)} style={{ ...btnStyle('#fce4ec', '#c2185b', '1px solid #c2185b'), border: '1px solid #c2185b', cursor: 'pointer' }}>
