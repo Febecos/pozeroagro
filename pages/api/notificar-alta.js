@@ -12,7 +12,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         from: 'alta@pozeroagro.ar',
-        to: 'pozeroagro@gmail.com',
+        to: 'contacto@pozeroagro.ar',
         subject: `🆕 Nuevo perforista registrado: ${nombre} ${apellido}`,
         html: `
           <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; background: #f5f7fa;">
