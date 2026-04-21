@@ -236,7 +236,7 @@ export default function Directorio() {
       const telLink = p.visible_telefono && p.telefono
         ? `<a href="tel:${p.telefono}" style="display:inline-block;margin-top:6px;margin-left:4px;padding:5px 12px;background:#e8f0fa;color:#1B4F8A;border-radius:5px;text-decoration:none;font-size:12px;font-weight:600;">📞 Llamar</a>`
         : ''
-      const nombreColor = p.estado === 'cliente' ? '#1B4F8A' : '#1a1a2e'
+      const nombreColor = p.estado === 'cliente' ? '#1B4F8A' : '#4a5568'
 
       marcador.addListener('click', () => {
         registrarEvento('pin_mapa_click', p.id, { perforista_nombre: `${p.nombre} ${p.apellido}`, origen: 'mapa' })
@@ -391,7 +391,7 @@ export default function Directorio() {
                         {p.nombre?.[0]}{p.apellido?.[0]}
                       </div>
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: '600', fontSize: '14px', color: esCliente ? '#1B4F8A' : '#1a1a2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ fontWeight: '600', fontSize: '14px', color: esCliente ? '#1B4F8A' : '#4a5568', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {nombreCompleto}
                         </div>
                         <div style={{ fontSize: '11px', color: '#888' }}>📍 {p.localidad} · {p.provincia}</div>
