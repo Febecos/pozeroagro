@@ -155,7 +155,7 @@ export default function Terminos() {
             </Seccion>
 
             <Seccion titulo="12. Contacto">
-              Para consultas, reclamos o reportes: <a href="mailto:pozeroagro@gmail.com" style={{ color: '#1B4F8A' }}>pozeroagro@gmail.com</a>
+              Para consultas, reclamos o reportes: <a href="mailto:contacto@pozeroagro.ar" style={{ color: '#1B4F8A' }}>contacto@pozeroagro.ar</a>
             </Seccion>
 
             <div style={{ marginTop: '2rem', padding: '16px', background: '#f8f9fa', borderRadius: '10px', fontSize: '13px', color: '#888', lineHeight: '1.6', textAlign: 'center' }}>
@@ -177,7 +177,7 @@ export default function Terminos() {
             </div>
 
             <Seccion titulo="1. Responsable del tratamiento">
-              El responsable del archivo y tratamiento de los datos personales recolectados a través de Pozero Agro es <strong>Pozero Agro</strong>, con domicilio en la República Argentina. Contacto: <a href="mailto:pozeroagro@gmail.com" style={{ color: '#1B4F8A' }}>pozeroagro@gmail.com</a>
+              El responsable del archivo y tratamiento de los datos personales recolectados a través de Pozero Agro es <strong>Pozero Agro</strong>, con domicilio en la República Argentina. Contacto: <a href="mailto:contacto@pozeroagro.ar" style={{ color: '#1B4F8A' }}>contacto@pozeroagro.ar</a>
             </Seccion>
 
             <Seccion titulo="2. Datos que recolectamos">
@@ -193,7 +193,7 @@ export default function Terminos() {
             </Seccion>
 
             <Seccion titulo="4. Publicación de datos personales">
-              Los perforistas consienten expresamente la publicación de sus datos de contacto en el directorio público de Pozero Agro al momento de completar el registro. Pueden solicitar la modificación o eliminación de sus datos en cualquier momento escribiendo a <a href="mailto:pozeroagro@gmail.com" style={{ color: '#1B4F8A' }}>pozeroagro@gmail.com</a>.
+              Los perforistas consienten expresamente la publicación de sus datos de contacto en el directorio público de Pozero Agro al momento de completar el registro. Pueden solicitar la modificación o eliminación de sus datos en cualquier momento escribiendo a <a href="mailto:contacto@pozeroagro.ar" style={{ color: '#1B4F8A' }}>contacto@pozeroagro.ar</a>.
             </Seccion>
 
             <Seccion titulo="5. Derechos del titular (Ley 25.326)">
@@ -204,7 +204,7 @@ export default function Terminos() {
                 <li><strong>Supresión:</strong> solicitar la eliminación de sus datos del sistema.</li>
                 <li><strong>Oposición:</strong> oponerse al tratamiento de sus datos en determinados supuestos.</li>
               </ul>
-              Para ejercer estos derechos, escribir a <a href="mailto:pozeroagro@gmail.com" style={{ color: '#1B4F8A' }}>pozeroagro@gmail.com</a> con el asunto "Datos Personales".
+              Para ejercer estos derechos, escribir a <a href="mailto:contacto@pozeroagro.ar" style={{ color: '#1B4F8A' }}>contacto@pozeroagro.ar</a> con el asunto "Datos Personales".
               <br /><br />
               <em>La Dirección Nacional de Protección de Datos Personales (DNPDP) es el organismo de control. Sitio web: <a href="https://www.argentina.gob.ar/aaip/datospersonales" target="_blank" rel="noreferrer" style={{ color: '#1B4F8A' }}>argentina.gob.ar/aaip/datospersonales</a></em>
             </Seccion>
@@ -226,7 +226,7 @@ export default function Terminos() {
             </Seccion>
 
             <Seccion titulo="10. Contacto">
-              Para ejercer derechos o realizar consultas sobre privacidad: <a href="mailto:pozeroagro@gmail.com" style={{ color: '#1B4F8A' }}>pozeroagro@gmail.com</a>
+              Para ejercer derechos o realizar consultas sobre privacidad: <a href="mailto:contacto@pozeroagro.ar" style={{ color: '#1B4F8A' }}>contacto@pozeroagro.ar</a>
             </Seccion>
 
             <div style={{ marginTop: '2rem', padding: '16px', background: '#e8f0fa', borderRadius: '10px', fontSize: '13px', color: '#1B4F8A', lineHeight: '1.6' }}>
