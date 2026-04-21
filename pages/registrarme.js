@@ -216,6 +216,38 @@ export default function Registro() {
 
     setEnviando(true)
     try {
+      // ─── Chequeo previo de unicidad ───
+      try {
+        const emailLower = form.email.trim().toLowerCase()
+        const whatsappNormalizado = (form.whatsapp || form.telefono || '').replace(/\s+/g, '')
+        const telefonoNormalizado = (form.telefono || '').replace(/\s+/g, '')
+
+        const filtros = [`email.eq.${encodeURIComponent(emailLower)}`]
+        if (whatsappNormalizado) filtros.push(`whatsapp.eq.${encodeURIComponent(whatsappNormalizado)}`)
+        if (telefonoNormalizado) filtros.push(`telefono.eq.${encodeURIComponent(telefonoNormalizado)}`)
+
+        const chkRes = await sbFetch(`/rest/v1/perforistas?select=email,whatsapp,telefono&or=(${filtros.join(',')})&limit=1`)
+        if (chkRes.ok) {
+          const existentes = await chkRes.json()
+          if (Array.isArray(existentes) && existentes.length > 0) {
+            const ex = existentes[0]
+            setEnviando(false)
+            if ((ex.email || '').toLowerCase() === emailLower) {
+              alert('Ya existe un perforista registrado con este email.\n\nSi es tuyo, ingresá por "Editar mi perfil".')
+            } else if (ex.whatsapp === whatsappNormalizado) {
+              alert('Ya existe un perforista registrado con este WhatsApp.\n\nSi es tuyo, ingresá por "Editar mi perfil".')
+            } else if (ex.telefono === telefonoNormalizado) {
+              alert('Ya existe un perforista registrado con este teléfono.\n\nSi es tuyo, ingresá por "Editar mi perfil".')
+            } else {
+              alert('Ya existe un perforista registrado con esos datos.')
+            }
+            return
+          }
+        }
+      } catch (checkErr) {
+        console.warn('Chequeo previo falló, seguimos:', checkErr.message)
+      }
+
       const ahora = new Date().toISOString()
 
       let lat = null, lng = null
@@ -275,6 +307,19 @@ export default function Registro() {
 
       if (!dataRes.ok && dataRes.status !== 201) {
         const err = await dataRes.text()
+        // Detectar violación de unicidad para dar mensaje amigable
+        if (err.includes('23505') || err.includes('duplicate') || err.includes('unique')) {
+          if (err.includes('email')) {
+            throw new Error('Ya existe un perforista registrado con este email. Si es tuyo, ingresá por "Editar mi perfil".')
+          }
+          if (err.includes('whatsapp')) {
+            throw new Error('Ya existe un perforista registrado con este WhatsApp. Si es tuyo, ingresá por "Editar mi perfil".')
+          }
+          if (err.includes('telefono')) {
+            throw new Error('Ya existe un perforista registrado con este teléfono. Si es tuyo, ingresá por "Editar mi perfil".')
+          }
+          throw new Error('Ya existe un perforista registrado con esos datos. Si es tuyo, ingresá por "Editar mi perfil".')
+        }
         throw new Error(err)
       }
 
