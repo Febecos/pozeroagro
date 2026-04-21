@@ -16,6 +16,20 @@ export default async function handler(req, res) {
     { loc: '/terminos', changefreq: 'monthly', priority: '0.3' },
   ]
 
+  // Landings por provincia (24 provincias)
+  const provinciasSlugs = [
+    'buenos-aires','caba','catamarca','chaco','chubut',
+    'cordoba','corrientes','entre-rios','formosa','jujuy',
+    'la-pampa','la-rioja','mendoza','misiones','neuquen',
+    'rio-negro','salta','san-juan','san-luis','santa-cruz',
+    'santa-fe','santiago-del-estero','tierra-del-fuego','tucuman'
+  ]
+  const landingsProvinciales = provinciasSlugs.map(slug => ({
+    loc: `/provincia/${slug}`,
+    changefreq: 'weekly',
+    priority: '0.85'
+  }))
+
   // Páginas dinámicas (perforistas activos y clientes)
   let perforistas = []
   try {
@@ -33,6 +47,12 @@ export default async function handler(req, res) {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${paginasEstaticas.map(p => `  <url>
+    <loc>${SITE_URL}${p.loc}</loc>
+    <lastmod>${hoy}</lastmod>
+    <changefreq>${p.changefreq}</changefreq>
+    <priority>${p.priority}</priority>
+  </url>`).join('\n')}
+${landingsProvinciales.map(p => `  <url>
     <loc>${SITE_URL}${p.loc}</loc>
     <lastmod>${hoy}</lastmod>
     <changefreq>${p.changefreq}</changefreq>
