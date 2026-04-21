@@ -4,17 +4,35 @@ import { useState, useEffect } from 'react'
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+// apiFetch usa el token de sesión del admin guardado en localStorage.
+// La apikey sigue siendo la anon (es el identificador público del proyecto),
+// pero el Authorization ahora lleva el JWT del usuario autenticado.
+// Esto permite que las RLS policies lo reconozcan como admin.
 async function apiFetch(path, options = {}) {
+  const adminToken = typeof window !== 'undefined'
+    ? localStorage.getItem('admin_token')
+    : null
+
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       'apikey': ANON_KEY,
-      'Authorization': `Bearer ${ANON_KEY}`,
+      'Authorization': `Bearer ${adminToken || ANON_KEY}`,
       'Prefer': 'return=representation',
       ...(options.headers || {})
     }
   })
+
+  // Si el token expiró o no tenemos permiso, volvemos a login
+  if (res.status === 401 || res.status === 403) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('admin_token')
+      window.location.href = '/login'
+    }
+    return []
+  }
+
   if (!res.ok) return []
   const text = await res.text()
   return text ? JSON.parse(text) : []
