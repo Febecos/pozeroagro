@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import SEO from '../components/SEO'
 import { registrarEvento } from '../lib/tracker'
 
 export default function Home() {
@@ -42,11 +43,27 @@ export default function Home() {
 
   return (
     <>
+      <SEO
+        path="/"
+        description="Encontrá perforistas rurales en toda Argentina. Directorio nacional de poceros con cobertura en todas las provincias. Contacto directo por WhatsApp, sin comisiones."
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Pozero Agro",
+          "url": "https://pozeroagro.ar",
+          "description": "Directorio nacional de perforistas rurales en Argentina",
+          "inLanguage": "es-AR",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://pozeroagro.ar/buscar?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }}
+      />
       <Head>
-        <title>Pozero Agro — Conectamos campo con agua</title>
-        <meta name="description" content="La forma simple de contratar perforistas rurales en Argentina. Buscá tu pocero en minutos o sumate al directorio nacional." />
-        <meta name="theme-color" content="#0F4C81" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
