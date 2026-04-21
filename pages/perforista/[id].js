@@ -48,6 +48,8 @@ export default function PerfilPerforista() {
   const [enviandoReporte, setEnviandoReporte] = useState(false)
   const [reporteEnviado, setReporteEnviado] = useState(false)
   const [errorReporte, setErrorReporte] = useState('')
+  const [hpComent, setHpComent] = useState('') // honeypot comentarios
+  const [comentStart] = useState(Date.now())
 
   useEffect(() => {
     if (!id) return
@@ -153,6 +155,19 @@ export default function PerfilPerforista() {
   }
 
   async function enviarComentario() {
+    // Honeypot
+    if (hpComent) {
+      console.warn('Honeypot activado en comentario')
+      setEnviado(true)
+      return
+    }
+    // Envío rapidísimo
+    if (Date.now() - comentStart < 3000) {
+      console.warn('Comentario enviado demasiado rápido')
+      setEnviado(true)
+      return
+    }
+
     if (!miRating) { setErrorEnvio('Por favor selecciona una puntuacion'); return }
     if (!usuario) { setErrorEnvio('Necesitas verificar tu email primero'); return }
     if (!aceptoTC) { setErrorEnvio('Debes aceptar los Terminos y Condiciones para comentar'); return }
@@ -686,6 +701,21 @@ export default function PerfilPerforista() {
                     </label>
                   </div>
                   {errorEnvio && <div style={{ fontSize: '12px', color: '#e53e3e', marginBottom: '8px' }}>{errorEnvio}</div>}
+
+                  {/* Honeypot: invisible para humanos */}
+                  <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '1px', height: '1px', overflow: 'hidden', opacity: 0 }}>
+                    <label htmlFor="comment_url">URL (no llenar)</label>
+                    <input
+                      type="text"
+                      id="comment_url"
+                      name="comment_url"
+                      tabIndex="-1"
+                      autoComplete="off"
+                      value={hpComent}
+                      onChange={e => setHpComent(e.target.value)}
+                    />
+                  </div>
+
                   <button onClick={enviarComentario} disabled={enviando || !aceptoTC}
                     style={{ padding: '9px 24px', background: aceptoTC ? '#1B4F8A' : '#ccc', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: aceptoTC ? 'pointer' : 'not-allowed', opacity: enviando ? 0.7 : 1 }}>
                     {enviando ? 'Enviando...' : 'Enviar comentario'}
