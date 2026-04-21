@@ -52,10 +52,10 @@ export default function Directorio() {
 
   const provincias = [
     'Buenos Aires','CABA','Catamarca','Chaco','Chubut',
-    'Cordoba','Corrientes','Entre Rios','Formosa','Jujuy',
-    'La Pampa','La Rioja','Mendoza','Misiones','Neuquen',
-    'Rio Negro','Salta','San Juan','San Luis','Santa Cruz',
-    'Santa Fe','Santiago del Estero','Tierra del Fuego','Tucuman'
+    'Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy',
+    'La Pampa','La Rioja','Mendoza','Misiones','Neuquén',
+    'Río Negro','Salta','San Juan','San Luis','Santa Cruz',
+    'Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'
   ]
 
   useEffect(() => {
@@ -173,7 +173,7 @@ export default function Directorio() {
     const q = normalizar(busquedaActiva)
     const texto = normalizar(`${p.nombre} ${p.apellido} ${p.localidad}`)
     const coincideBusqueda = !busquedaActiva || texto.includes(q)
-    const coincideProvincia = !provincia || p.provincia === provincia
+    const coincideProvincia = !provincia || normalizar(p.provincia) === normalizar(provincia)
     return coincideBusqueda && coincideProvincia
   })
 
