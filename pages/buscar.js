@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import SEO from '../components/SEO'
 import { registrarEvento, trackWhatsApp, trackTelefono } from '../lib/tracker'
 import AdBanner from '../components/AdBanner'
 
@@ -301,10 +302,12 @@ export default function Directorio() {
 
   return (
     <>
+      <SEO
+        path="/buscar"
+        title="Buscar pocero"
+        description="Encontrá perforistas rurales en Argentina por provincia o localidad. Perfiles con reviews, zonas de trabajo, y contacto directo por WhatsApp."
+      />
       <Head>
-        <title>Buscar pocero — Pozero Agro</title>
-        <meta name="description" content="Encontrá perforistas rurales en toda Argentina. Buscá por zona, filtrá por provincia y contactá directo por WhatsApp." />
-        <meta name="theme-color" content="#0F4C81" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
