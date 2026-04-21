@@ -112,10 +112,8 @@ export default function Directorio() {
   async function cargar() {
     setCargando(true)
     try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/perforistas?select=*&estado=in.(activo,cliente)&order=score_visibilidad.desc,created_at.desc`,
-        { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
-      )
+      // Usamos endpoint propio que NO expone whatsapp/teléfono
+      const res = await fetch('/api/directorio')
       const data = await res.json()
       setPerforistas(Array.isArray(data) ? data : [])
       cargarRatings()
@@ -231,14 +229,6 @@ export default function Directorio() {
         }
       })
 
-      const wa = whatsappNum(p)
-      const waLink = wa
-        ? `<a href="javascript:void(0)" onclick="window.open('https://wa.me/${wa}?text=${encodeURIComponent('Me contacto desde Pozero Agro')}','_blank')" style="display:inline-block;margin-top:6px;padding:5px 12px;background:#25D366;color:#fff;border-radius:5px;text-decoration:none;font-size:12px;font-weight:600;">💬 WhatsApp</a>`
-        : ''
-      const telLink = p.visible_telefono && p.telefono
-        ? `<a href="tel:${p.telefono}" style="display:inline-block;margin-top:6px;margin-left:4px;padding:5px 12px;background:#e8f0fa;color:#0F4C81;border-radius:5px;text-decoration:none;font-size:12px;font-weight:600;">📞 Llamar</a>`
-        : ''
-
       const nombreColor = p.estado === 'cliente' ? '#0F4C81' : '#4a5568'
 
       marcador.addListener('click', () => {
@@ -248,9 +238,8 @@ export default function Directorio() {
             <div style="font-weight:700;font-size:14px;color:${nombreColor}">${p.nombre} ${p.apellido}</div>
             <div style="font-size:12px;color:#888;margin-top:4px">📍 <strong>Zona:</strong> ${p.localidad}, ${p.provincia}</div>
             ${p.profundidad_max ? `<div style="font-size:11px;color:#6a0dad;margin-top:3px">⬇️ Hasta ${p.profundidad_max}m</div>` : ''}
-            <div style="margin-top:6px">${waLink}${telLink}</div>
-            <div style="margin-top:8px">
-              <a href="/perforista/${p.id}" style="font-size:11px;color:#0F4C81;font-weight:600;">Ver perfil completo →</a>
+            <div style="margin-top:10px">
+              <a href="/perforista/${p.id}" style="display:inline-block;padding:6px 14px;background:#0F4C81;color:#fff;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;">Ver perfil y contactar →</a>
             </div>
           </div>
         `)
@@ -412,7 +401,6 @@ export default function Directorio() {
 
               <div className="cards-grid">
                 {filtrados.map((p, index) => {
-                  const wa = whatsappNum(p)
                   const esCliente = p.estado === 'cliente'
                   const nombreCompleto = `${p.nombre} ${p.apellido}`
                   return (
@@ -441,16 +429,19 @@ export default function Directorio() {
                           )}
                         </div>
                         <div className="card-actions" onClick={e => e.stopPropagation()}>
-                          {p.visible_telefono && p.telefono && (
-                            <a href={`tel:${p.telefono}`}
-                              onClick={() => trackTelefono(p.id, p.telefono, nombreCompleto)}
+                          {p.visible_telefono && (
+                            <button
+                              onClick={async () => {
+                                const num = await trackTelefono(p.id, null, nombreCompleto)
+                                if (num) window.location.href = `tel:${num}`
+                              }}
                               className="btn-phone">
                               📞 Llamar
-                            </a>
+                            </button>
                           )}
-                          {wa && (
+                          {p.visible_whatsapp && (
                             <button
-                              onClick={() => trackWhatsApp(p.id, wa, nombreCompleto)}
+                              onClick={() => trackWhatsApp(p.id, null, nombreCompleto)}
                               className="btn-wa">
                               💬 WA
                             </button>
