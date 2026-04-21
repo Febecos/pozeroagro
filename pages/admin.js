@@ -55,7 +55,7 @@ export default function AdminWrapper() {
 }
 
 function Admin() {
-  const [tab, setTab] = useState('perforistas')
+  const [tab, setTab] = useState('dashboard')
   const [perforistas, setPerforistas] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState('todos')
@@ -182,6 +182,7 @@ function Admin() {
 
       <div style={{ background: '#fff', borderBottom: '0.5px solid #e0e0d8', padding: '0 1.5rem', display: 'flex', gap: '0' }}>
         {[
+          { key: 'dashboard',   label: '📊 Dashboard' },
           { key: 'perforistas', label: '👷 Perforistas' },
           { key: 'publicidad',  label: '📢 Publicidad' },
           { key: 'contactos',   label: '📬 Contactos' },
@@ -284,10 +285,380 @@ function Admin() {
           </>
         )}
 
+        {tab === 'dashboard' && <TabDashboard />}
+
         {tab === 'publicidad' && <TabPublicidad />}
         {tab === 'contactos' && <TabContactos />}
         {tab === 'comentarios' && <TabComentarios />}
 
+      </div>
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// TAB DASHBOARD — Analytics internos del sitio
+// Todas las métricas salen de eventos_log (no dependen de GA ni Meta)
+// ══════════════════════════════════════════════════════════════════════════
+function TabDashboard() {
+  const [cargando, setCargando] = useState(true)
+  const [metricas, setMetricas] = useState({
+    visitantes_unicos: 0,
+    total_clicks_whatsapp: 0,
+    total_clicks_telefono: 0,
+    total_busquedas: 0,
+    total_registros: 0,
+    total_comentarios: 0,
+    por_dia: [],
+    top_perforistas: [],
+    top_provincias: [],
+    top_busquedas: [],
+    fuentes_trafico: []
+  })
+
+  useEffect(() => {
+    cargarMetricas()
+  }, [])
+
+  async function cargarMetricas() {
+    setCargando(true)
+    try {
+      // Fechas: últimos 30 días
+      const hace30dias = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+      // Traer todos los eventos de los últimos 30 días
+      const res = await apiFetch(
+        `eventos_log?created_at=gte.${hace30dias}&order=created_at.desc&limit=10000`
+      )
+      const eventos = Array.isArray(res) ? res : []
+
+      // ─── CÁLCULOS ─────────────────────────────────────────────────────
+
+      // Visitantes únicos (session_ids únicos)
+      const sessions = new Set()
+      eventos.forEach(e => {
+        if (e.session_id) sessions.add(e.session_id)
+      })
+
+      // Contadores por tipo
+      const clicksWhatsApp = eventos.filter(e => e.tipo_evento === 'contacto_whatsapp').length
+      const clicksTelefono = eventos.filter(e => e.tipo_evento === 'contacto_telefono').length
+      const busquedas = eventos.filter(e => e.tipo_evento === 'busqueda_realizada').length
+      const registros = eventos.filter(e => e.tipo_evento === 'registro_perforista').length
+      const comentarios = eventos.filter(e => e.tipo_evento === 'comentario_enviado').length
+
+      // Visitas por día (últimos 30 días)
+      const porDia = {}
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date()
+        d.setDate(d.getDate() - i)
+        const key = d.toISOString().split('T')[0]
+        porDia[key] = { fecha: key, visitas: 0, whatsapp: 0 }
+      }
+      eventos.forEach(e => {
+        const dia = (e.created_at || '').split('T')[0]
+        if (!porDia[dia]) return
+        // Contamos una visita por cada evento de vista de página/home/directorio
+        if (['home_vista', 'directorio_visto', 'landing_provincia_vista', 'card_vista'].includes(e.tipo_evento)) {
+          porDia[dia].visitas++
+        }
+        if (e.tipo_evento === 'contacto_whatsapp') {
+          porDia[dia].whatsapp++
+        }
+      })
+
+      // Top 10 perforistas más contactados
+      const perfCount = {}
+      eventos.forEach(e => {
+        if (['contacto_whatsapp', 'contacto_telefono'].includes(e.tipo_evento) && e.perforista_id) {
+          const nombre = e.metadata?.perforista_nombre || 'Desconocido'
+          perfCount[e.perforista_id] = perfCount[e.perforista_id] || { id: e.perforista_id, nombre, count: 0 }
+          perfCount[e.perforista_id].count++
+        }
+      })
+      const topPerforistas = Object.values(perfCount).sort((a, b) => b.count - a.count).slice(0, 10)
+
+      // Top 5 provincias con más búsquedas
+      const provCount = {}
+      eventos.forEach(e => {
+        if (e.tipo_evento === 'busqueda_realizada' && e.metadata?.provincia) {
+          const prov = e.metadata.provincia
+          provCount[prov] = (provCount[prov] || 0) + 1
+        }
+        if (e.tipo_evento === 'landing_provincia_vista' && e.metadata?.provincia) {
+          const prov = e.metadata.provincia
+          provCount[prov] = (provCount[prov] || 0) + 1
+        }
+      })
+      const topProvincias = Object.entries(provCount)
+        .map(([nombre, count]) => ({ nombre, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10)
+
+      // Top 5 términos de búsqueda
+      const termCount = {}
+      eventos.forEach(e => {
+        if (e.tipo_evento === 'busqueda_realizada' && e.metadata?.query) {
+          const q = e.metadata.query.toLowerCase().trim()
+          if (q && q.length > 1) {
+            termCount[q] = (termCount[q] || 0) + 1
+          }
+        }
+      })
+      const topBusquedas = Object.entries(termCount)
+        .map(([termino, count]) => ({ termino, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5)
+
+      // Fuentes de tráfico (agrupando por dominio del referrer)
+      const fuenteCount = {}
+      eventos.forEach(e => {
+        const ref = e.metadata?.referrer || ''
+        let fuente = 'Directo'
+        if (ref) {
+          try {
+            const url = new URL(ref)
+            const host = url.hostname.toLowerCase().replace(/^www\./, '')
+            if (host.includes('google')) fuente = 'Google'
+            else if (host.includes('facebook') || host.includes('fb.')) fuente = 'Facebook'
+            else if (host.includes('instagram')) fuente = 'Instagram'
+            else if (host.includes('whatsapp') || host.includes('wa.me')) fuente = 'WhatsApp'
+            else if (host.includes('bing')) fuente = 'Bing'
+            else if (host.includes('pozeroagro.ar')) return // Interno, lo ignoramos
+            else fuente = host
+          } catch (e) { /* URL inválida */ }
+        }
+        // Solo cuento eventos de visita (no todos los eventos)
+        if (['home_vista', 'directorio_visto', 'landing_provincia_vista', 'card_vista'].includes(e.tipo_evento)) {
+          fuenteCount[fuente] = (fuenteCount[fuente] || 0) + 1
+        }
+      })
+      const fuentes = Object.entries(fuenteCount)
+        .map(([nombre, count]) => ({ nombre, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 8)
+
+      setMetricas({
+        visitantes_unicos: sessions.size,
+        total_clicks_whatsapp: clicksWhatsApp,
+        total_clicks_telefono: clicksTelefono,
+        total_busquedas: busquedas,
+        total_registros: registros,
+        total_comentarios: comentarios,
+        por_dia: Object.values(porDia),
+        top_perforistas: topPerforistas,
+        top_provincias: topProvincias,
+        top_busquedas: topBusquedas,
+        fuentes_trafico: fuentes
+      })
+    } catch (e) {
+      console.error('Error cargando métricas:', e)
+    }
+    setCargando(false)
+  }
+
+  if (cargando) {
+    return <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>Cargando dashboard...</div>
+  }
+
+  // ─── Cálculos auxiliares ─────────────────────────────────────────────
+  const maxVisitas = Math.max(...metricas.por_dia.map(d => d.visitas), 1)
+  const maxWa = Math.max(...metricas.por_dia.map(d => d.whatsapp), 1)
+  const totalFuentes = metricas.fuentes_trafico.reduce((a, b) => a + b.count, 0) || 1
+
+  const metricasTop = [
+    { label: 'Visitantes únicos', valor: metricas.visitantes_unicos, icon: '👥', color: '#0F4C81' },
+    { label: 'Clicks a WhatsApp', valor: metricas.total_clicks_whatsapp, icon: '💬', color: '#25D366' },
+    { label: 'Clicks a teléfono', valor: metricas.total_clicks_telefono, icon: '📞', color: '#6366F1' },
+    { label: 'Búsquedas', valor: metricas.total_busquedas, icon: '🔍', color: '#F59E0B' },
+    { label: 'Registros de poceros', valor: metricas.total_registros, icon: '👷', color: '#22C55E' },
+    { label: 'Comentarios nuevos', valor: metricas.total_comentarios, icon: '⭐', color: '#F5A623' },
+  ]
+
+  return (
+    <div>
+      <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#085041' }}>Dashboard</h2>
+          <div style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>Últimos 30 días</div>
+        </div>
+        <button onClick={cargarMetricas}
+          style={{ padding: '6px 14px', fontSize: '12px', background: '#fff', border: '1px solid #e0e0d8', borderRadius: '6px', cursor: 'pointer', color: '#555' }}>
+          ↻ Actualizar
+        </button>
+      </div>
+
+      {/* ─── MÉTRICAS TOP ─── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '10px', marginBottom: '20px' }}>
+        {metricasTop.map((m, i) => (
+          <div key={i} style={{ background: '#fff', padding: '14px 16px', borderRadius: '8px', border: '1px solid #e0e0d8' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span>{m.icon}</span>
+              <span>{m.label}</span>
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: m.color, fontFamily: 'Montserrat, sans-serif' }}>
+              {m.valor.toLocaleString('es-AR')}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+
+        {/* ─── GRÁFICO: VISITAS POR DÍA ─── */}
+        <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #e0e0d8' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: '14px', fontWeight: 600, color: '#333' }}>Visitas por día</h3>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '120px', paddingTop: '10px' }}>
+            {metricas.por_dia.map((d, i) => {
+              const altura = (d.visitas / maxVisitas) * 100
+              return (
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}
+                  title={`${d.fecha}: ${d.visitas} visitas`}>
+                  <div style={{ fontSize: '9px', color: '#888', height: '12px', lineHeight: '12px' }}>
+                    {d.visitas > 0 ? d.visitas : ''}
+                  </div>
+                  <div style={{
+                    width: '100%', background: '#0F4C81', borderRadius: '2px 2px 0 0',
+                    height: `${Math.max(altura, 2)}%`, minHeight: '2px'
+                  }} />
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '10px', color: '#aaa' }}>
+            <span>Hace 30 días</span>
+            <span>Hoy</span>
+          </div>
+        </div>
+
+        {/* ─── GRÁFICO: WHATSAPP POR DÍA ─── */}
+        <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #e0e0d8' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: '14px', fontWeight: 600, color: '#333' }}>Clicks a WhatsApp por día</h3>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '120px', paddingTop: '10px' }}>
+            {metricas.por_dia.map((d, i) => {
+              const altura = (d.whatsapp / maxWa) * 100
+              return (
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}
+                  title={`${d.fecha}: ${d.whatsapp} WhatsApps`}>
+                  <div style={{ fontSize: '9px', color: '#888', height: '12px', lineHeight: '12px' }}>
+                    {d.whatsapp > 0 ? d.whatsapp : ''}
+                  </div>
+                  <div style={{
+                    width: '100%', background: '#25D366', borderRadius: '2px 2px 0 0',
+                    height: `${Math.max(altura, 2)}%`, minHeight: '2px'
+                  }} />
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '10px', color: '#aaa' }}>
+            <span>Hace 30 días</span>
+            <span>Hoy</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+
+        {/* ─── TOP PERFORISTAS MÁS CONTACTADOS ─── */}
+        <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #e0e0d8' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: '14px', fontWeight: 600, color: '#333' }}>🏆 Top perforistas contactados</h3>
+          {metricas.top_perforistas.length === 0 ? (
+            <div style={{ color: '#aaa', fontSize: '13px', padding: '12px 0' }}>Sin datos aún</div>
+          ) : (
+            <div>
+              {metricas.top_perforistas.map((p, i) => (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < metricas.top_perforistas.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
+                    <span style={{ fontSize: '12px', color: '#aaa', fontWeight: 600, minWidth: '18px' }}>#{i + 1}</span>
+                    <a href={`/perforista/${p.id}`} target="_blank" rel="noreferrer"
+                      style={{ fontSize: '13px', color: '#0F4C81', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {p.nombre}
+                    </a>
+                  </div>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#333' }}>{p.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ─── TOP PROVINCIAS ─── */}
+        <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #e0e0d8' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: '14px', fontWeight: 600, color: '#333' }}>📍 Top provincias</h3>
+          {metricas.top_provincias.length === 0 ? (
+            <div style={{ color: '#aaa', fontSize: '13px', padding: '12px 0' }}>Sin datos aún</div>
+          ) : (
+            <div>
+              {metricas.top_provincias.map((p, i) => (
+                <div key={p.nombre} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < metricas.top_provincias.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '12px', color: '#aaa', fontWeight: 600, minWidth: '18px' }}>#{i + 1}</span>
+                    <span style={{ fontSize: '13px', color: '#333' }}>{p.nombre}</span>
+                  </div>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#333' }}>{p.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '14px' }}>
+
+        {/* ─── FUENTES DE TRÁFICO ─── */}
+        <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #e0e0d8' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: '14px', fontWeight: 600, color: '#333' }}>🌐 Fuentes de tráfico</h3>
+          {metricas.fuentes_trafico.length === 0 ? (
+            <div style={{ color: '#aaa', fontSize: '13px', padding: '12px 0' }}>Sin datos aún</div>
+          ) : (
+            <div>
+              {metricas.fuentes_trafico.map((f, i) => {
+                const pct = ((f.count / totalFuentes) * 100).toFixed(1)
+                return (
+                  <div key={f.nombre} style={{ padding: '8px 0', borderBottom: i < metricas.fuentes_trafico.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
+                      <span style={{ color: '#333' }}>{f.nombre}</span>
+                      <span style={{ color: '#888' }}>{f.count} · {pct}%</span>
+                    </div>
+                    <div style={{ height: '4px', background: '#f0f0f0', borderRadius: '2px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: '#0F4C81', borderRadius: '2px' }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ─── TOP BÚSQUEDAS ─── */}
+        <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #e0e0d8' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: '14px', fontWeight: 600, color: '#333' }}>🔍 Top búsquedas</h3>
+          {metricas.top_busquedas.length === 0 ? (
+            <div style={{ color: '#aaa', fontSize: '13px', padding: '12px 0' }}>Sin datos aún</div>
+          ) : (
+            <div>
+              {metricas.top_busquedas.map((b, i) => (
+                <div key={b.termino} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < metricas.top_busquedas.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
+                    <span style={{ fontSize: '12px', color: '#aaa', fontWeight: 600, minWidth: '18px' }}>#{i + 1}</span>
+                    <span style={{ fontSize: '13px', color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: 'italic' }}>
+                      "{b.termino}"
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#333' }}>{b.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      <div style={{ marginTop: '16px', fontSize: '11px', color: '#aaa', textAlign: 'center' }}>
+        Datos calculados en tiempo real desde eventos_log. Cache: sin cache.
       </div>
     </div>
   )
