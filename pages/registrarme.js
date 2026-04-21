@@ -371,45 +371,121 @@ export default function Registro() {
   )
 
   if (exito) return (
-    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ background: '#fff', borderRadius: '12px', padding: '2rem', textAlign: 'center', maxWidth: '420px', margin: '1rem', border: '0.5px solid #e0e0e8' }}>
-        <div style={{ fontSize: '48px', marginBottom: '12px' }}>📋</div>
-        <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px', color: '#1B4F8A' }}>¡Registro recibido!</div>
-        <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.7', marginBottom: '1.5rem' }}>
-          Tu perfil fue enviado correctamente y está <strong>en revisión</strong>.<br /><br />
-          En breve aparecés en el directorio de Pozero Agro.<br />
-          Si dejaste tu email, te avisamos cuando esté activo.
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <div style={{ fontFamily: 'Inter, sans-serif', minHeight: '100vh', background: '#F8FAFC', display: 'flex', flexDirection: 'column' }}>
+      <header style={{ background: '#fff', borderBottom: '1px solid rgba(15, 76, 129, 0.12)', padding: '16px 0' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center' }}>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <path d="M23.5 21H76.5L50 85L23.5 21Z" fill="#0F4C81" stroke="#0F4C81" strokeWidth="2.5" strokeLinejoin="round"/>
+              <path d="M46 12H54V59H46V12Z" fill="#F8FAFC"/>
+              <path d="M50 97C55 97 59 93 59 88.5C59 84 50 75 50 75C50 75 41 84 41 88.5C41 93 45 97 50 97Z" fill="#0F4C81" stroke="#0F4C81" strokeWidth="1" strokeLinejoin="round"/>
+              <circle cx="50" cy="88" r="1.5" fill="white" fillOpacity="0.4"/>
+            </svg>
+            <span style={{ display: 'flex', alignItems: 'baseline', gap: '5px', fontFamily: 'Montserrat, sans-serif', lineHeight: 1 }}>
+              <span style={{ fontWeight: 800, letterSpacing: '0.005em', fontSize: '18px', color: '#0F4C81' }}>POZERO</span>
+              <span style={{ fontWeight: 500, letterSpacing: '0.04em', fontSize: '13px', color: '#94A3B8', textTransform: 'uppercase' }}>AGRO</span>
+            </span>
+          </a>
         </div>
-        <div style={{ background: '#f5f7fa', borderRadius: '8px', padding: '12px', fontSize: '12px', color: '#888', marginBottom: '1.5rem', lineHeight: '1.6' }}>
-          Al registrarte aceptaste nuestros{' '}
-          <a href="/terminos" style={{ color: '#1B4F8A' }}>Términos y Condiciones</a>.
+      </header>
+
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
+        <div style={{ background: '#fff', borderRadius: '12px', padding: '2.5rem 2rem', textAlign: 'center', maxWidth: '460px', border: '1px solid rgba(15, 76, 129, 0.12)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+          <div style={{ fontSize: '48px', marginBottom: '12px' }}>✅</div>
+          <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '22px', fontWeight: 700, marginBottom: '8px', color: '#0F4C81' }}>¡Registro recibido!</div>
+          <div style={{ fontSize: '14px', color: '#334155', lineHeight: 1.7, marginBottom: '1.5rem' }}>
+            Tu perfil fue enviado correctamente y está <strong>en revisión</strong>.<br /><br />
+            En breve aparecés en el directorio de Pozero Agro.<br />
+            Si dejaste tu email, te avisamos cuando esté activo.
+          </div>
+          <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '12px', fontSize: '12px', color: '#94A3B8', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+            Al registrarte aceptaste nuestros{' '}
+            <a href="/terminos" style={{ color: '#0F4C81', fontWeight: 500 }}>Términos y Condiciones</a>.
+          </div>
+          <a href="/" style={{ display: 'inline-block', background: '#0F4C81', color: '#fff', padding: '12px 28px', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>
+            Ver el directorio →
+          </a>
         </div>
-        <a href="/" style={{ display: 'inline-block', background: '#1B4F8A', color: '#fff', padding: '10px 24px', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
-          Ver el directorio →
-        </a>
       </div>
+
+      <footer style={{ background: '#0F4C81', padding: '20px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '6px' }}>
+          <a href="/terminos" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Términos y condiciones</a>
+          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
+          <a href="/terminos#privacidad" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Política de privacidad</a>
+          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
+          <a href="/contacto" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Contacto</a>
+        </div>
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>© 2026 Pozero Agro · Argentina</div>
+      </footer>
     </div>
+    </>
   )
 
   return (
-    <div style={{ fontFamily: 'sans-serif', minHeight: '100vh', background: '#f5f7fa' }}>
+    <>
+      <style jsx global>{`
+        :root {
+          --azul-pozero: #0F4C81;
+          --azul-pozero-deep: #0A3A63;
+          --gris-agro: #94A3B8;
+          --off-white: #F8FAFC;
+          --verde-solar: #22C55E;
+          --ink: #0F1E2E;
+          --ink-soft: #334155;
+          --line: rgba(15, 76, 129, 0.12);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { -webkit-text-size-adjust: 100%; }
+        body {
+          font-family: "Inter", -apple-system, system-ui, sans-serif;
+          color: var(--ink);
+          background: var(--off-white);
+          min-height: 100vh;
+        }
+        a { color: inherit; text-decoration: none; }
+      `}</style>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-      <div style={{ background: '#1B4F8A', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{ width: '32px', height: '32px', background: 'rgba(255,255,255,0.15)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="20" height="20" viewBox="0 0 100 100">
-            <polygon points="15,15 85,15 50,75" fill="#fff"/>
-            <rect x="44" y="8" width="12" height="38" fill="#1B4F8A" rx="2"/>
-            <circle cx="50" cy="80" r="9" fill="#fff"/>
-            <circle cx="50" cy="80" r="3.5" fill="#1B4F8A"/>
-          </svg>
-        </div>
-        <div>
-          <div style={{ fontSize: '15px', fontWeight: '700', color: '#fff' }}>Pozero Agro</div>
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>Registrate gratis · 2 minutos</div>
-        </div>
-      </div>
+    <div style={{ minHeight: '100vh', background: 'var(--off-white)', display: 'flex', flexDirection: 'column' }}>
 
-      <div style={{ maxWidth: '560px', margin: '1.5rem auto', padding: '0 1rem' }}>
+      {/* ─── HEADER ─── */}
+      <header style={{ background: '#fff', borderBottom: '1px solid var(--line)', padding: '16px 0', position: 'sticky', top: 0, zIndex: 20 }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center' }}>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px' }} aria-label="Volver al inicio">
+            <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M23.5 21H76.5L50 85L23.5 21Z" fill="#0F4C81" stroke="#0F4C81" strokeWidth="2.5" strokeLinejoin="round"/>
+              <path d="M46 12H54V59H46V12Z" fill="#F8FAFC"/>
+              <path d="M50 97C55 97 59 93 59 88.5C59 84 50 75 50 75C50 75 41 84 41 88.5C41 93 45 97 50 97Z" fill="#0F4C81" stroke="#0F4C81" strokeWidth="1" strokeLinejoin="round"/>
+              <circle cx="50" cy="88" r="1.5" fill="white" fillOpacity="0.4"/>
+            </svg>
+            <span style={{ display: 'flex', alignItems: 'baseline', gap: '5px', fontFamily: 'Montserrat, sans-serif', lineHeight: 1 }}>
+              <span style={{ fontWeight: 800, letterSpacing: '0.005em', fontSize: '18px', color: 'var(--azul-pozero)' }}>POZERO</span>
+              <span style={{ fontWeight: 500, letterSpacing: '0.04em', fontSize: '13px', color: 'var(--gris-agro)', textTransform: 'uppercase' }}>AGRO</span>
+            </span>
+          </a>
+        </div>
+      </header>
+
+      {/* ─── MINI HERO AZUL ─── */}
+      <section style={{ background: 'linear-gradient(135deg, var(--azul-pozero) 0%, var(--azul-pozero-deep) 100%)', padding: '36px 20px 28px', color: '#fff' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 'clamp(28px, 5vw, 42px)', letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: '8px' }}>
+            Sumate a Pozero Agro
+          </h1>
+          <p style={{ fontSize: 'clamp(14px, 1.4vw, 16px)', color: 'rgba(255,255,255,0.85)', maxWidth: '620px', lineHeight: 1.4 }}>
+            Registrate gratis en el directorio nacional de perforistas rurales. Te toma 2 minutos y los productores te encuentran por zona.
+          </p>
+        </div>
+      </section>
+
+      <div style={{ maxWidth: '560px', margin: '1.5rem auto', padding: '0 1rem', width: '100%', flex: 1 }}>
 
         <div style={{ marginBottom: '1rem' }}>
           <div style={{ fontSize: '12px', color: '#888', marginBottom: '6px' }}>Paso {paso} de 4</div>
@@ -714,6 +790,19 @@ export default function Registro() {
 
         </div>
       </div>
+
+      {/* ─── FOOTER ─── */}
+      <footer style={{ background: 'var(--azul-pozero)', padding: '20px', textAlign: 'center', marginTop: '40px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '6px' }}>
+          <a href="/terminos" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Términos y condiciones</a>
+          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
+          <a href="/terminos#privacidad" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Política de privacidad</a>
+          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
+          <a href="/contacto" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Contacto</a>
+        </div>
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>© 2026 Pozero Agro · Argentina</div>
+      </footer>
     </div>
+    </>
   )
 }
