@@ -492,7 +492,7 @@ export default function Registro() {
     <>
       <SEO
         path="/registrarme"
-        title="Registrar mi perfil de pocero"
+        title="Registrar mi perfil de Pozero"
         description="Sumate gratis al directorio nacional de perforistas rurales de Argentina. 2 minutos de registro. Los productores te contactan directo por WhatsApp. Sin comisiones."
       />
       <style jsx global>{`
