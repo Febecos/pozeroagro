@@ -165,14 +165,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ─── DISCLAIMER LEGAL ─── */}
-        <div className="disclaimer">
-          Pozero Agro es un directorio informativo. No garantiza la calidad ni los resultados de los servicios publicados.{' '}
-          <a href="/terminos">Términos y condiciones</a>
-          {' · '}
-          <a href="/terminos#privacidad">Privacidad</a>
-        </div>
-
         {/* ─── FOOTER ─── */}
         <footer className="site-footer">
           <div className="footer-links">
@@ -458,24 +450,6 @@ export default function Home() {
         .trust-icon :global(svg) {
           width: 20px;
           height: 20px;
-        }
-
-        .disclaimer {
-          max-width: 1200px;
-          width: 100%;
-          margin: 0 auto;
-          padding: 16px 24px;
-          font-size: 12px;
-          color: var(--gris-agro);
-          line-height: 1.6;
-          text-align: center;
-        }
-        .disclaimer a {
-          color: var(--azul-pozero);
-          font-weight: 500;
-        }
-        .disclaimer a:hover {
-          text-decoration: underline;
         }
 
         .site-footer {
