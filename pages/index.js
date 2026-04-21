@@ -45,7 +45,7 @@ export default function Home() {
     <>
       <SEO
         path="/"
-        description="Encontrá perforistas rurales en toda Argentina. Directorio nacional de poceros con cobertura en todas las provincias. Contacto directo por WhatsApp, sin comisiones."
+        description="Encontrá perforistas rurales en toda Argentina. Directorio nacional de Pozeros con cobertura en todas las provincias. Contacto directo por WhatsApp, sin comisiones."
         structuredData={{
           "@context": "https://schema.org",
           "@type": "WebSite",
@@ -130,13 +130,13 @@ export default function Home() {
               </h1>
 
               <p className="sub">
-                La forma simple de contratar perforistas rurales en Argentina. Encontrá tu pocero en minutos, con cobertura nacional y contacto directo.
+                La forma simple de contratar perforistas rurales en Argentina. Encontrá tu Pozero en minutos, con cobertura nacional y contacto directo.
               </p>
 
               <div className="cta-group">
-                <button className="cta cta-primary" onClick={irABuscar} aria-label="Buscar pocero cerca tuyo">
+                <button className="cta cta-primary" onClick={irABuscar} aria-label="Buscar Pozero cerca tuyo">
                   <span>
-                    <span className="cta-label">Buscar pocero</span>
+                    <span className="cta-label">Buscar Pozero</span>
                     <span className="cta-sub">encontralo en minutos</span>
                   </span>
                   <span className="cta-arrow" aria-hidden="true">
@@ -144,9 +144,9 @@ export default function Home() {
                   </span>
                 </button>
 
-                <button className="cta cta-secondary" onClick={irARegistrarme} aria-label="Sumar mi perfil como pocero">
+                <button className="cta cta-secondary" onClick={irARegistrarme} aria-label="Sumar mi perfil como Pozero">
                   <span>
-                    <span className="cta-label">Sumar mi perfil de pocero</span>
+                    <span className="cta-label">Sumar mi perfil de Pozero</span>
                     <span className="cta-sub">sumate a la red</span>
                   </span>
                   <span className="cta-arrow" aria-hidden="true">
@@ -165,7 +165,7 @@ export default function Home() {
               <span className="trust-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>
               </span>
-              <span>Poceros en toda Argentina</span>
+              <span>Pozeros en toda Argentina</span>
             </div>
             <div className="trust-item">
               <span className="trust-icon" aria-hidden="true">
@@ -185,7 +185,7 @@ export default function Home() {
         {/* ─── BUSCAR POR PROVINCIA (SEO) ─── */}
         <section className="provincias-links">
           <div className="provincias-inner">
-            <h2 className="provincias-title">Encontrá poceros por provincia</h2>
+            <h2 className="provincias-title">Encontrá Pozeros por provincia</h2>
             <div className="provincias-grid">
               <a href="/provincia/buenos-aires">Buenos Aires</a>
               <a href="/provincia/caba">CABA</a>
