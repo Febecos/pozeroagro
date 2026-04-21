@@ -89,6 +89,36 @@ function Admin() {
     setPerforistas(prev => prev.map(p => p.id === id ? { ...p, estado, ...extras } : p))
   }
 
+  async function eliminarPerforista(p) {
+    const nombre = `${p.nombre} ${p.apellido}`
+    const confirm1 = confirm(`¿Eliminar definitivamente a "${nombre}"?\n\nEsta acción NO se puede deshacer.`)
+    if (!confirm1) return
+    const confirm2 = prompt(`Para confirmar, escribí ELIMINAR (en mayúsculas):`)
+    if (confirm2 !== 'ELIMINAR') {
+      alert('Eliminación cancelada.')
+      return
+    }
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/perforistas?id=eq.${p.id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': ANON_KEY,
+          'Authorization': `Bearer ${localStorage.getItem('admin_token') || ANON_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      if (res.ok) {
+        setPerforistas(prev => prev.filter(x => x.id !== p.id))
+      } else {
+        alert('Error al eliminar. Revisá la consola.')
+        console.error('Delete error:', await res.text())
+      }
+    } catch (e) {
+      alert('Error de red al eliminar.')
+      console.error(e)
+    }
+  }
+
   function cerrarSesion() {
     localStorage.removeItem('admin_token')
     window.location.href = '/login'
@@ -222,9 +252,14 @@ function Admin() {
                   <div style={{ display: 'flex', justifyContent: 'center' }}><Toggle id={p.id} campo="visible_facebook" valor={p.visible_facebook} /></div>
                   <div style={{ display: 'flex', justifyContent: 'center' }}><Toggle id={p.id} campo="visible_email" valor={p.visible_email} /></div>
                   <div style={{ textAlign: 'center', color: '#666' }}>{p.profundidad_max ? `${p.profundidad_max}m` : '—'}</div>
-                  <div style={{ display: 'flex', gap: '4px' }}>
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                     {p.telefono && <a href={`tel:${p.telefono}`} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: '#E1F5EE', color: '#085041', textDecoration: 'none' }}>📞</a>}
                     {p.whatsapp && <a href={`https://wa.me/${p.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: '#EAF3DE', color: '#27500A', textDecoration: 'none' }}>WA</a>}
+                    <button onClick={() => eliminarPerforista(p)}
+                      title="Eliminar definitivamente"
+                      style={{ fontSize: '11px', padding: '3px 7px', borderRadius: '4px', background: '#FEE2E2', color: '#991B1B', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
+                      🗑
+                    </button>
                   </div>
                 </div>
               ))}
