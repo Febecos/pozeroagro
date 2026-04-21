@@ -663,7 +663,7 @@ export default function Registro() {
                       Términos y Condiciones
                     </a>
                     {' '}y la{' '}
-                    <a href="/terminos" target="_blank" rel="noreferrer"
+                    <a href="/terminos#privacidad" target="_blank" rel="noreferrer"
                       style={{ color: '#1B4F8A', fontWeight: '600', textDecoration: 'underline' }}>
                       Política de Privacidad
                     </a>
