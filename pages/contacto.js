@@ -20,6 +20,8 @@ export default function Contacto() {
   const [enviado, setEnviado] = useState(false)
   const [error, setError] = useState('')
   const [turnstileToken, setTurnstileToken] = useState('')
+  const [hp, setHp] = useState('') // honeypot
+  const [formStart] = useState(Date.now())
   const turnstileRef = useRef(null)
   const widgetIdRef = useRef(null)
 
@@ -50,6 +52,20 @@ export default function Contacto() {
 
   async function enviar() {
     setError('')
+
+    // Honeypot: bot detectado, simulamos éxito
+    if (hp) {
+      console.warn('Honeypot activado')
+      setEnviado(true)
+      return
+    }
+
+    // Envío sospechosamente rápido
+    if (Date.now() - formStart < 3000) {
+      console.warn('Envío demasiado rápido')
+      setEnviado(true)
+      return
+    }
 
     if (!form.tipo) { setError('Por favor seleccioná quién sos.'); return }
     if (!form.nombre || !form.apellido) { setError('Nombre y apellido son obligatorios.'); return }
@@ -268,6 +284,20 @@ export default function Contacto() {
               placeholder="Contanos en qué podemos ayudarte..."
               rows={4}
               style={{ ...inputStyle, resize: 'vertical', minHeight: '100px' }}
+            />
+          </div>
+
+          {/* Honeypot: invisible para humanos, bots lo llenan */}
+          <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '1px', height: '1px', overflow: 'hidden', opacity: 0 }}>
+            <label htmlFor="website_url">Website (no llenar)</label>
+            <input
+              type="text"
+              id="website_url"
+              name="website_url"
+              tabIndex="-1"
+              autoComplete="off"
+              value={hp}
+              onChange={e => setHp(e.target.value)}
             />
           </div>
 
