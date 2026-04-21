@@ -222,7 +222,7 @@ export default function Directorio() {
         icon: {
           path: window.google.maps.SymbolPath.CIRCLE,
           scale: 10,
-          fillColor: p.estado === 'cliente' ? '#1B4F8A' : '#F26419',
+          fillColor: '#1B4F8A',
           fillOpacity: 1,
           strokeColor: '#fff',
           strokeWeight: 2
@@ -236,16 +236,13 @@ export default function Directorio() {
       const telLink = p.visible_telefono && p.telefono
         ? `<a href="tel:${p.telefono}" style="display:inline-block;margin-top:6px;margin-left:4px;padding:5px 12px;background:#e8f0fa;color:#1B4F8A;border-radius:5px;text-decoration:none;font-size:12px;font-weight:600;">📞 Llamar</a>`
         : ''
-      const validadoBadge = p.estado === 'cliente'
-        ? `<span style="display:inline-block;margin-top:4px;font-size:10px;background:linear-gradient(135deg,#F5A623,#F0C040);color:#fff;padding:2px 7px;border-radius:4px;font-weight:700;">★ Validado</span>`
-        : ''
+      const nombreColor = p.estado === 'cliente' ? '#1B4F8A' : '#1a1a2e'
 
       marcador.addListener('click', () => {
         registrarEvento('pin_mapa_click', p.id, { perforista_nombre: `${p.nombre} ${p.apellido}`, origen: 'mapa' })
         infoWindow.current.setContent(`
           <div style="font-family:sans-serif;min-width:190px;padding:4px">
-            <div style="font-weight:700;font-size:14px;color:#1a1a2e">${p.nombre} ${p.apellido}</div>
-            ${validadoBadge}
+            <div style="font-weight:700;font-size:14px;color:${nombreColor}">${p.nombre} ${p.apellido}</div>
             <div style="font-size:12px;color:#888;margin-top:4px">📍 <strong>Zona:</strong> ${p.localidad}, ${p.provincia}</div>
             ${p.profundidad_max ? `<div style="font-size:11px;color:#6a0dad;margin-top:3px">⬇️ Hasta ${p.profundidad_max}m</div>` : ''}
             <div style="margin-top:6px">${waLink}${telLink}</div>
@@ -374,7 +371,7 @@ export default function Directorio() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
             {filtrados.map((p, index) => {
               const wa = whatsappNum(p)
-              const esValidado = p.estado === 'cliente'
+              const esCliente = p.estado === 'cliente'
               const nombreCompleto = `${p.nombre} ${p.apellido}`
               return (
                 <>
@@ -382,7 +379,7 @@ export default function Directorio() {
                     onClick={() => handleCardClick(p)}
                     style={{
                       background: '#fff', borderRadius: '12px', cursor: 'pointer',
-                      border: esValidado ? '1.5px solid #1B4F8A' : '0.5px solid #e0e0e8',
+                      border: '0.5px solid #e0e0e8',
                       padding: '1rem', transition: 'box-shadow 0.15s',
                       boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
                     }}
@@ -394,7 +391,7 @@ export default function Directorio() {
                         {p.nombre?.[0]}{p.apellido?.[0]}
                       </div>
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: '600', fontSize: '14px', color: '#1a1a2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ fontWeight: '600', fontSize: '14px', color: esCliente ? '#1B4F8A' : '#1a1a2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {nombreCompleto}
                         </div>
                         <div style={{ fontSize: '11px', color: '#888' }}>📍 {p.localidad} · {p.provincia}</div>
@@ -404,11 +401,6 @@ export default function Directorio() {
                       <Estrellas id={p.id} />
                     </div>
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                      {esValidado && (
-                        <span style={{ fontSize: '10px', background: 'linear-gradient(135deg, #F5A623, #F0C040)', color: '#fff', padding: '2px 7px', borderRadius: '4px', fontWeight: '700', boxShadow: '0 1px 4px rgba(245,166,35,0.4)' }}>
-                          ★ Validado
-                        </span>
-                      )}
                       {p.profundidad_max && (
                         <span style={{ fontSize: '10px', background: '#f3e8ff', color: '#6a0dad', padding: '2px 6px', borderRadius: '4px' }}>
                           ⬇️ {p.profundidad_max}m
