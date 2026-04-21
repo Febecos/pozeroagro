@@ -111,14 +111,20 @@ export default function PerfilPerforista() {
     setEnviandoMagic(true)
     setErrorEnvio('')
     try {
-      const res = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
-        method: 'POST',
-        headers: { 'apikey': ANON_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: emailMagic,
-          options: { emailRedirectTo: `${window.location.origin}/perforista/${id}` }
-        })
-      })
+      const redirectUrl = `${window.location.origin}/perforista/${id}`
+      // La REST API de Supabase espera `redirect_to` en el body (no `emailRedirectTo`).
+      // También se puede pasar como query param `?redirect_to=` para asegurar.
+      const res = await fetch(
+        `${SUPABASE_URL}/auth/v1/otp?redirect_to=${encodeURIComponent(redirectUrl)}`,
+        {
+          method: 'POST',
+          headers: { 'apikey': ANON_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: emailMagic,
+            options: { emailRedirectTo: redirectUrl }
+          })
+        }
+      )
       if (res.ok) setMagicEnviado(true)
       else setErrorEnvio('No se pudo enviar el email. Intenta de nuevo.')
     } catch (e) {
