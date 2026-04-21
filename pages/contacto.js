@@ -1,5 +1,6 @@
 // pages/contacto.js
 import { useState, useEffect, useRef } from 'react'
+import SEO from '../components/SEO'
 
 const TURNSTILE_SITE_KEY = '0x4AAAAAADAEeI6Am4GwlZZD'
 
@@ -133,6 +134,11 @@ export default function Contacto() {
 
   return (
     <>
+      <SEO
+        path="/contacto"
+        title="Contacto"
+        description="Contactanos para consultas sobre Pozero Agro, sumarte al directorio, o cualquier consulta. Respondemos por WhatsApp o email."
+      />
       <style jsx global>{`
         :root {
           --azul-pozero: #0F4C81;
