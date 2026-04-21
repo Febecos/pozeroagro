@@ -4,7 +4,7 @@ import Head from 'next/head'
 const SITE_URL = 'https://pozeroagro.ar'
 const SITE_NAME = 'Pozero Agro'
 const DEFAULT_DESCRIPTION = 'Directorio nacional de perforistas rurales en Argentina. Encontrá tu pocero por zona, contactá directo por WhatsApp. Sin comisiones, sin intermediarios.'
-const DEFAULT_IMAGE = 'https://pozeroagro.ar/images/hero.jpg'
+const DEFAULT_IMAGE = 'https://pozeroagro.ar/og-image.png'
 
 /**
  * Componente SEO reutilizable
@@ -67,9 +67,12 @@ export default function SEO({
       <meta name="theme-color" content="#0F4C81" />
       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
-      {/* Favicon */}
-      <link rel="icon" href="/favicon.ico" />
+      {/* Favicon y iconos */}
+      <link rel="icon" href="/favicon.ico" sizes="any" />
+      <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+      <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
       <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      <link rel="manifest" href="/manifest.json" />
 
       {/* JSON-LD estructurado */}
       {structuredData && (
