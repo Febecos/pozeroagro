@@ -358,13 +358,13 @@ export default function PerfilPerforista() {
       <div style={{ maxWidth: '700px', margin: '0 auto', padding: '1.5rem' }}>
 
         {/* TARJETA PRINCIPAL */}
-        <div style={{ background: '#fff', borderRadius: '16px', border: esValidado ? '2px solid #1B4F8A' : '1px solid #e0e0e8', padding: '1.5rem', marginBottom: '16px' }}>
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e0e0e8', padding: '1.5rem', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' }}>
             <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#e8f0fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '22px', color: '#1B4F8A', flexShrink: 0 }}>
               {p.nombre?.[0]}{p.apellido?.[0]}
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '20px', fontWeight: '700', color: '#1a1a2e' }}>{nombreCompleto}</div>
+              <div style={{ fontSize: '20px', fontWeight: '700', color: esValidado ? '#1B4F8A' : '#4a5568' }}>{nombreCompleto}</div>
               <div style={{ fontSize: '13px', color: '#888', marginTop: '2px' }}>📍 {p.localidad} · {p.provincia}</div>
               {comentarios.length > 0 && (
                 <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -375,11 +375,6 @@ export default function PerfilPerforista() {
                 </div>
               )}
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
-                {esValidado && (
-                  <span style={{ fontSize: '12px', background: 'linear-gradient(135deg, #F5A623, #F0C040)', color: '#fff', padding: '4px 10px', borderRadius: '5px', fontWeight: '700', boxShadow: '0 2px 6px rgba(245,166,35,0.4)' }}>
-                    Perforista Validado
-                  </span>
-                )}
                 {p.conoce_solar === 'Si, ya instale sistemas solares' && (
                   <span style={{ fontSize: '11px', background: '#fff3e0', color: '#E65100', padding: '3px 8px', borderRadius: '4px' }}>Instala solar</span>
                 )}
@@ -387,12 +382,6 @@ export default function PerfilPerforista() {
                   <span style={{ fontSize: '11px', background: '#f0fdf4', color: '#166534', padding: '3px 8px', borderRadius: '4px' }}>Interesado en equipos</span>
                 )}
               </div>
-              {esValidado && (
-                <div style={{ marginTop: '8px', fontSize: '11px', color: '#aaa', lineHeight: '1.4' }}>
-                  La insignia indica revision interna basica de datos. No implica certificacion tecnica ni garantia de calidad.{' '}
-                  <a href="/terminos" target="_blank" rel="noreferrer" style={{ color: '#1B4F8A' }}>Ver terminos</a>
-                </div>
-              )}
             </div>
           </div>
 
