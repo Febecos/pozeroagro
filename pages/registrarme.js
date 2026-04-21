@@ -22,6 +22,8 @@ export default function Registro() {
   const [paso, setPaso] = useState(1)
   const [enviando, setEnviando] = useState(false)
   const [exito, setExito] = useState(false)
+  const [hp, setHp] = useState('') // honeypot: campo invisible que bots llenan
+  const [formStart] = useState(Date.now()) // timestamp de carga para detectar envíos instantáneos
   const [form, setForm] = useState({
     nombre: '', apellido: '', provincia: '', localidad: '',
     telefono: '', whatsapp: '', instagram: '', facebook: '', email: '',
@@ -206,6 +208,20 @@ export default function Registro() {
   }
 
   async function enviar() {
+    // Honeypot: si está lleno, es un bot. Simulamos éxito para que el bot no sepa.
+    if (hp) {
+      console.warn('Honeypot activado')
+      setExito(true)
+      return
+    }
+
+    // Detección de envío instantáneo (bot rapidísimo): menos de 3 segundos en el form
+    if (Date.now() - formStart < 3000) {
+      console.warn('Envío demasiado rápido, sospechoso')
+      setExito(true)
+      return
+    }
+
     if (!form.email) {
       alert('El email es obligatorio para confirmar tu registro.')
       return
@@ -838,6 +854,20 @@ export default function Registro() {
               ⚠️ Debés aceptar los Términos y Condiciones para continuar
             </div>
           )}
+
+          {/* Honeypot: campo invisible que solo llenan bots */}
+          <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '1px', height: '1px', overflow: 'hidden', opacity: 0 }}>
+            <label htmlFor="website_url">Website (no llenar)</label>
+            <input
+              type="text"
+              id="website_url"
+              name="website_url"
+              tabIndex="-1"
+              autoComplete="off"
+              value={hp}
+              onChange={e => setHp(e.target.value)}
+            />
+          </div>
 
         </div>
       </div>
