@@ -186,7 +186,13 @@ export default function PerfilPerforista() {
         setAceptoTC(false)
         cargarComentarios()
       } else {
-        setErrorEnvio('Hubo un error al enviar. Intenta de nuevo.')
+        // Detectar violación de unicidad (ya comentó antes este mismo pocero)
+        const errText = await res.text().catch(() => '')
+        if (res.status === 409 || errText.includes('23505') || errText.includes('duplicate') || errText.includes('unique')) {
+          setErrorEnvio('Ya dejaste un comentario a este pocero. Cada persona puede comentar una sola vez.')
+        } else {
+          setErrorEnvio('Hubo un error al enviar. Intenta de nuevo.')
+        }
       }
     } catch (e) {
       setErrorEnvio('Error de red. Intenta de nuevo.')
@@ -592,6 +598,15 @@ export default function PerfilPerforista() {
                   </div>
                 </div>
               )
+            ) : comentarios.some(c => (c.email_verificado || '').toLowerCase() === (usuario.email || '').toLowerCase()) ? (
+              <div style={{ textAlign: 'center', padding: '16px', background: '#e8f0fa', borderRadius: '8px' }}>
+                <div style={{ fontSize: '28px', marginBottom: '6px' }}>✅</div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#1B4F8A', marginBottom: '4px' }}>Ya dejaste tu comentario</div>
+                <div style={{ fontSize: '12px', color: '#666', lineHeight: 1.6 }}>
+                  Cada persona puede comentar una sola vez por pocero.<br/>
+                  Si querés modificar tu opinión, escribinos a <a href="/contacto" style={{ color: '#1B4F8A', fontWeight: 500 }}>Contacto</a>.
+                </div>
+              </div>
             ) : (
               !enviado ? (
                 <div>
