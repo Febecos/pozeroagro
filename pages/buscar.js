@@ -5,6 +5,7 @@ import SEO from '../components/SEO'
 import { registrarEvento, trackWhatsApp, trackTelefono } from '../lib/tracker'
 import { titleCase, nombreCompleto } from '../lib/formato'
 import AdBanner from '../components/AdBanner'
+import SocialBadge from '../components/SocialBadge'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -555,6 +556,8 @@ export default function Directorio() {
           <div className="copyright">© 2026 Pozero Agro · Argentina</div>
         </footer>
       </div>
+
+      <SocialBadge />
 
       <style jsx>{`
         .page { min-height: 100vh; display: flex; flex-direction: column; }
