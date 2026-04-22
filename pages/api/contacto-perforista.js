@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Faltan parámetros' })
   }
 
-  if (!['whatsapp', 'telefono'].includes(tipo)) {
+  if (!['whatsapp', 'telefono', 'email'].includes(tipo)) {
     return res.status(400).json({ error: 'Tipo inválido' })
   }
 
@@ -60,7 +60,7 @@ export default async function handler(req, res) {
 
     // ─── Obtener datos del perforista ─────────────────────────────────────
     const perfRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/perforistas?id=eq.${id}&select=whatsapp,telefono,visible_whatsapp,visible_telefono,estado,nombre,apellido&limit=1`,
+      `${SUPABASE_URL}/rest/v1/perforistas?id=eq.${id}&select=whatsapp,telefono,email,visible_whatsapp,visible_telefono,visible_email,estado,nombre,apellido&limit=1`,
       {
         headers: {
           apikey: SERVICE_KEY,
@@ -91,6 +91,8 @@ export default async function handler(req, res) {
       valor = p.whatsapp || p.telefono // Fallback a teléfono si no hay whatsapp
     } else if (tipo === 'telefono' && p.visible_telefono) {
       valor = p.telefono
+    } else if (tipo === 'email' && p.visible_email) {
+      valor = p.email
     }
 
     if (!valor) {
