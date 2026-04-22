@@ -161,7 +161,7 @@ export async function getStaticProps({ params }) {
       contexto: data.contexto,
       perforistasIniciales: perforistas
     },
-    revalidate: 3600 // Regenera cada hora
+    revalidate: 60 // Regenera cada 60s — los cambios se ven casi en tiempo real
   }
 }
 
