@@ -453,8 +453,16 @@ export default function PerfilPerforista() {
           <a href="/buscar" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.75)', marginBottom: '12px' }}>
             ← Volver al directorio
           </a>
-          <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 'clamp(24px, 4vw, 34px)', letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: '4px' }}>
+          <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 'clamp(24px, 4vw, 34px)', letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: '4px', display: 'inline-flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             {nombreCompleto}
+            {p.estado === 'cliente' && (
+              <span title="Cliente verificado Pozero Agro" aria-label="Verificado" style={{ display: 'inline-flex', color: '#22C55E', lineHeight: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2L14.39 5.42 18.24 4.76 18.9 8.61 22.32 11 18.9 13.39 18.24 17.24 14.39 16.58 12 20 9.61 16.58 5.76 17.24 5.1 13.39 1.68 11 5.1 8.61 5.76 4.76 9.61 5.42z"/>
+                  <path d="M10.5 13.5l-2-2 1.4-1.4 0.6 0.6 3.6-3.6 1.4 1.4z" fill="#fff"/>
+                </svg>
+              </span>
+            )}
           </h1>
           <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
             📍 {localidadFmt} · {provinciaFmt}
