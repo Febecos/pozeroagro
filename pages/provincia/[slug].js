@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 import Head from 'next/head'
 import SEO from '../../components/SEO'
 import { registrarEvento, trackWhatsApp, trackTelefono } from '../../lib/tracker'
+import { titleCase, nombreCompleto as formatNombreCompleto } from '../../lib/formato'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -136,7 +137,7 @@ export async function getStaticProps({ params }) {
   let perforistas = []
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/perforistas?select=*&estado=in.(activo,cliente)&order=score_visibilidad.desc,created_at.desc`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/perforistas?select=*&estado=in.(activo,cliente)&order=created_at.asc`,
       {
         headers: {
           'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -149,6 +150,13 @@ export async function getStaticProps({ params }) {
       // Filtrar por provincia normalizando
       const nombreNormalizado = normalizar(data.nombre)
       perforistas = todos.filter(p => normalizar(p.provincia) === nombreNormalizado)
+      // Orden: clientes primero, después activos (ambos más antiguos arriba)
+      perforistas.sort((a, b) => {
+        const aEsCliente = a.estado === 'cliente' ? 0 : 1
+        const bEsCliente = b.estado === 'cliente' ? 0 : 1
+        if (aEsCliente !== bEsCliente) return aEsCliente - bEsCliente
+        return new Date(a.created_at) - new Date(b.created_at)
+      })
     }
   } catch (e) {
     console.warn('Error cargando perforistas:', e.message)
@@ -197,11 +205,11 @@ export default function LandingProvincia({ slug, nombre, contexto, perforistasIn
           "position": i + 1,
           "item": {
             "@type": "LocalBusiness",
-            "name": `${p.nombre} ${p.apellido}`,
+            "name": formatNombreCompleto(p.nombre, p.apellido),
             "address": {
               "@type": "PostalAddress",
-              "addressLocality": p.localidad,
-              "addressRegion": p.provincia,
+              "addressLocality": titleCase(p.localidad),
+              "addressRegion": titleCase(p.provincia),
               "addressCountry": "AR"
             },
             "url": `https://pozeroagro.ar/perforista/${p.id}`
@@ -312,17 +320,19 @@ export default function LandingProvincia({ slug, nombre, contexto, perforistasIn
                   {perforistas.map(p => {
                     const wa = whatsappNum(p)
                     const esCliente = p.estado === 'cliente'
+                    const nombreFmt = formatNombreCompleto(p.nombre, p.apellido)
+                    const localidadFmt = titleCase(p.localidad)
                     return (
                       <div key={p.id} onClick={() => irAFicha(p.id)} className="card">
                         <div className="card-head">
                           <div className="avatar">
-                            {p.nombre?.[0]}{p.apellido?.[0]}
+                            {nombreFmt.split(' ').map(w => w[0]).slice(0, 2).join('')}
                           </div>
                           <div className="card-identity">
                             <div className={`card-name ${esCliente ? 'is-cliente' : ''}`}>
-                              {p.nombre} {p.apellido}
+                              {nombreFmt}
                             </div>
-                            <div className="card-location">📍 {p.localidad}</div>
+                            <div className="card-location">📍 {localidadFmt}</div>
                           </div>
                         </div>
                         <div className="card-tags">
@@ -336,14 +346,14 @@ export default function LandingProvincia({ slug, nombre, contexto, perforistasIn
                         <div className="card-actions" onClick={e => e.stopPropagation()}>
                           {p.visible_telefono && p.telefono && (
                             <a href={`tel:${p.telefono}`}
-                              onClick={() => trackTelefono(p.id, p.telefono, `${p.nombre} ${p.apellido}`)}
+                              onClick={() => trackTelefono(p.id, p.telefono, nombreFmt)}
                               className="btn-phone">
                               📞 Llamar
                             </a>
                           )}
                           {wa && (
                             <button
-                              onClick={() => trackWhatsApp(p.id, wa, `${p.nombre} ${p.apellido}`)}
+                              onClick={() => trackWhatsApp(p.id, wa, nombreFmt)}
                               className="btn-wa">
                               💬 WA
                             </button>
