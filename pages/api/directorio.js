@@ -1,4 +1,3 @@
-
 // pages/api/directorio.js
 // Devuelve la lista pública de perforistas SIN teléfonos ni WhatsApp
 // Los contactos solo se obtienen via /api/contacto-perforista tras click
@@ -45,7 +44,7 @@ export default async function handler(req, res) {
     ].join(',')
 
     const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/perforistas?select=${camposPublicos}&estado=in.(activo,cliente)&order=score_visibilidad.desc,created_at.desc`,
+      `${SUPABASE_URL}/rest/v1/perforistas?select=${camposPublicos}&estado=in.(activo,cliente)&order=created_at.asc`,
       {
         headers: {
           apikey: ANON_KEY,
