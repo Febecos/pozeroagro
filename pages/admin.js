@@ -1,5 +1,6 @@
 // v6 — con pestaña Contactos
 import { useState, useEffect } from 'react'
+import { titleCase, nombreCompleto } from '../lib/formato'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -248,8 +249,8 @@ function Admin() {
               {filtrados.map((p, i) => (
                 <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 80px 70px 70px 70px 70px 70px 100px', padding: '.65rem 1rem', alignItems: 'center', borderBottom: i < filtrados.length - 1 ? '0.5px solid #f0f0e8' : 'none', fontSize: '13px' }}>
                   <div>
-                    <div style={{ fontWeight: '500' }}>{p.nombre} {p.apellido}</div>
-                    <div style={{ fontSize: '11px', color: '#888' }}>{p.localidad}, {p.provincia}</div>
+                    <div style={{ fontWeight: '500' }}>{nombreCompleto(p.nombre, p.apellido)}</div>
+                    <div style={{ fontSize: '11px', color: '#888' }}>{titleCase(p.localidad)}, {titleCase(p.provincia)}</div>
                   </div>
                   <div>
                     <select value={p.estado || 'pendiente'} onChange={e => cambiarEstado(p.id, e.target.value)}
@@ -371,7 +372,8 @@ function TabDashboard() {
       const perfCount = {}
       eventos.forEach(e => {
         if (['contacto_whatsapp', 'contacto_telefono'].includes(e.tipo_evento) && e.perforista_id) {
-          const nombre = e.metadata?.perforista_nombre || 'Desconocido'
+          const nombreRaw = e.metadata?.perforista_nombre || 'Desconocido'
+          const nombre = titleCase(nombreRaw)
           perfCount[e.perforista_id] = perfCount[e.perforista_id] || { id: e.perforista_id, nombre, count: 0 }
           perfCount[e.perforista_id].count++
         }
