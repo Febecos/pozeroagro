@@ -524,6 +524,20 @@ export default function PerfilPerforista() {
                   💬 WhatsApp
                 </button>
               )}
+              {p.visible_email && (
+                <button
+                  onClick={async () => {
+                    const res = await fetch(`/api/contacto-perforista?id=${id}&tipo=email`)
+                    const data = await res.json()
+                    if (res.status === 429) { alert(data.mensaje || 'Demasiadas solicitudes.'); return }
+                    if (!res.ok || !data.valor) { alert('No se pudo obtener el email.'); return }
+                    registrarEvento('contacto_email', id, { canal: 'email', perforista_nombre: nombreCompleto })
+                    window.location.href = `mailto:${data.valor}?subject=Consulta desde Pozero Agro`
+                  }}
+                  style={{ ...btnStyle('#e8f0fa', '#1B4F8A', '1px solid #1B4F8A'), border: '1px solid #1B4F8A', cursor: 'pointer' }}>
+                  ✉️ Email
+                </button>
+              )}
               {p.visible_instagram && p.instagram && (
                 <button onClick={() => trackInstagram(id, p.instagram, nombreCompleto)} style={{ ...btnStyle('#fce4ec', '#c2185b', '1px solid #c2185b'), border: '1px solid #c2185b', cursor: 'pointer' }}>
                   📸 Instagram
