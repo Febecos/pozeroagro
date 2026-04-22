@@ -11,6 +11,7 @@ import {
   trackInstagram,
   trackFacebook
 } from '../../lib/tracker'
+import { titleCase, nombreCompleto as formatNombreCompleto } from '../../lib/formato'
 
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -305,7 +306,9 @@ export default function PerfilPerforista() {
 
   const promedio = promedioEstrellas()
   const esValidado = p.estado === 'cliente'
-  const nombreCompleto = `${p.nombre} ${p.apellido}`
+  const nombreCompleto = formatNombreCompleto(p.nombre, p.apellido)
+  const localidadFmt = titleCase(p.localidad)
+  const provinciaFmt = titleCase(p.provincia)
   // esPropietario lo veremos via /mi-perfil (no dejamos p.email en respuesta pública)
   const esPropietario = false
 
@@ -314,12 +317,12 @@ export default function PerfilPerforista() {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": nombreCompleto,
-    "description": p.descripcion || `Perforista rural en ${p.localidad}, ${p.provincia}. ${p.experiencia ? `Experiencia: ${p.experiencia}. ` : ''}${p.servicios?.length ? `Servicios: ${p.servicios.join(', ')}.` : ''}`,
+    "description": p.descripcion || `Perforista rural en ${localidadFmt}, ${provinciaFmt}. ${p.experiencia ? `Experiencia: ${p.experiencia}. ` : ''}${p.servicios?.length ? `Servicios: ${p.servicios.join(', ')}.` : ''}`,
     "url": `https://pozeroagro.ar/perforista/${p.id}`,
     "address": {
       "@type": "PostalAddress",
-      "addressLocality": p.localidad,
-      "addressRegion": p.provincia,
+      "addressLocality": localidadFmt,
+      "addressRegion": provinciaFmt,
       "addressCountry": "AR"
     },
     ...(p.lat && p.lng ? {
@@ -343,13 +346,13 @@ export default function PerfilPerforista() {
 
   const seoDescription = p.descripcion
     ? p.descripcion.slice(0, 155)
-    : `Pocero en ${p.localidad}, ${p.provincia}. ${p.experiencia ? `${p.experiencia} de experiencia. ` : ''}Contacto directo por WhatsApp.`
+    : `Pocero en ${localidadFmt}, ${provinciaFmt}. ${p.experiencia ? `${p.experiencia} de experiencia. ` : ''}Contacto directo por WhatsApp.`
 
   return (
     <>
       <SEO
         path={`/perforista/${p.id}`}
-        title={`${nombreCompleto} — Pocero en ${p.localidad}, ${p.provincia}`}
+        title={`${nombreCompleto} — Pocero en ${localidadFmt}, ${provinciaFmt}`}
         description={seoDescription}
         structuredData={jsonLd}
       />
@@ -454,7 +457,7 @@ export default function PerfilPerforista() {
             {nombreCompleto}
           </h1>
           <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
-            📍 {p.localidad} · {p.provincia}
+            📍 {localidadFmt} · {provinciaFmt}
           </p>
         </div>
       </section>
