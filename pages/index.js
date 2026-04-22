@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import SEO from '../components/SEO'
+import SocialBadge from '../components/SocialBadge'
 import { registrarEvento } from '../lib/tracker'
 
 export default function Home() {
@@ -236,6 +237,8 @@ export default function Home() {
           <div className="copyright">© 2026 Pozero Agro · Argentina</div>
         </footer>
       </div>
+
+      <SocialBadge />
 
       <style jsx>{`
         .page {
