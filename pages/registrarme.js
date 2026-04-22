@@ -355,15 +355,7 @@ export default function Registro() {
         await fetch('/api/notificar-alta', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            nombre: form.nombre,
-            apellido: form.apellido,
-            localidad: form.localidad,
-            provincia: form.provincia,
-            telefono: form.telefono,
-            email: form.email,
-            experiencia: form.experiencia
-          })
+          body: JSON.stringify(form)
         })
       } catch (notifErr) {
         console.warn('Notificación admin falló:', notifErr.message)
