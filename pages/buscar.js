@@ -449,6 +449,14 @@ export default function Directorio() {
                           <div className="card-identity">
                             <div className={`card-name ${esCliente ? 'is-cliente' : ''}`}>
                               {nombreFormateado}
+                              {esCliente && (
+                                <span className="verified-check" title="Cliente verificado Pozero Agro" aria-label="Verificado">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M12 2L14.39 5.42 18.24 4.76 18.9 8.61 22.32 11 18.9 13.39 18.24 17.24 14.39 16.58 12 20 9.61 16.58 5.76 17.24 5.1 13.39 1.68 11 5.1 8.61 5.76 4.76 9.61 5.42z"/>
+                                    <path d="M10.5 13.5l-2-2 1.4-1.4 0.6 0.6 3.6-3.6 1.4 1.4z" fill="#fff"/>
+                                  </svg>
+                                </span>
+                              )}
                             </div>
                             <div className="card-location">📍 {localidadFormateada} · {provinciaFormateada}</div>
                           </div>
@@ -778,8 +786,17 @@ export default function Directorio() {
           text-overflow: ellipsis;
           font-family: "Inter", sans-serif;
           line-height: 1.2;
+          display: flex;
+          align-items: center;
+          gap: 5px;
         }
         .card-name.is-cliente { color: var(--azul-pozero); }
+        .verified-check {
+          display: inline-flex;
+          color: var(--azul-pozero);
+          flex-shrink: 0;
+          line-height: 0;
+        }
         .card-location {
           font-size: 11px;
           color: #94A3B8;
