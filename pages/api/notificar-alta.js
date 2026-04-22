@@ -1,91 +1,75 @@
-// pages/api/contacto.js
-import { createClient } from '@supabase/supabase-js'
-import { emailFormContacto } from '../../lib/emailTemplate'
+// pages/api/notificar-alta.js
+// Manda 2 mails al registrarse un perforista:
+//  1. Al admin (notificación de nuevo registro)
+//  2. Al perforista (confirmación de datos recibidos)
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+import { emailNuevoRegistroAdmin, emailRegistroRecibido } from '../../lib/emailTemplate'
+
+async function enviarMail({ from, to, subject, html }) {
+  return await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ from, to, subject, html })
+  })
+}
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end()
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { tipo, nombre, apellido, dni, whatsapp, email, mensaje, token } = req.body
+  const datos = req.body || {}
+  const { nombre, apellido, localidad, provincia, telefono, email, experiencia } = datos
 
-  // Validaciones básicas
-  if (!tipo || !nombre || !apellido || !whatsapp || !email || !mensaje) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios.' })
+  if (!email) {
+    return res.status(400).json({ error: 'Falta email' })
   }
 
-  if (!token) {
-    return res.status(400).json({ error: 'Falta verificación de seguridad.' })
-  }
+  const errores = []
 
-  // Verificar Turnstile
-  const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      secret: process.env.TURNSTILE_SECRET_KEY,
-      response: token,
-    }),
-  })
-  const verifyData = await verifyRes.json()
-
-  if (!verifyData.success) {
-    return res.status(400).json({ error: 'Verificación de seguridad fallida. Intentá de nuevo.' })
-  }
-
-  // Guardar en Supabase
-  const { error: dbError } = await supabase.from('contactos').insert({
-    tipo,
-    nombre,
-    apellido,
-    dni: dni || null,
-    whatsapp,
-    email,
-    mensaje,
-  })
-
-  if (dbError) {
-    console.error('Error guardando contacto:', dbError)
-    return res.status(500).json({ error: 'Error al guardar. Intentá de nuevo.' })
-  }
-
-  // Notificar al admin via Resend
+  // ─── Mail 1: al admin ──────────────────────────────────────────────────
   try {
-    const tipoLabel = {
-      productor: '🌾 Productor agropecuario',
-      perforista: '⛏️ Perforista',
-      empresa: '🏢 Empresa',
-      persona: '👤 Persona particular',
-    }[tipo] || tipo
-
-    const html = emailFormContacto({
-      tipo: tipoLabel, nombre, apellido, dni, whatsapp, email, mensaje
+    const htmlAdmin = emailNuevoRegistroAdmin({
+      nombre, apellido, localidad, provincia, telefono, email, experiencia
     })
-
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Pozero Agro <contacto@pozeroagro.ar>',
-        to: 'contacto@pozeroagro.ar',
-        subject: `📬 Nuevo contacto: ${tipoLabel} — ${nombre} ${apellido}`,
-        html,
-      }),
+    const r1 = await enviarMail({
+      from: 'Pozero Agro <alta@pozeroagro.ar>',
+      to: 'contacto@pozeroagro.ar',
+      subject: `🆕 Nuevo perforista: ${nombre} ${apellido}`,
+      html: htmlAdmin
     })
-
-    if (!response.ok) {
-      const err = await response.text()
-      console.error('Resend error:', err)
+    if (!r1.ok) {
+      const err = await r1.text()
+      console.error('Resend admin error:', err)
+      errores.push('admin')
     }
   } catch (e) {
-    console.warn('Notificación admin falló:', e.message)
+    console.error('Mail admin falló:', e.message)
+    errores.push('admin')
   }
 
-  return res.status(200).json({ ok: true })
+  // ─── Mail 2: al perforista (confirmación con resumen de datos) ─────────
+  try {
+    const htmlPocero = emailRegistroRecibido({ datos })
+    const r2 = await enviarMail({
+      from: 'Pozero Agro <contacto@pozeroagro.ar>',
+      to: email,
+      subject: `✅ Recibimos tu registro — Pozero Agro`,
+      html: htmlPocero
+    })
+    if (!r2.ok) {
+      const err = await r2.text()
+      console.error('Resend pocero error:', err)
+      errores.push('pocero')
+    }
+  } catch (e) {
+    console.error('Mail pocero falló:', e.message)
+    errores.push('pocero')
+  }
+
+  if (errores.length === 0) {
+    return res.json({ ok: true })
+  }
+  return res.status(500).json({ error: 'Error parcial enviando mails', fallaron: errores })
 }
