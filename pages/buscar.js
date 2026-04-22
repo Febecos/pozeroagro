@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import Head from 'next/head'
 import SEO from '../components/SEO'
 import { registrarEvento, trackWhatsApp, trackTelefono } from '../lib/tracker'
+import { titleCase, nombreCompleto } from '../lib/formato'
 import AdBanner from '../components/AdBanner'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -132,7 +133,18 @@ export default function Directorio() {
       // Usamos endpoint propio que NO expone whatsapp/teléfono
       const res = await fetch('/api/directorio')
       const data = await res.json()
-      setPerforistas(Array.isArray(data) ? data : [])
+      const lista = Array.isArray(data) ? data : []
+
+      // Orden: clientes primero (más antiguos arriba), después activos (más antiguos arriba)
+      lista.sort((a, b) => {
+        const aEsCliente = a.estado === 'cliente' ? 0 : 1
+        const bEsCliente = b.estado === 'cliente' ? 0 : 1
+        if (aEsCliente !== bEsCliente) return aEsCliente - bEsCliente
+        // Misma categoría: más antiguos primero
+        return new Date(a.created_at) - new Date(b.created_at)
+      })
+
+      setPerforistas(lista)
       cargarRatings()
       cargarAds()
     } catch (e) {}
@@ -249,13 +261,16 @@ export default function Directorio() {
       })
 
       const nombreColor = p.estado === 'cliente' ? '#0F4C81' : '#4a5568'
+      const nombreFmt = nombreCompleto(p.nombre, p.apellido)
+      const localidadFmt = titleCase(p.localidad)
+      const provinciaFmt = titleCase(p.provincia)
 
       marcador.addListener('click', () => {
-        registrarEvento('pin_mapa_click', p.id, { perforista_nombre: `${p.nombre} ${p.apellido}`, origen: 'mapa' })
+        registrarEvento('pin_mapa_click', p.id, { perforista_nombre: nombreFmt, origen: 'mapa' })
         infoWindow.current.setContent(`
           <div style="font-family:Inter,sans-serif;min-width:190px;padding:4px">
-            <div style="font-weight:700;font-size:14px;color:${nombreColor}">${p.nombre} ${p.apellido}</div>
-            <div style="font-size:12px;color:#888;margin-top:4px">📍 <strong>Zona:</strong> ${p.localidad}, ${p.provincia}</div>
+            <div style="font-weight:700;font-size:14px;color:${nombreColor}">${nombreFmt}</div>
+            <div style="font-size:12px;color:#888;margin-top:4px">📍 <strong>Zona:</strong> ${localidadFmt}, ${provinciaFmt}</div>
             ${p.profundidad_max ? `<div style="font-size:11px;color:#6a0dad;margin-top:3px">⬇️ Hasta ${p.profundidad_max}m</div>` : ''}
             <div style="margin-top:10px">
               <a href="/perforista/${p.id}" style="display:inline-block;padding:6px 14px;background:#0F4C81;color:#fff;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;">Ver perfil y contactar →</a>
@@ -421,19 +436,21 @@ export default function Directorio() {
               <div className="cards-grid">
                 {filtrados.map((p, index) => {
                   const esCliente = p.estado === 'cliente'
-                  const nombreCompleto = `${p.nombre} ${p.apellido}`
+                  const nombreFormateado = nombreCompleto(p.nombre, p.apellido)
+                  const localidadFormateada = titleCase(p.localidad)
+                  const provinciaFormateada = titleCase(p.provincia)
                   return (
                     <>
                       <div key={p.id} onClick={() => handleCardClick(p)} className="card">
                         <div className="card-head">
                           <div className="avatar">
-                            {p.nombre?.[0]}{p.apellido?.[0]}
+                            {nombreFormateado.split(' ').map(w => w[0]).slice(0, 2).join('')}
                           </div>
                           <div className="card-identity">
                             <div className={`card-name ${esCliente ? 'is-cliente' : ''}`}>
-                              {nombreCompleto}
+                              {nombreFormateado}
                             </div>
-                            <div className="card-location">📍 {p.localidad} · {p.provincia}</div>
+                            <div className="card-location">📍 {localidadFormateada} · {provinciaFormateada}</div>
                           </div>
                         </div>
                         <div className="card-rating">
@@ -451,7 +468,7 @@ export default function Directorio() {
                           {p.visible_telefono && (
                             <button
                               onClick={async () => {
-                                const num = await trackTelefono(p.id, null, nombreCompleto)
+                                const num = await trackTelefono(p.id, null, nombreFormateado)
                                 if (num) window.location.href = `tel:${num}`
                               }}
                               className="btn-phone">
@@ -460,7 +477,7 @@ export default function Directorio() {
                           )}
                           {p.visible_whatsapp && (
                             <button
-                              onClick={() => trackWhatsApp(p.id, null, nombreCompleto)}
+                              onClick={() => trackWhatsApp(p.id, null, nombreFormateado)}
                               className="btn-wa">
                               💬 WA
                             </button>
