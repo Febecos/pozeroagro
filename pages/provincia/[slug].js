@@ -408,6 +408,8 @@ export default function LandingProvincia({ slug, nombre, contexto, perforistasIn
             <span className="sep">·</span>
             <a href="/terminos#privacidad">Política de privacidad</a>
             <span className="sep">·</span>
+            <a href="/como-funciona">Cómo funciona</a>
+            <span className="sep">·</span>
             <a href="/contacto">Contacto</a>
           </div>
           <div className="copyright">© 2026 Pozero Agro · Argentina</div>
