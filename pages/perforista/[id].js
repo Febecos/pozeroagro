@@ -766,6 +766,8 @@ export default function PerfilPerforista() {
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
           <a href="/terminos#privacidad" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Política de privacidad</a>
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
+          <a href="/como-funciona" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Cómo funciona</a>
+          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
           <a href="/contacto" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Contacto</a>
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>·</span>
           <a href="/mi-perfil" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>Editar mi perfil</a>
