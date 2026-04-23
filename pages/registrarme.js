@@ -733,7 +733,7 @@ export default function Registro() {
               <div>
                 <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Zonas donde trabajás *</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {['Buenos Aires','Santa Fe','Córdoba','Entre Ríos','La Pampa','Corrientes','Chaco','Salta','Mendoza','Otras'].map(v => <Tag key={v} campo="zonas_trabajo" valor={v} />)}
+                  {provincias.map(v => <Tag key={v} campo="zonas_trabajo" valor={v} />)}
                 </div>
               </div>
             </div>
