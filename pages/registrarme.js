@@ -30,6 +30,7 @@ export default function Registro() {
     cuit: '', dni: '',
     experiencia: '', tipo_empresa: '', profundidad_max: 80,
     diametros: [], terrenos: [], zonas_trabajo: [], servicios: [],
+    tipo_perforaciones: [], tipo_cliente: [],
     tipo_bomba: [], conoce_solar: '', trabajos_por_mes: '', descripcion: '',
     quiere_info_equipos: false,
     acepto_terminos: false
@@ -298,6 +299,8 @@ export default function Registro() {
         terrenos: form.terrenos,
         zonas_trabajo: form.zonas_trabajo,
         servicios: form.servicios,
+        tipo_perforaciones: form.tipo_perforaciones,
+        tipo_cliente: form.tipo_cliente,
         tipo_bomba: form.tipo_bomba,
         conoce_solar: form.conoce_solar,
         trabajos_por_mes: form.trabajos_por_mes,
@@ -398,6 +401,8 @@ export default function Registro() {
     }
     if (paso === 2) {
       if (!form.experiencia) { alert('Por favor indicá tus años de experiencia.'); return }
+      if (form.tipo_perforaciones.length === 0) { alert('Por favor indicá el tipo de perforaciones que hacés.'); return }
+      if (form.tipo_cliente.length === 0) { alert('Por favor indicá qué tipo de clientes atendés.'); return }
       if (form.diametros.length === 0) { alert('Por favor seleccioná al menos un diámetro.'); return }
       if (form.zonas_trabajo.length === 0) { alert('Por favor seleccioná al menos una zona.'); return }
     }
@@ -678,6 +683,34 @@ export default function Registro() {
                     <option>Empresa unipersonal</option>
                     <option>Empresa con empleados</option>
                   </select>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>Tipo de perforaciones que hacés *</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {[
+                    'Pozos de agua para campo / chacra',
+                    'Pozos de agua para tambo',
+                    'Pozos de agua para vivienda rural',
+                    'Pozos de agua para municipios / cooperativas',
+                    'Perforaciones para minería',
+                    'Perforaciones para industria / petróleo',
+                    'Geotermia'
+                  ].map(v => <Tag key={v} campo="tipo_perforaciones" valor={v} />)}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '6px' }}>¿Para quién trabajás habitualmente? *</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {[
+                    'Productores agropecuarios',
+                    'Tambos',
+                    'Municipios / cooperativas',
+                    'Particulares / viviendas',
+                    'Empresas / industria'
+                  ].map(v => <Tag key={v} campo="tipo_cliente" valor={v} />)}
                 </div>
               </div>
 
