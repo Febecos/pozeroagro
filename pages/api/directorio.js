@@ -30,7 +30,6 @@ export default async function handler(req, res) {
       'conoce_solar',
       'trabajos_por_mes',
       'descripcion',
-      'quiere_info_equipos',
       'lat',
       'lng',
       'instagram',
