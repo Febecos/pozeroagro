@@ -493,9 +493,6 @@ export default function PerfilPerforista() {
                 {p.conoce_solar === 'Si, ya instale sistemas solares' && (
                   <span style={{ fontSize: '11px', background: '#fff3e0', color: '#E65100', padding: '3px 8px', borderRadius: '4px' }}>Instala solar</span>
                 )}
-                {p.quiere_info_equipos && (
-                  <span style={{ fontSize: '11px', background: '#f0fdf4', color: '#166534', padding: '3px 8px', borderRadius: '4px' }}>Interesado en equipos</span>
-                )}
               </div>
             </div>
           </div>
