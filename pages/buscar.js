@@ -86,12 +86,42 @@ export default function Directorio() {
   }, [])
 
   useEffect(() => {
-    if (window.google) { setMapaListo(true); return }
-    const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=marker&loading=async&v=weekly`
-    script.async = true
-    script.onload = () => setMapaListo(true)
-    document.head.appendChild(script)
+    let cancelled = false
+
+    async function init() {
+      // Si ya está cargado todo
+      if (window.google?.maps?.marker?.AdvancedMarkerElement) {
+        if (!cancelled) setMapaListo(true)
+        return
+      }
+
+      // Cargar el script si no existe
+      if (!window.google) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=marker&loading=async&v=weekly`
+          script.async = true
+          script.onload = resolve
+          script.onerror = reject
+          document.head.appendChild(script)
+        })
+      }
+
+      // Asegurar que la librería marker está cargada
+      try {
+        await window.google.maps.importLibrary('marker')
+        await window.google.maps.importLibrary('maps')
+      } catch (e) {
+        console.error('Error cargando librerías de Google Maps:', e)
+        return
+      }
+
+      if (!cancelled) setMapaListo(true)
+    }
+
+    init()
+
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
@@ -248,6 +278,7 @@ export default function Directorio() {
 
   useEffect(() => {
     if (!mapaInstancia.current || !window.google) return
+    if (!window.google.maps.marker?.AdvancedMarkerElement) return // librería marker aún no cargada
     marcadores.current.forEach(m => { m.map = null })
     marcadores.current = []
     const bounds = new window.google.maps.LatLngBounds()
