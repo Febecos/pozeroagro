@@ -69,6 +69,7 @@ export default function Directorio() {
   const mapaInstancia = useRef(null)
   const marcadores = useRef([])
   const infoWindow = useRef(null)
+  const mapClases = useRef({}) // guarda { Map, AdvancedMarkerElement, InfoWindow, LatLngBounds }
 
   const provincias = [
     'Buenos Aires','CABA','Catamarca','Chaco','Chubut',
@@ -89,15 +90,16 @@ export default function Directorio() {
     let cancelled = false
 
     async function init() {
-      // Si ya está cargado todo
-      if (window.google?.maps?.marker?.AdvancedMarkerElement) {
-        if (!cancelled) setMapaListo(true)
-        return
-      }
-
       // Cargar el script si no existe
-      if (!window.google) {
+      if (!window.google?.maps) {
         await new Promise((resolve, reject) => {
+          // Si ya hay un script cargándose, esperarlo
+          const existente = document.querySelector('script[src*="maps.googleapis.com"]')
+          if (existente) {
+            existente.addEventListener('load', resolve)
+            existente.addEventListener('error', reject)
+            return
+          }
           const script = document.createElement('script')
           script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=marker&loading=async&v=weekly`
           script.async = true
@@ -107,16 +109,25 @@ export default function Directorio() {
         })
       }
 
-      // Asegurar que la librería marker está cargada
+      // Importar las librerías y guardar las clases
       try {
-        await window.google.maps.importLibrary('marker')
-        await window.google.maps.importLibrary('maps')
+        const { Map } = await window.google.maps.importLibrary('maps')
+        const { AdvancedMarkerElement } = await window.google.maps.importLibrary('marker')
+        const { InfoWindow } = await window.google.maps.importLibrary('maps')
+        const { LatLngBounds } = await window.google.maps.importLibrary('core')
+
+        if (cancelled) return
+
+        mapClases.current = {
+          Map,
+          AdvancedMarkerElement,
+          InfoWindow,
+          LatLngBounds
+        }
+        setMapaListo(true)
       } catch (e) {
         console.error('Error cargando librerías de Google Maps:', e)
-        return
       }
-
-      if (!cancelled) setMapaListo(true)
     }
 
     init()
@@ -126,12 +137,15 @@ export default function Directorio() {
 
   useEffect(() => {
     if (!mapaListo || !mapRef.current || mapaInstancia.current) return
-    mapaInstancia.current = new window.google.maps.Map(mapRef.current, {
+    const { Map, InfoWindow } = mapClases.current
+    if (!Map || !InfoWindow) return
+
+    mapaInstancia.current = new Map(mapRef.current, {
       center: { lat: -38.5, lng: -63.5 }, zoom: 4,
       mapId: 'c3fc81abb800c8c3e62d55d1', // Map ID requerido para AdvancedMarkerElement
       mapTypeControl: false, streetViewControl: false, fullscreenControl: false
     })
-    infoWindow.current = new window.google.maps.InfoWindow()
+    infoWindow.current = new InfoWindow()
   }, [mapaListo, mostrarMapa])
 
   // Redimensionar el mapa cuando se muestra/oculta el contenedor
@@ -277,11 +291,13 @@ export default function Directorio() {
   }, [filtrados.length, busquedaActiva, provincia])
 
   useEffect(() => {
-    if (!mapaInstancia.current || !window.google) return
-    if (!window.google.maps.marker?.AdvancedMarkerElement) return // librería marker aún no cargada
+    if (!mapaInstancia.current) return
+    const { AdvancedMarkerElement, LatLngBounds } = mapClases.current
+    if (!AdvancedMarkerElement || !LatLngBounds) return
+
     marcadores.current.forEach(m => { m.map = null })
     marcadores.current = []
-    const bounds = new window.google.maps.LatLngBounds()
+    const bounds = new LatLngBounds()
     let hayPins = false
 
     filtrados.forEach(p => {
@@ -291,20 +307,18 @@ export default function Directorio() {
       bounds.extend(coord)
 
       // AdvancedMarkerElement usa un elemento HTML personalizado
-      const esCliente = p.estado === 'cliente'
-      const pinColor = esCliente ? '#0F4C81' : '#0F4C81'
       const pinDiv = document.createElement('div')
       pinDiv.style.cssText = `
         width: 20px;
         height: 20px;
         border-radius: 50%;
-        background: ${pinColor};
+        background: #0F4C81;
         border: 2px solid #fff;
         box-shadow: 0 2px 6px rgba(0,0,0,0.25);
         cursor: pointer;
       `
 
-      const marcador = new window.google.maps.marker.AdvancedMarkerElement({
+      const marcador = new AdvancedMarkerElement({
         position: coord,
         map: mapaInstancia.current,
         title: `${p.nombre} ${p.apellido}`,
