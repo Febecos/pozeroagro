@@ -408,9 +408,10 @@ export default function Directorio() {
                 <button
                   onClick={() => setMostrarMapa(v => !v)}
                   className={`map-toggle ${mostrarMapa ? 'active' : ''}`}
-                  aria-label="Mostrar/ocultar mapa"
+                  aria-label="Mostrar u ocultar mapa"
                 >
-                  🗺️
+                  <span className="map-toggle-icon">🗺️</span>
+                  <span className="map-toggle-text">{mostrarMapa ? 'Ocultar mapa' : 'Ver mapa'}</span>
                 </button>
               )}
             </div>
@@ -689,16 +690,33 @@ export default function Directorio() {
         }
         .search-btn:hover { background: #16A34A; }
         .map-toggle {
-          padding: 11px 14px;
-          background: rgba(255,255,255,0.15);
+          padding: 12px 16px;
+          background: rgba(255,255,255,0.12);
           color: #fff;
-          border: none;
+          border: 1px solid rgba(255,255,255,0.2);
           border-radius: 8px;
-          font-size: 18px;
+          font-size: 14px;
+          font-weight: 500;
           cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          width: 100%;
+          transition: background 0.2s;
+        }
+        .map-toggle:hover {
+          background: rgba(255,255,255,0.18);
         }
         .map-toggle.active {
-          background: #fff;
+          background: rgba(255,255,255,0.25);
+          border-color: rgba(255,255,255,0.4);
+        }
+        .map-toggle-icon {
+          font-size: 16px;
+        }
+        .map-toggle-text {
+          font-family: "Inter", sans-serif;
         }
 
         .mobile-map {
