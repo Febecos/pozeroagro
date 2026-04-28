@@ -102,7 +102,19 @@ export default function Directorio() {
       styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }]
     })
     infoWindow.current = new window.google.maps.InfoWindow()
-  }, [mapaListo])
+  }, [mapaListo, mostrarMapa])
+
+  // Redimensionar el mapa cuando se muestra/oculta el contenedor
+  useEffect(() => {
+    if (!mapaInstancia.current || !window.google) return
+    if (mostrarMapa) {
+      // Pequeño delay para que el DOM termine de mostrar el div
+      const t = setTimeout(() => {
+        window.google.maps.event.trigger(mapaInstancia.current, 'resize')
+      }, 100)
+      return () => clearTimeout(t)
+    }
+  }, [mostrarMapa])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -289,7 +301,7 @@ export default function Directorio() {
         ? (mapaInstancia.current.setCenter(bounds.getCenter()), mapaInstancia.current.setZoom(10))
         : mapaInstancia.current.fitBounds(bounds, { padding: 60 })
     }
-  }, [coordenadas, filtrados.length, busquedaActiva, provincia])
+  }, [coordenadas, filtrados.length, busquedaActiva, provincia, mostrarMapa])
 
   function whatsappNum(p) {
     const num = p.whatsapp || p.telefono || ''
