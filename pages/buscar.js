@@ -90,40 +90,63 @@ export default function Directorio() {
     let cancelled = false
 
     async function init() {
-      // Cargar el script si no existe
-      if (!window.google?.maps) {
+      // Si ya están las clases cargadas, no hacer nada
+      if (mapClases.current.Map) {
+        if (!cancelled) setMapaListo(true)
+        return
+      }
+
+      // Bootstrap loader oficial de Google (https://developers.google.com/maps/documentation/javascript/load-maps-js-api)
+      // Esto inyecta el script con loading=async automáticamente
+      if (!window.google?.maps?.importLibrary) {
+        // Limpiar cualquier script viejo que pueda haber quedado
+        const viejos = document.querySelectorAll('script[src*="maps.googleapis.com"]')
+        viejos.forEach(s => s.remove())
+        if (window.google) delete window.google
+
+        // Inyectar el bootstrap oficial
         await new Promise((resolve, reject) => {
-          // Si ya hay un script cargándose, esperarlo
-          const existente = document.querySelector('script[src*="maps.googleapis.com"]')
-          if (existente) {
-            existente.addEventListener('load', resolve)
-            existente.addEventListener('error', reject)
-            return
-          }
-          const script = document.createElement('script')
-          script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=marker&loading=async&v=weekly`
-          script.async = true
-          script.onload = resolve
-          script.onerror = reject
-          document.head.appendChild(script)
+          ((g) => {
+            var h, a, k, p = "The Google Maps JavaScript API",
+              c = "google", l = "importLibrary", q = "__ib__",
+              m = document, b = window
+            b = b[c] || (b[c] = {})
+            var d = b.maps || (b.maps = {}),
+              r = new Set, e = new URLSearchParams,
+              u = () => h || (h = new Promise(async (f, n) => {
+                await (a = m.createElement("script"))
+                e.set("libraries", [...r] + "")
+                for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k])
+                e.set("callback", c + ".maps." + q)
+                a.src = `https://maps.${c}apis.com/maps/api/js?` + e
+                d[q] = f
+                a.onerror = () => h = n(Error(p + " could not load."))
+                a.nonce = m.querySelector("script[nonce]")?.nonce || ""
+                m.head.append(a)
+              }))
+            d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n))
+          })({ key: MAPS_KEY, v: "weekly" })
+
+          // Esperar a que importLibrary esté disponible
+          const checkInterval = setInterval(() => {
+            if (window.google?.maps?.importLibrary) {
+              clearInterval(checkInterval)
+              resolve()
+            }
+          }, 50)
+          setTimeout(() => { clearInterval(checkInterval); reject(new Error('Timeout cargando Google Maps')) }, 10000)
         })
       }
 
       // Importar las librerías y guardar las clases
       try {
-        const { Map } = await window.google.maps.importLibrary('maps')
+        const { Map, InfoWindow } = await window.google.maps.importLibrary('maps')
         const { AdvancedMarkerElement } = await window.google.maps.importLibrary('marker')
-        const { InfoWindow } = await window.google.maps.importLibrary('maps')
         const { LatLngBounds } = await window.google.maps.importLibrary('core')
 
         if (cancelled) return
 
-        mapClases.current = {
-          Map,
-          AdvancedMarkerElement,
-          InfoWindow,
-          LatLngBounds
-        }
+        mapClases.current = { Map, AdvancedMarkerElement, InfoWindow, LatLngBounds }
         setMapaListo(true)
       } catch (e) {
         console.error('Error cargando librerías de Google Maps:', e)
@@ -142,7 +165,7 @@ export default function Directorio() {
 
     mapaInstancia.current = new Map(mapRef.current, {
       center: { lat: -38.5, lng: -63.5 }, zoom: 4,
-      mapId: 'c3fc81abb800c8c3e62d55d1', // Map ID requerido para AdvancedMarkerElement
+      mapId: '839d4741615b5e1d9808c87a', // Map ID requerido para AdvancedMarkerElement
       mapTypeControl: false, streetViewControl: false, fullscreenControl: false
     })
     infoWindow.current = new InfoWindow()
