@@ -232,7 +232,7 @@ function Admin() {
             </div>
 
             <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e0e0d8', overflow: 'hidden' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 80px 70px 70px 70px 70px 70px 100px', padding: '.6rem 1rem', background: '#f5f5f0', fontSize: '11px', color: '#888', fontWeight: '500', borderBottom: '0.5px solid #e0e0d8' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 80px 70px 70px 70px 70px 70px 80px 100px', padding: '.6rem 1rem', background: '#f5f5f0', fontSize: '11px', color: '#888', fontWeight: '500', borderBottom: '0.5px solid #e0e0d8' }}>
                 <div>Perforista</div><div>Estado</div>
                 <div style={{ textAlign: 'center' }}>Tel.</div>
                 <div style={{ textAlign: 'center' }}>WA</div>
@@ -240,6 +240,7 @@ function Admin() {
                 <div style={{ textAlign: 'center' }}>FB</div>
                 <div style={{ textAlign: 'center' }}>Email</div>
                 <div style={{ textAlign: 'center' }}>Prof.</div>
+                <div style={{ textAlign: 'center' }}>Video</div>
                 <div>Acciones</div>
               </div>
 
@@ -247,7 +248,7 @@ function Admin() {
               {!cargando && filtrados.length === 0 && <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No hay perforistas.</div>}
 
               {filtrados.map((p, i) => (
-                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 80px 70px 70px 70px 70px 70px 100px', padding: '.65rem 1rem', alignItems: 'center', borderBottom: i < filtrados.length - 1 ? '0.5px solid #f0f0e8' : 'none', fontSize: '13px' }}>
+                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 80px 70px 70px 70px 70px 70px 80px 100px', padding: '.65rem 1rem', alignItems: 'center', borderBottom: i < filtrados.length - 1 ? '0.5px solid #f0f0e8' : 'none', fontSize: '13px' }}>
                   <div>
                     <div style={{ fontWeight: '500' }}>{nombreCompleto(p.nombre, p.apellido)}</div>
                     <div style={{ fontSize: '11px', color: '#888' }}>{titleCase(p.localidad)}, {titleCase(p.provincia)}</div>
@@ -267,6 +268,22 @@ function Admin() {
                   <div style={{ display: 'flex', justifyContent: 'center' }}><Toggle id={p.id} campo="visible_facebook" valor={p.visible_facebook} /></div>
                   <div style={{ display: 'flex', justifyContent: 'center' }}><Toggle id={p.id} campo="visible_email" valor={p.visible_email} /></div>
                   <div style={{ textAlign: 'center', color: '#666' }}>{p.profundidad_max ? `${p.profundidad_max}m` : '—'}</div>
+                  <div style={{ textAlign: 'center' }}>
+                  {p.video_url ? (
+                    <a href={p.video_url} target="_blank" rel="noreferrer"
+                      style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: '#FEE2E2', color: '#991B1B', textDecoration: 'none' }}>
+                      ▶ Ver
+                    </a>
+                  ) : (
+                    <button onClick={() => {
+                      const url = prompt('Pegá el link de YouTube del video:')
+                      if (url && url.trim()) actualizar(p.id, 'video_url', url.trim())
+                    }}
+                      style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: '#f0f0f0', color: '#888', border: 'none', cursor: 'pointer' }}>
+                      + Video
+                    </button>
+                  )}
+                  </div>
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                     {p.telefono && <a href={`tel:${p.telefono}`} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: '#E1F5EE', color: '#085041', textDecoration: 'none' }}>📞</a>}
                     {p.whatsapp && <a href={`https://wa.me/${p.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: '#EAF3DE', color: '#27500A', textDecoration: 'none' }}>WA</a>}
